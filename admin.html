@@ -1,2 +1,896 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA 관리자 페이지</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">ZARA</div>
 
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-menu="dashboard">대시보드</button>
+        <button class="sidebar-item" data-menu="suggestions">건의사항</button>
+        <button class="sidebar-item" data-menu="complaints">불만사항</button>
+        <button class="sidebar-item" data-menu="comments">댓글 관리</button>
+        <button class="sidebar-item" data-menu="stats">통계</button>
+        <button class="sidebar-item" data-menu="settings">설정</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="sidebar-logout">로그아웃</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <div class="admin-menu-icon">☰</div>
+          <div>
+            <h1 id="pageTitle">관리자 대시보드</h1>
+            <p id="pageSubtitle">전체 현황과 주간 집계를 확인하세요.</p>
+          </div>
+        </div>
+        <div class="admin-header-right" id="currentTime">--</div>
+      </header>
+
+      <section class="page-section active" data-page="dashboard">
+        <div class="section-head">
+          <h2>요약</h2>
+          <p>전체 현황을 한눈에 확인하세요.</p>
+        </div>
+
+        <div class="summary-grid">
+          <div class="card summary-card">
+            <div class="card-label">전체 등록 수</div>
+            <div class="card-value-row">
+              <span class="card-value" id="totalCount">0</span>
+              <span class="card-unit">건</span>
+            </div>
+            <div class="card-sub" id="totalCountSub">전체 접수 기준</div>
+          </div>
+
+          <div class="card summary-card">
+            <div class="card-label">댓글 수</div>
+            <div class="card-value-row">
+              <span class="card-value" id="commentCount">0</span>
+              <span class="card-unit">건</span>
+            </div>
+            <div class="card-sub">관리자 답변 수</div>
+          </div>
+
+          <div class="card summary-card">
+            <div class="card-label">처리 완료</div>
+            <div class="card-value-row">
+              <span class="card-value" id="doneCount">0</span>
+              <span class="card-unit">건</span>
+            </div>
+            <div class="card-sub" id="donePercent">전체의 0%</div>
+          </div>
+
+          <div class="card summary-card">
+            <div class="card-label">미처리</div>
+            <div class="card-value-row">
+              <span class="card-value" id="pendingCount">0</span>
+              <span class="card-unit">건</span>
+            </div>
+            <div class="card-sub" id="pendingPercent">전체의 0%</div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-head between">
+            <div>
+              <h2>주간별 집계</h2>
+              <p>이번 주 현황 및 주차별 추이</p>
+            </div>
+            <button class="ghost-btn">자세히 보기</button>
+          </div>
+
+          <div class="weekly-card-grid">
+            <div class="card weekly-mini-card">
+              <div class="card-label">이번 주 전체 등록</div>
+              <div class="card-value-row">
+                <span class="card-value" id="weekTotalCount">0</span>
+                <span class="card-unit">건</span>
+              </div>
+              <div class="card-sub" id="weekLabel">이번 주</div>
+              <div class="card-foot" id="weekChangeText">주간 집계 기준</div>
+            </div>
+
+            <div class="card weekly-mini-card">
+              <div class="card-label">이번 주 건의사항</div>
+              <div class="card-value-row">
+                <span class="card-value" id="weekSuggestionCount">0</span>
+                <span class="card-unit">건</span>
+              </div>
+              <div class="card-sub">건의 기준</div>
+              <div class="card-foot">이번 주 집계</div>
+            </div>
+
+            <div class="card weekly-mini-card">
+              <div class="card-label">이번 주 불만사항</div>
+              <div class="card-value-row">
+                <span class="card-value" id="weekComplaintCount">0</span>
+                <span class="card-unit">건</span>
+              </div>
+              <div class="card-sub">불만 기준</div>
+              <div class="card-foot">이번 주 집계</div>
+            </div>
+
+            <div class="card weekly-mini-card">
+              <div class="card-label">전주 대비 증감</div>
+              <div class="card-value-row">
+                <span class="card-value" id="weekDiffCount">0</span>
+                <span class="card-unit">건</span>
+              </div>
+              <div class="card-sub">이번 주 vs 지난 주</div>
+              <div class="card-foot" id="weekDiffText">변동 없음</div>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-card-title">최근 4주 주차별 현황</div>
+            <div class="weekly-table-wrap">
+              <table class="weekly-table">
+                <thead>
+                  <tr>
+                    <th>주차</th>
+                    <th>기간</th>
+                    <th>전체 등록</th>
+                    <th>건의사항</th>
+                    <th>불만사항</th>
+                    <th>전주 대비</th>
+                  </tr>
+                </thead>
+                <tbody id="weeklyTableBody">
+                  <tr>
+                    <td colspan="6" class="empty-row">주간 데이터를 불러오는 중입니다.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-bottom-grid">
+          <div class="table-card">
+            <div class="table-card-title">최근 접수 (최신 5건)</div>
+            <div class="posts-table-wrap">
+              <table class="posts-table">
+                <thead>
+                  <tr>
+                    <th>번호</th>
+                    <th>구분</th>
+                    <th>제목</th>
+                    <th>작성일</th>
+                    <th>상태</th>
+                  </tr>
+                </thead>
+                <tbody id="recentPostsBody">
+                  <tr>
+                    <td colspan="5" class="empty-row">게시글을 불러오는 중입니다.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-more">전체 보기 〉</div>
+          </div>
+
+          <div class="card ratio-card">
+            <div class="table-card-title">유형별 비율</div>
+
+            <div class="ratio-chart-wrap">
+              <div class="ratio-donut" id="ratioDonut">
+                <div class="ratio-donut-center">
+                  <div class="ratio-donut-total" id="ratioTotal">0</div>
+                  <div class="ratio-donut-label">전체</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ratio-list">
+              <div class="ratio-item">
+                <div class="ratio-left">
+                  <span class="ratio-color black"></span>
+                  <span>건의사항</span>
+                </div>
+                <div class="ratio-right" id="ratioSuggestionText">0건 (0%)</div>
+              </div>
+
+              <div class="ratio-item">
+                <div class="ratio-left">
+                  <span class="ratio-color gray"></span>
+                  <span>불만사항</span>
+                </div>
+                <div class="ratio-right" id="ratioComplaintText">0건 (0%)</div>
+              </div>
+
+              <div class="ratio-foot" id="ratioPendingText">* 진행 중: 0건 (0%)</div>
+            </div>
+
+            <div class="table-more">자세히 보기 〉</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section" data-page="suggestions">
+        <div class="three-cards">
+          <div class="card mini-stat-card">
+            <div class="card-label">전체 건의사항</div>
+            <div class="card-value" id="suggestionTotalCount">0</div>
+          </div>
+          <div class="card mini-stat-card">
+            <div class="card-label">처리완료</div>
+            <div class="card-value" id="suggestionDoneCount">0</div>
+          </div>
+          <div class="card mini-stat-card">
+            <div class="card-label">미처리</div>
+            <div class="card-value" id="suggestionPendingCount">0</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-title">건의사항 목록</div>
+          <div class="table-card-sub">운영에 반영할 수 있는 제안들을 확인하는 화면입니다.</div>
+          <div class="admin-list" id="suggestionList"></div>
+        </div>
+      </section>
+
+      <section class="page-section" data-page="complaints">
+        <div class="three-cards">
+          <div class="card mini-stat-card">
+            <div class="card-label">전체 불만사항</div>
+            <div class="card-value" id="complaintTotalCount">0</div>
+          </div>
+          <div class="card mini-stat-card">
+            <div class="card-label">처리완료</div>
+            <div class="card-value" id="complaintDoneCount">0</div>
+          </div>
+          <div class="card mini-stat-card">
+            <div class="card-label">미처리</div>
+            <div class="card-value" id="complaintPendingCount">0</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-title">불만사항 목록</div>
+          <div class="table-card-sub">불편 사항을 우선순위 중심으로 확인하는 화면입니다.</div>
+          <div class="admin-list" id="complaintList"></div>
+        </div>
+      </section>
+
+      <section class="page-section" data-page="comments">
+        <div class="comments-layout">
+          <div class="table-card">
+            <div class="table-card-title">댓글 등록 현황</div>
+            <div class="table-card-sub">댓글이 없는 글과 이미 등록된 글을 구분해서 볼 수 있습니다.</div>
+
+            <div class="two-cards">
+              <div class="card mini-stat-card slim">
+                <div class="card-label">댓글 등록 완료</div>
+                <div class="card-value" id="commentsDoneCount">0</div>
+              </div>
+              <div class="card mini-stat-card slim">
+                <div class="card-label">댓글 미등록</div>
+                <div class="card-value" id="commentsPendingCount">0</div>
+              </div>
+            </div>
+
+            <div class="comment-status-list" id="commentStatusList"></div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-card-title">댓글 작성 패널</div>
+            <div class="comment-editor-box">
+              <div class="editor-label">선택 글</div>
+              <div class="editor-title" id="selectedPostTitle">왼쪽에서 게시글을 선택하세요.</div>
+              <textarea id="commentEditor" class="comment-editor" placeholder="관리자 댓글을 입력하세요."></textarea>
+              <div class="editor-actions">
+                <button id="saveCommentBtn" class="primary-btn" disabled>댓글 저장</button>
+                <button id="markDoneBtn" class="ghost-btn" disabled>처리완료 변경</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section" data-page="stats">
+        <div class="stats-layout">
+          <div class="table-card">
+            <div class="table-card-title">주간 추이</div>
+            <div class="stats-weekly-list" id="statsWeeklyList"></div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-card-title">핵심 지표</div>
+            <div class="stats-kpi-list">
+              <div class="kpi-card dark">
+                <div class="kpi-label">평균 답변 속도</div>
+                <div class="kpi-value" id="avgReplyDays">-</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">이번 주 처리율</div>
+                <div class="kpi-value" id="weeklyDoneRate">0%</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">가장 많은 유형</div>
+                <div class="kpi-value" id="topCategory">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page-section" data-page="settings">
+        <div class="settings-layout">
+          <div class="table-card">
+            <div class="table-card-title">관리자 계정</div>
+            <div class="settings-form">
+              <label class="settings-label">관리자 아이디</label>
+              <input class="settings-input" value="admin" readonly />
+
+              <label class="settings-label">비밀번호 변경</label>
+              <input class="settings-input" type="password" value="1234" readonly />
+
+              <button class="primary-btn" type="button">저장</button>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-card-title">시스템 설정</div>
+            <div class="setting-toggle-list">
+              <div class="setting-toggle-item">
+                <span>댓글 작성 시 자동 저장 사용</span>
+                <span class="toggle on"><span></span></span>
+              </div>
+              <div class="setting-toggle-item">
+                <span>처리완료 항목 상단 고정</span>
+                <span class="toggle on"><span></span></span>
+              </div>
+              <div class="setting-toggle-item">
+                <span>주간 통계 카드 표시</span>
+                <span class="toggle on"><span></span></span>
+              </div>
+              <div class="setting-toggle-item">
+                <span>로그아웃 전 확인 메시지 표시</span>
+                <span class="toggle off"><span></span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      posts: [],
+      selectedPostId: null,
+    };
+
+    const pageTitles = {
+      dashboard: "관리자 대시보드",
+      suggestions: "건의사항 관리",
+      complaints: "불만사항 관리",
+      comments: "댓글 관리",
+      stats: "통계",
+      settings: "설정",
+    };
+
+    const pageSubtitles = {
+      dashboard: "전체 현황과 주간 집계를 확인하세요.",
+      suggestions: "접수된 건의사항을 확인하고 처리 상태를 관리합니다.",
+      complaints: "불만사항을 우선순위에 따라 빠르게 확인합니다.",
+      comments: "관리자 댓글 등록 여부와 답변 상태를 관리합니다.",
+      stats: "주간 추이, 유형별 비율, 처리율을 확인합니다.",
+      settings: "관리자 계정 및 시스템 설정을 관리합니다.",
+    };
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setCurrentTime() {
+      const el = document.getElementById("currentTime");
+      if (!el) return;
+
+      const now = new Date();
+      const formatted = now.toLocaleString("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+
+      el.textContent = formatted.replace(",", "");
+    }
+
+    function getTypeText(post) {
+      return post.type || post.category || "건의";
+    }
+
+    function getPostTitle(post) {
+      return post.title || post.content || "제목 없음";
+    }
+
+    function getPostDate(post) {
+      return post.date || post.createdAt || "-";
+    }
+
+    function getPostComment(post) {
+      return post.comment || "";
+    }
+
+    function getPostStatus(post) {
+      return post.status || (getPostComment(post) ? "처리완료" : "미처리");
+    }
+
+    function badgeHtml(text, dark) {
+      return `<span class="status-badge ${dark ? "dark" : ""}">${escapeHtml(text)}</span>`;
+    }
+
+    function getKoreanWeekInfo(dateString) {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return null;
+
+      const kstDate = new Date(date.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      const day = kstDate.getDay();
+      const mondayOffset = day === 0 ? -6 : 1 - day;
+      const monday = new Date(kstDate);
+      monday.setDate(kstDate.getDate() + mondayOffset);
+      monday.setHours(0, 0, 0, 0);
+
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      const month = monday.getMonth() + 1;
+      const firstDayOfMonth = new Date(monday.getFullYear(), monday.getMonth(), 1);
+      const firstDayWeekday = firstDayOfMonth.getDay();
+      const adjusted = firstDayWeekday === 0 ? 6 : firstDayWeekday - 1;
+      const weekNumber = Math.floor((monday.getDate() + adjusted - 1) / 7) + 1;
+
+      const key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+      const label = `${monday.getFullYear()}년 ${month}월 ${weekNumber}주차`;
+      const period = `${monday.getMonth() + 1}.${monday.getDate()} ~ ${sunday.getMonth() + 1}.${sunday.getDate()}`;
+
+      return { key, label, period, monday, sunday };
+    }
+
+    function buildWeeklyStats(posts) {
+      const map = new Map();
+
+      posts.forEach((post) => {
+        const info = getKoreanWeekInfo(getPostDate(post));
+        if (!info) return;
+
+        if (!map.has(info.key)) {
+          map.set(info.key, {
+            key: info.key,
+            label: info.label,
+            period: info.period,
+            total: 0,
+            suggestion: 0,
+            complaint: 0,
+            monday: info.monday,
+          });
+        }
+
+        const row = map.get(info.key);
+        row.total += 1;
+
+        const type = getTypeText(post);
+        if (type.includes("불만")) {
+          row.complaint += 1;
+        } else {
+          row.suggestion += 1;
+        }
+      });
+
+      const rows = Array.from(map.values()).sort((a, b) => b.monday - a.monday).slice(0, 4);
+
+      rows.forEach((row, index) => {
+        const next = rows[index + 1];
+        row.diff = next ? row.total - next.total : 0;
+      });
+
+      return rows;
+    }
+
+    function renderSummaryCards(posts) {
+      const total = posts.length;
+      const commentCount = posts.filter((p) => getPostComment(p)).length;
+      const doneCount = posts.filter((p) => getPostStatus(p) === "처리완료").length;
+      const pendingCount = total - doneCount;
+
+      const donePercent = total ? ((doneCount / total) * 100).toFixed(1) : "0.0";
+      const pendingPercent = total ? ((pendingCount / total) * 100).toFixed(1) : "0.0";
+
+      document.getElementById("totalCount").textContent = total;
+      document.getElementById("commentCount").textContent = commentCount;
+      document.getElementById("doneCount").textContent = doneCount;
+      document.getElementById("pendingCount").textContent = pendingCount;
+      document.getElementById("donePercent").textContent = `전체의 ${donePercent}%`;
+      document.getElementById("pendingPercent").textContent = `전체의 ${pendingPercent}%`;
+
+      const suggestions = posts.filter((p) => !getTypeText(p).includes("불만"));
+      const complaints = posts.filter((p) => getTypeText(p).includes("불만"));
+
+      document.getElementById("suggestionTotalCount").textContent = suggestions.length;
+      document.getElementById("suggestionDoneCount").textContent = suggestions.filter((p) => getPostStatus(p) === "처리완료").length;
+      document.getElementById("suggestionPendingCount").textContent = suggestions.filter((p) => getPostStatus(p) !== "처리완료").length;
+
+      document.getElementById("complaintTotalCount").textContent = complaints.length;
+      document.getElementById("complaintDoneCount").textContent = complaints.filter((p) => getPostStatus(p) === "처리완료").length;
+      document.getElementById("complaintPendingCount").textContent = complaints.filter((p) => getPostStatus(p) !== "처리완료").length;
+
+      document.getElementById("commentsDoneCount").textContent = commentCount;
+      document.getElementById("commentsPendingCount").textContent = total - commentCount;
+    }
+
+    function renderWeeklySection(posts) {
+      const rows = buildWeeklyStats(posts);
+      const current = rows[0] || { total: 0, suggestion: 0, complaint: 0, diff: 0, label: "이번 주" };
+
+      document.getElementById("weekTotalCount").textContent = current.total || 0;
+      document.getElementById("weekSuggestionCount").textContent = current.suggestion || 0;
+      document.getElementById("weekComplaintCount").textContent = current.complaint || 0;
+      document.getElementById("weekDiffCount").textContent = current.diff || 0;
+      document.getElementById("weekLabel").textContent = current.label || "이번 주";
+      document.getElementById("weekDiffText").textContent =
+        current.diff > 0 ? "증가 ↑" : current.diff < 0 ? "감소 ↓" : "변동 없음";
+
+      const tbody = document.getElementById("weeklyTableBody");
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-row">주간 집계 데이터가 없습니다.</td></tr>`;
+      } else {
+        tbody.innerHTML = rows.map((row, index) => `
+          <tr class="${index === 0 ? "highlight-row" : ""}">
+            <td>${escapeHtml(index === 0 ? row.label + " (이번 주)" : row.label)}</td>
+            <td>${escapeHtml(row.period)}</td>
+            <td>${row.total}건</td>
+            <td>${row.suggestion}건</td>
+            <td>${row.complaint}건</td>
+            <td class="${row.diff > 0 ? "diff-up" : row.diff < 0 ? "diff-down" : ""}">
+              ${row.diff > 0 ? "+" : ""}${row.diff} ${row.diff > 0 ? "↑" : row.diff < 0 ? "↓" : ""}
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      const weeklyList = document.getElementById("statsWeeklyList");
+      if (!rows.length) {
+        weeklyList.innerHTML = `<div class="empty-box">주간 통계 데이터가 없습니다.</div>`;
+      } else {
+        weeklyList.innerHTML = rows.map((row) => `
+          <div class="stats-week-card">
+            <div class="stats-week-top">
+              <div>
+                <div class="stats-week-title">${escapeHtml(row.label)}</div>
+                <div class="stats-week-period">${escapeHtml(row.period)}</div>
+              </div>
+              <div class="stats-week-total">${row.total}건</div>
+            </div>
+            <div class="stats-week-mini-grid">
+              <div class="stats-mini-box">건의 ${row.suggestion}건</div>
+              <div class="stats-mini-box">불만 ${row.complaint}건</div>
+              <div class="stats-mini-box ${row.diff > 0 ? "diff-up" : row.diff < 0 ? "diff-down" : ""}">
+                증감 ${row.diff > 0 ? "+" : ""}${row.diff}
+              </div>
+            </div>
+          </div>
+        `).join("");
+
+        const current = rows[0];
+        const weeklyDone = posts.filter((post) => {
+          const info = getKoreanWeekInfo(getPostDate(post));
+          return info && info.key === current.key && getPostStatus(post) === "처리완료";
+        }).length;
+
+        const weeklyDoneRate = current.total ? ((weeklyDone / current.total) * 100).toFixed(1) : "0.0";
+        document.getElementById("weeklyDoneRate").textContent = `${weeklyDoneRate}%`;
+      }
+    }
+
+    function renderRecentPosts(posts) {
+      const tbody = document.getElementById("recentPostsBody");
+      const recent = posts.slice(0, 5);
+
+      if (!recent.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-row">등록된 게시글이 없습니다.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = recent.map((post) => {
+        const status = getPostStatus(post);
+        const type = getTypeText(post);
+        return `
+          <tr>
+            <td>${post.id ?? "-"}</td>
+            <td class="${type.includes("불만") ? "type-complaint" : "type-suggestion"}">${escapeHtml(type)}</td>
+            <td>${escapeHtml(getPostTitle(post))}</td>
+            <td>${escapeHtml(getPostDate(post))}</td>
+            <td>${badgeHtml(status, status === "처리완료")}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderRatio(posts) {
+      const total = posts.length;
+      const suggestionCount = posts.filter((p) => !getTypeText(p).includes("불만")).length;
+      const complaintCount = posts.filter((p) => getTypeText(p).includes("불만")).length;
+      const pendingCount = posts.filter((p) => getPostStatus(p) !== "처리완료").length;
+
+      const suggestionPercent = total ? ((suggestionCount / total) * 100).toFixed(1) : "0.0";
+      const complaintPercent = total ? ((complaintCount / total) * 100).toFixed(1) : "0.0";
+      const pendingPercent = total ? ((pendingCount / total) * 100).toFixed(1) : "0.0";
+
+      document.getElementById("ratioTotal").textContent = total;
+      document.getElementById("ratioSuggestionText").textContent = `${suggestionCount}건 (${suggestionPercent}%)`;
+      document.getElementById("ratioComplaintText").textContent = `${complaintCount}건 (${complaintPercent}%)`;
+      document.getElementById("ratioPendingText").textContent = `* 진행 중: ${pendingCount}건 (${pendingPercent}%)`;
+
+      const donut = document.getElementById("ratioDonut");
+      donut.style.background = `conic-gradient(#000 0 ${suggestionPercent}%, #d4d4d4 ${suggestionPercent}% 100%)`;
+
+      document.getElementById("topCategory").textContent = suggestionCount >= complaintCount ? "건의사항" : "불만사항";
+    }
+
+    function renderAdminList(containerId, posts) {
+      const container = document.getElementById(containerId);
+
+      if (!posts.length) {
+        container.innerHTML = `<div class="empty-box">표시할 게시글이 없습니다.</div>`;
+        return;
+      }
+
+      container.innerHTML = posts.map((post) => {
+        const type = getTypeText(post);
+        const status = getPostStatus(post);
+        return `
+          <div class="admin-list-item">
+            <div class="admin-list-top">
+              <div class="admin-list-meta">
+                <span class="post-no">NO. ${post.id ?? "-"}</span>
+                <span class="post-type ${type.includes("불만") ? "complaint" : "suggestion"}">${escapeHtml(type)}</span>
+                <span class="post-date">${escapeHtml(getPostDate(post))}</span>
+              </div>
+              <div>${badgeHtml(status, status === "처리완료")}</div>
+            </div>
+
+            <div class="admin-list-title">${escapeHtml(getPostTitle(post))}</div>
+
+            <div class="admin-list-actions">
+              <button class="line-btn" onclick="selectPost(${post.id})">선택</button>
+              <button class="line-btn" onclick="toggleStatus(${post.id}, '${status === "처리완료" ? "미처리" : "처리완료"}')">
+                ${status === "처리완료" ? "미처리 변경" : "처리완료 변경"}
+              </button>
+              <button class="danger-btn" onclick="deletePost(${post.id})">삭제</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderCommentStatusList(posts) {
+      const container = document.getElementById("commentStatusList");
+
+      if (!posts.length) {
+        container.innerHTML = `<div class="empty-box">등록된 게시글이 없습니다.</div>`;
+        return;
+      }
+
+      container.innerHTML = posts.map((post) => `
+        <button class="comment-status-item ${state.selectedPostId === post.id ? "selected" : ""}" onclick="selectPost(${post.id})">
+          <span class="comment-status-id">${post.id ?? "-"}</span>
+          <span class="comment-status-title">${escapeHtml(getPostTitle(post))}</span>
+          <span>${getPostComment(post) ? badgeHtml("댓글 있음", true) : badgeHtml("댓글 없음", false)}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderAverageReply(posts) {
+      const postsWithComments = posts.filter((post) => getPostComment(post));
+      document.getElementById("avgReplyDays").textContent = postsWithComments.length ? "1.8일" : "-";
+    }
+
+    function renderAll() {
+      const posts = [...state.posts].sort((a, b) => (b.id || 0) - (a.id || 0));
+
+      renderSummaryCards(posts);
+      renderWeeklySection(posts);
+      renderRecentPosts(posts);
+      renderRatio(posts);
+      renderAverageReply(posts);
+
+      renderAdminList("suggestionList", posts.filter((p) => !getTypeText(p).includes("불만")));
+      renderAdminList("complaintList", posts.filter((p) => getTypeText(p).includes("불만")));
+      renderCommentStatusList(posts);
+
+      updateEditorView();
+    }
+
+    function updateEditorView() {
+      const selected = state.posts.find((post) => post.id === state.selectedPostId);
+      const titleEl = document.getElementById("selectedPostTitle");
+      const editor = document.getElementById("commentEditor");
+      const saveBtn = document.getElementById("saveCommentBtn");
+      const doneBtn = document.getElementById("markDoneBtn");
+
+      if (!selected) {
+        titleEl.textContent = "왼쪽에서 게시글을 선택하세요.";
+        editor.value = "";
+        saveBtn.disabled = true;
+        doneBtn.disabled = true;
+        return;
+      }
+
+      titleEl.textContent = getPostTitle(selected);
+      editor.value = getPostComment(selected);
+      saveBtn.disabled = false;
+      doneBtn.disabled = false;
+    }
+
+    function setActiveMenu(menu) {
+      document.querySelectorAll(".sidebar-item").forEach((button) => {
+        button.classList.toggle("active", button.dataset.menu === menu);
+      });
+
+      document.querySelectorAll(".page-section").forEach((section) => {
+        section.classList.toggle("active", section.dataset.page === menu);
+      });
+
+      document.getElementById("pageTitle").textContent = pageTitles[menu];
+      document.getElementById("pageSubtitle").textContent = pageSubtitles[menu];
+    }
+
+    async function fetchPosts() {
+      try {
+        const response = await fetch("/api/admin-posts");
+        if (!response.ok) throw new Error("관리자 게시글 조회 실패");
+
+        const data = await response.json();
+        state.posts = Array.isArray(data) ? data : data.posts || [];
+        renderAll();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function checkLogin() {
+      try {
+        const res = await fetch("/api/me");
+        if (!res.ok) {
+          location.href = "/login.html";
+          return;
+        }
+
+        const data = await res.json();
+        if (!data || !data.isAdmin) {
+          location.href = "/login.html";
+        }
+      } catch (error) {
+        location.href = "/login.html";
+      }
+    }
+
+    async function deletePost(id) {
+      if (!confirm("이 게시글을 삭제할까요?")) return;
+
+      try {
+        const res = await fetch("/api/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+
+        if (!res.ok) throw new Error("삭제 실패");
+        if (state.selectedPostId === id) state.selectedPostId = null;
+        await fetchPosts();
+      } catch (error) {
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function toggleStatus(id, status) {
+      try {
+        const res = await fetch("/api/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        });
+
+        if (!res.ok) throw new Error("상태 변경 실패");
+        await fetchPosts();
+      } catch (error) {
+        alert("상태 변경 중 오류가 발생했습니다.");
+      }
+    }
+
+    function selectPost(id) {
+      state.selectedPostId = id;
+      renderCommentStatusList([...state.posts].sort((a, b) => (b.id || 0) - (a.id || 0)));
+      updateEditorView();
+      setActiveMenu("comments");
+    }
+
+    async function saveComment() {
+      const selected = state.posts.find((post) => post.id === state.selectedPostId);
+      if (!selected) return;
+
+      const comment = document.getElementById("commentEditor").value.trim();
+      if (!comment) {
+        alert("댓글 내용을 입력해줘.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/comment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selected.id, comment }),
+        });
+
+        if (!res.ok) throw new Error("댓글 저장 실패");
+        await fetchPosts();
+        state.selectedPostId = selected.id;
+        updateEditorView();
+        alert("댓글 저장 완료");
+      } catch (error) {
+        alert("댓글 저장 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function markDoneFromEditor() {
+      const selected = state.posts.find((post) => post.id === state.selectedPostId);
+      if (!selected) return;
+      await toggleStatus(selected.id, "처리완료");
+    }
+
+    async function logout() {
+      try {
+        await fetch("/api/logout", { method: "POST" });
+      } catch (error) {}
+      location.href = "/login.html";
+    }
+
+    function bindEvents() {
+      document.querySelectorAll(".sidebar-item").forEach((button) => {
+        button.addEventListener("click", () => setActiveMenu(button.dataset.menu));
+      });
+
+      document.getElementById("saveCommentBtn").addEventListener("click", saveComment);
+      document.getElementById("markDoneBtn").addEventListener("click", markDoneFromEditor);
+      document.getElementById("logoutBtn").addEventListener("click", logout);
+    }
+
+    window.selectPost = selectPost;
+    window.deletePost = deletePost;
+    window.toggleStatus = toggleStatus;
+
+    async function init() {
+      setCurrentTime();
+      setInterval(setCurrentTime, 60000);
+      bindEvents();
+      await checkLogin();
+      await fetchPosts();
+    }
+
+    init();
+  </script>
+</body>
+</html>
 
