@@ -23,29 +23,28 @@ export async function onRequestGet(context) {
     }));
 
     const { results: commentResults } = await context.env.DB.prepare(`
-      SELECT id, post_id, content, created_at
+      SELECT id, post_id, content, created_at, deleted
       FROM comments
       ORDER BY id ASC
     `).all();
 
     const commentMap = {};
+
     for (const row of commentResults || []) {
       if (!commentMap[row.post_id]) {
         commentMap[row.post_id] = [];
       }
 
       commentMap[row.post_id].push({
-  id: row.id,
-  content: row.content || "",
-  date: row.created_at,
-  deleted: !!row.deleted
-});
+        id: row.id,
+        content: row.content || "",
+        date: row.created_at,
+        deleted: !!row.deleted
+      });
+    }
 
     for (const post of posts) {
       post.comments = commentMap[post.id] || [];
-      post.comment = post.comments.length
-        ? post.comments[post.comments.length - 1].content
-        : "";
     }
 
     return json(posts);
