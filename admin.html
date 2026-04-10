@@ -1,309 +1,359 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZARA 관리자 페이지</title>
-    <link rel="stylesheet" href="style.css" />
-    <style>
-      .comment-history {
-        margin-top: 14px;
-        padding-top: 14px;
-        border-top: 1px solid #ece8df;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA 관리자 페이지</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <p class="brand">ZARA</p>
+      <h1 class="admin-title">SUGGESTION MANAGEMENT</h1>
+      <p class="admin-desc">관리자 전용 페이지입니다.</p>
 
-      .comment-history-title {
-        font-size: 12px;
-        letter-spacing: 2px;
-        color: #666666;
-        margin-bottom: 10px;
-      }
+      <div id="adminPostList" class="admin-post-list"></div>
+    </aside>
 
-      .comment-item {
-        border: 1px solid #e8e1d6;
-        background: #faf8f3;
-        padding: 12px;
-        margin-bottom: 10px;
-      }
+    <main class="admin-main">
+      <div class="admin-grid">
+        <section class="admin-detail-card">
+          <div class="detail-header">
+            <div>
+              <p class="section-mini">DETAIL</p>
+              <h2>건의사항 상세</h2>
+            </div>
+            <div class="detail-actions">
+              <span id="detailStatus" class="status-badge processing">처리중</span>
+              <button id="hideBtn" class="secondary-btn">숨김 처리</button>
+            </div>
+          </div>
 
-      .comment-item.deleted {
-        background: #f3f3f3;
-      }
+          <div class="detail-box">
+            <div class="detail-meta">
+              <div class="post-badges">
+                <span id="detailNo" class="post-no">NO. -</span>
+                <span id="detailType" class="type-badge suggestion">건의사항</span>
+              </div>
+              <div class="post-meta">
+                <span id="detailDate">-</span>
+                <span id="detailLikes">❤ 0</span>
+              </div>
+            </div>
 
-      .comment-meta {
-        font-size: 12px;
-        color: #666666;
-        margin-bottom: 8px;
-      }
+            <p id="detailContent" class="detail-content">선택된 항목이 없습니다.</p>
+          </div>
 
-      .comment-text {
-        font-size: 15px;
-        line-height: 1.7;
-        color: #111111;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
+          <div class="status-actions">
+            <button onclick="changeStatus('processing')" class="secondary-btn">처리중으로 변경</button>
+            <button onclick="changeStatus('done')" class="secondary-btn">완료로 변경</button>
+            <button onclick="changeStatus('hold')" class="secondary-btn">보류로 변경</button>
+          </div>
 
-      .comment-item.deleted .comment-text {
-        color: #888888;
-      }
+          <div class="comment-box">
+            <label class="section-label">관리자 댓글 작성</label>
+            <textarea id="commentInput" placeholder="관리자 답변을 입력하세요."></textarea>
+            <div class="comment-actions">
+              <button id="saveCommentBtn" class="primary-btn">댓글 저장</button>
+            </div>
+          </div>
+        </section>
 
-      .comment-submeta {
-        font-size: 12px;
-        color: #777777;
-        margin-top: 8px;
-      }
+        <section class="admin-side-cards">
+          <div class="overview-card">
+            <p class="section-mini">OVERVIEW</p>
+            <h3>요약</h3>
+            <div id="overviewGrid" class="overview-grid"></div>
+          </div>
 
-      .comment-delete-btn {
-        margin-top: 10px;
-        border: 1px solid #111111;
-        background: transparent;
-        color: #111111;
-        padding: 8px 12px;
-        font-size: 12px;
-        letter-spacing: 1px;
-        cursor: pointer;
-      }
+          <div class="overview-card">
+            <p class="section-mini">SEARCH & FILTER</p>
+            <h3>관리 도구</h3>
+            <div class="filter-grid">
+              <button class="secondary-btn" onclick="setFilter('all')">전체</button>
+              <button class="secondary-btn" onclick="setFilter('suggestion')">건의사항</button>
+              <button class="secondary-btn" onclick="setFilter('complaint')">불만사항</button>
+              <button class="secondary-btn" onclick="setFilter('processing')">처리중</button>
+            </div>
+          </div>
 
-      .comment-delete-btn:hover {
-        background: #111111;
-        color: #ffffff;
-      }
-    </style>
-  </head>
-  <body class="admin-body">
-    <div class="admin-shell">
-      <div class="admin-top">
-        <div>
-          <div class="zara-logo admin-logo">ZARA</div>
-          <div class="admin-subtitle">SUGGESTION MANAGEMENT</div>
-          <h1 class="admin-title">건의사항 관리자</h1>
-          <p class="admin-desc">
-            등록된 건의사항을 확인하고 댓글을 남길 수 있습니다.
-          </p>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
+          <div class="overview-card">
+            <button id="logoutBtn" class="primary-btn full">로그아웃</button>
+          </div>
+        </section>
       </div>
+    </main>
+  </div>
 
-      <div class="admin-divider"></div>
+  <script>
+    let allPosts = [];
+    let currentPostId = null;
+    let currentFilter = "all";
 
-      <p id="msg" class="message admin-message"></p>
-      <div id="list" class="post-list"></div>
-    </div>
+    const adminPostList = document.getElementById("adminPostList");
+    const detailNo = document.getElementById("detailNo");
+    const detailType = document.getElementById("detailType");
+    const detailStatus = document.getElementById("detailStatus");
+    const detailDate = document.getElementById("detailDate");
+    const detailLikes = document.getElementById("detailLikes");
+    const detailContent = document.getElementById("detailContent");
+    const commentInput = document.getElementById("commentInput");
+    const overviewGrid = document.getElementById("overviewGrid");
+    const hideBtn = document.getElementById("hideBtn");
+    const saveCommentBtn = document.getElementById("saveCommentBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-    <script>
-      async function load() {
-        const res = await fetch("/api/posts", {
-          credentials: "same-origin",
-        });
+    function typeLabel(type) {
+      return type === "complaint" ? "불만사항" : "건의사항";
+    }
 
-        const list = document.getElementById("list");
+    function statusLabel(status) {
+      if (status === "done") return "완료";
+      if (status === "hold") return "보류";
+      return "처리중";
+    }
 
-        if (!res.ok) {
+    function getFilteredPosts() {
+      if (currentFilter === "all") return allPosts;
+      if (currentFilter === "suggestion" || currentFilter === "complaint") {
+        return allPosts.filter((post) => post.type === currentFilter);
+      }
+      if (currentFilter === "processing") {
+        return allPosts.filter((post) => post.status === "processing");
+      }
+      return allPosts;
+    }
+
+    function renderSidebar() {
+      const posts = getFilteredPosts();
+
+      if (posts.length === 0) {
+        adminPostList.innerHTML = "<p class='empty-text'>표시할 항목이 없습니다.</p>";
+        return;
+      }
+
+      adminPostList.innerHTML = posts.map((post) => `
+        <button class="sidebar-post ${currentPostId === post.id ? "active" : ""}" onclick="selectPost(${post.id})">
+          <div class="sidebar-post-top">
+            <span>NO. ${post.id}</span>
+            <span>${post.date || "-"}</span>
+          </div>
+          <div class="sidebar-post-text">
+            ${post.deleted ? "삭제된 건의사항입니다." : post.content}
+          </div>
+        </button>
+      `).join("");
+    }
+
+    function renderOverview() {
+      const total = allPosts.length;
+      const processing = allPosts.filter((p) => p.status === "processing").length;
+      const done = allPosts.filter((p) => p.status === "done").length;
+      const hold = allPosts.filter((p) => p.status === "hold").length;
+      const suggestion = allPosts.filter((p) => p.type === "suggestion").length;
+      const complaint = allPosts.filter((p) => p.type === "complaint").length;
+
+      overviewGrid.innerHTML = `
+        <div class="overview-item"><span>전체 건수</span><strong>${String(total).padStart(2, "0")}</strong></div>
+        <div class="overview-item"><span>처리중</span><strong>${String(processing).padStart(2, "0")}</strong></div>
+        <div class="overview-item"><span>건의사항</span><strong>${String(suggestion).padStart(2, "0")}</strong></div>
+        <div class="overview-item"><span>불만사항</span><strong>${String(complaint).padStart(2, "0")}</strong></div>
+        <div class="overview-item"><span>완료</span><strong>${String(done).padStart(2, "0")}</strong></div>
+        <div class="overview-item"><span>보류</span><strong>${String(hold).padStart(2, "0")}</strong></div>
+      `;
+    }
+
+    function selectPost(id) {
+      currentPostId = id;
+      const post = allPosts.find((item) => item.id === id);
+
+      if (!post) return;
+
+      detailNo.textContent = `NO. ${post.id}`;
+      detailType.textContent = typeLabel(post.type);
+      detailType.className = `type-badge ${post.type}`;
+      detailStatus.textContent = statusLabel(post.status);
+      detailStatus.className = `status-badge ${post.status}`;
+      detailDate.textContent = post.date || "-";
+      detailLikes.textContent = `❤ ${post.likes || 0}`;
+      detailContent.textContent = post.deleted ? "삭제된 건의사항입니다." : post.content;
+      commentInput.value = post.comment || "";
+
+      renderSidebar();
+    }
+
+    function resetDetail() {
+      detailNo.textContent = "NO. -";
+      detailType.textContent = "건의사항";
+      detailType.className = "type-badge suggestion";
+      detailStatus.textContent = "처리중";
+      detailStatus.className = "status-badge processing";
+      detailDate.textContent = "-";
+      detailLikes.textContent = "❤ 0";
+      detailContent.textContent = "선택된 항목이 없습니다.";
+      commentInput.value = "";
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      const filtered = getFilteredPosts();
+
+      if (filtered.length > 0) {
+        currentPostId = filtered[0].id;
+      } else {
+        currentPostId = null;
+      }
+
+      renderSidebar();
+
+      if (currentPostId) {
+        selectPost(currentPostId);
+      } else {
+        resetDetail();
+      }
+    }
+
+    async function loadAdminPosts() {
+      try {
+        const meRes = await fetch("/api/me");
+        const me = await meRes.json();
+
+        if (!me.isAdmin) {
           location.href = "/login.html";
           return;
         }
 
-        const data = await res.json();
+        const res = await fetch("/api/admin-posts");
+        const posts = await res.json();
 
-        if (!data.length) {
-          list.innerHTML = `
-            <div class="post-item empty-item">
-              <div class="empty-text">등록된 건의사항이 없습니다.</div>
-            </div>
-          `;
-          return;
+        allPosts = Array.isArray(posts) ? posts : [];
+
+        renderOverview();
+
+        const filtered = getFilteredPosts();
+        if (filtered.length > 0) {
+          currentPostId = filtered[0].id;
+          renderSidebar();
+          selectPost(currentPostId);
+        } else {
+          renderSidebar();
+          resetDetail();
         }
+      } catch (error) {
+        adminPostList.innerHTML = "<p class='empty-text'>목록을 불러오지 못했습니다.</p>";
+      }
+    }
 
-        let html = "";
-        data.forEach((p) => {
-          html += `
-            <div class="post-item">
-              <div class="post-head">
-                <div class="post-number">NO. ${p.id}</div>
-                <div class="post-date">
-  ${p.is_deleted && p.deleted_at ? `삭제일: ${escapeHtml(p.deleted_at)}` : escapeHtml(p.date)}
-</div>
-              </div>
-
-              <div class="post-label">건의사항</div>
-              <div class="post-content">
-  ${p.is_deleted ? "삭제된 건의사항입니다." : escapeHtml(p.content).replace(/\n/g, "<br>")}
-</div>
-
-              <div class="comment-block">
-                <div class="post-label">관리자 댓글 작성</div>
-                <textarea
-                  id="comment-${p.id}"
-                  class="comment-textarea"
-                  placeholder="댓글을 입력하세요."
-                ></textarea>
-                <div class="post-footer">
-                  <button class="comment-btn" onclick="saveComment(${p.id})">댓글 저장</button>
-                </div>
-              </div>
-
-              <div class="comment-history">
-                <div class="comment-history-title">댓글 내역</div>
-                <div id="comments-${p.id}"></div>
-              </div>
-
-              <div class="post-footer">
-  ${
-    p.is_deleted
-      ? ""
-      : `<button class="delete-btn" onclick="delPost(${p.id})">건의사항 삭제</button>`
-  }
-</div>
-            </div>
-          `;
-        });
-
-        list.innerHTML = html;
-
-        for (const p of data) {
-          await loadComments(p.id);
-        }
+    async function changeStatus(status) {
+      if (!currentPostId) {
+        alert("선택된 항목이 없습니다.");
+        return;
       }
 
-      async function saveComment(postId) {
-        const textarea = document.getElementById(`comment-${postId}`);
-        const content = textarea.value.trim();
+      try {
+        const res = await fetch("/api/status", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: currentPostId,
+            status,
+          }),
+        });
 
-        if (!content) {
-          alert("댓글 내용을 입력해주세요.");
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          alert(result.message || "상태 변경 실패");
           return;
         }
 
+        await loadAdminPosts();
+      } catch (error) {
+        alert("상태 변경 중 오류가 발생했습니다.");
+      }
+    }
+
+    saveCommentBtn.addEventListener("click", async () => {
+      if (!currentPostId) {
+        alert("선택된 항목이 없습니다.");
+        return;
+      }
+
+      try {
         const res = await fetch("/api/comment", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ postId, content }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: currentPostId,
+            comment: commentInput.value,
+          }),
         });
 
-        const text = await res.text();
-        let data = {};
-        try {
-          data = JSON.parse(text);
-        } catch (_) {}
+        const result = await res.json();
 
-        if (!res.ok) {
-          alert(data.msg || "댓글 저장 실패");
+        if (!res.ok || !result.success) {
+          alert(result.message || "댓글 저장 실패");
           return;
         }
 
-        textarea.value = "";
-        await loadComments(postId);
+        alert("댓글이 저장되었습니다.");
+        await loadAdminPosts();
+      } catch (error) {
+        alert("댓글 저장 중 오류가 발생했습니다.");
+      }
+    });
+
+    hideBtn.addEventListener("click", async () => {
+      if (!currentPostId) {
+        alert("선택된 항목이 없습니다.");
+        return;
       }
 
-      async function loadComments(postId) {
-        const container = document.getElementById(`comments-${postId}`);
-        if (!container) return;
-
-        const res = await fetch(`/api/comments?postId=${postId}`, {
-          credentials: "same-origin",
-        });
-
-        if (!res.ok) {
-          container.innerHTML = `<div class="empty-text">댓글을 불러오지 못했습니다.</div>`;
-          return;
-        }
-
-        const comments = await res.json();
-
-        if (!comments.length) {
-          container.innerHTML = `<div class="empty-text">등록된 댓글이 없습니다.</div>`;
-          return;
-        }
-
-        let html = "";
-        comments.forEach((c) => {
-          html += `
-            <div class="comment-item ${c.is_deleted ? "deleted" : ""}">
-              <div class="comment-meta">댓글 NO. ${c.id}</div>
-              <div class="comment-text">
-                ${c.is_deleted ? "삭제된 댓글입니다." : escapeHtml(c.content)}
-              </div>
-              <div class="comment-submeta">
-                ${
-                  c.is_deleted && c.deleted_at
-                    ? `삭제일: ${escapeHtml(c.deleted_at)}`
-                    : `작성일: ${escapeHtml(c.date)}`
-                }
-              </div>
-              ${
-                c.is_deleted
-                  ? ""
-                  : `<button class="comment-delete-btn" onclick="deleteComment(${c.id}, ${postId})">댓글 삭제</button>`
-              }
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
+      if (!confirm("이 게시글을 숨김 처리할까요?")) {
+        return;
       }
 
-      async function deleteComment(commentId, postId) {
-        const ok = confirm("댓글을 삭제할까요?");
-        if (!ok) return;
-
-        const res = await fetch("/api/delete-comment", {
+      try {
+        const res = await fetch("/api/delete", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "same-origin",
-          body: JSON.stringify({ commentId }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: currentPostId,
+          }),
         });
 
-        const text = await res.text();
-        let data = {};
-        try {
-          data = JSON.parse(text);
-        } catch (_) {}
+        const result = await res.json();
 
-        if (!res.ok) {
-          alert(data.msg || "댓글 삭제 실패");
+        if (!res.ok || !result.success) {
+          alert(result.message || "숨김 처리 실패");
           return;
         }
 
-        await loadComments(postId);
+        await loadAdminPosts();
+      } catch (error) {
+        alert("숨김 처리 중 오류가 발생했습니다.");
       }
+    });
 
-      async function delPost(id) {
-        const ok = confirm("이 건의사항을 삭제할까요?");
-        if (!ok) return;
-
-        const res = await fetch("/api/posts/" + id, {
-          method: "DELETE",
-          credentials: "same-origin",
-        });
-
-        if (res.ok) {
-          load();
-        } else {
-          alert("삭제 실패");
-        }
-      }
-
-      async function logout() {
+    logoutBtn.addEventListener("click", async () => {
+      try {
         await fetch("/api/logout", {
           method: "POST",
-          credentials: "same-origin",
         });
         location.href = "/login.html";
+      } catch (error) {
+        alert("로그아웃 중 오류가 발생했습니다.");
       }
+    });
 
-      function escapeHtml(text = "") {
-        return String(text)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-
-      load();
-    </script>
-  </body>
+    loadAdminPosts();
+  </script>
+</body>
 </html>
