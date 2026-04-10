@@ -3,5 +3,5 @@ compatibility_date = "2026-04-10"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "complaint-board-db"
-database_id = "나중에_넣기"
+database_name = "complaint-db"
+database_id = "0d180aef-5396-4ad9-85e2-b8b4ee4e3ef3"
