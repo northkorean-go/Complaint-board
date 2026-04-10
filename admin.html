@@ -326,36 +326,44 @@
     window.setFilter = setFilter;
 
     saveCommentBtn.addEventListener("click", async () => {
-      if (!currentPostId) {
-        alert("선택된 항목이 없습니다.");
-        return;
-      }
+  if (!currentPostId) {
+    alert("선택된 항목이 없습니다.");
+    return;
+  }
 
-      try {
-        const res = await fetch("/api/comment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            id: currentPostId,
-            comment: commentInput.value
-          })
-        });
-
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-          alert(result.message || "댓글 저장 실패");
-          return;
-        }
-
-        alert("댓글이 저장되었습니다.");
-        await loadAdminPosts();
-      } catch (error) {
-        alert("댓글 저장 중 오류가 발생했습니다.");
-      }
+  try {
+    const res = await fetch("/api/comment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: currentPostId,
+        comment: commentInput.value
+      })
     });
+
+    const text = await res.text();
+    let result = {};
+
+    try {
+      result = JSON.parse(text);
+    } catch {
+      alert(`댓글 저장 실패: ${text}`);
+      return;
+    }
+
+    if (!res.ok || !result.success) {
+      alert(result.message || "댓글 저장 실패");
+      return;
+    }
+
+    alert(result.message || "댓글이 저장되었습니다.");
+    await loadAdminPosts();
+  } catch (error) {
+    alert(`댓글 저장 중 오류: ${error.message}`);
+  }
+});
 
     hideBtn.addEventListener("click", async () => {
       if (!currentPostId) {
