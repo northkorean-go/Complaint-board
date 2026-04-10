@@ -20,10 +20,13 @@ export async function onRequestPost(context) {
       .bind(id)
       .run();
 
-    return json({ success: true });
+    return json({ success: true, message: "댓글이 삭제되었습니다." });
   } catch (error) {
     return json(
-      { success: false, message: "댓글 삭제 실패" },
+      {
+        success: false,
+        message: `댓글 삭제 실패: ${error.message || "알 수 없는 오류"}`
+      },
       500
     );
   }
