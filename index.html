@@ -2,53 +2,176 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZARA 건의사항</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div class="user-wrapper">
-    <div class="user-box">
-      <h1 class="user-title">SUGGESTION BOX</h1>
-
-      <div class="type-select">
-        <button class="type-btn active" data-type="건의사항">건의사항</button>
-        <button class="type-btn" data-type="불만사항">불만사항</button>
+  <div class="zara-shell">
+    <header class="zara-topbar">
+      <div class="zara-topbar-inner">
+        <div class="zara-topbar-title">ZARA 건의사항</div>
+        <div class="zara-topbar-switch">
+          <button class="top-switch-btn active" type="button">사용자 화면</button>
+          <button
+            class="top-switch-btn"
+            type="button"
+            onclick="location.href='/login.html'"
+          >
+            관리자 화면
+          </button>
+        </div>
       </div>
+    </header>
 
-      <textarea
-        id="content"
-        placeholder="건의사항 또는 불만사항을 입력해주세요"
-        class="user-textarea"
-      ></textarea>
+    <main class="zara-main">
+      <section class="zara-card zara-form-card">
+        <div class="zara-eyebrow">ZARA</div>
+        <h1 class="zara-hero-title">SUGGESTION BOX</h1>
+        <p class="zara-hero-desc">
+          운영진도 작성자를 확인할 수 없는 익명 방식으로 운영되니 자유롭게 남겨주세요.
+        </p>
 
-      <button id="submitBtn" class="submit-btn">등록하기</button>
-    </div>
+        <div class="zara-section-label">접수 유형 선택</div>
 
-    <div class="list-box">
-      <h2>최근 접수</h2>
-      <div id="postList"></div>
-    </div>
+        <div class="zara-type-grid">
+          <button class="zara-type-btn active" type="button" data-type="건의사항">
+            <span class="zara-type-title">건의사항</span>
+            <span class="zara-type-desc">부담 없이 자유롭게 건의해주세요.</span>
+          </button>
+
+          <button class="zara-type-btn" type="button" data-type="불만사항">
+            <span class="zara-type-title">불만사항</span>
+            <span class="zara-type-desc">불편했던 점, 개선이 필요한 문제 관련 불만 사항을 자유롭게 남겨주세요.</span>
+          </button>
+        </div>
+
+        <div class="zara-section-label" id="formLabel">ZARA 건의사항</div>
+
+        <textarea
+          id="content"
+          class="zara-textarea"
+          placeholder="자유롭게 건의해주세요."
+        ></textarea>
+
+        <div class="zara-form-footer">
+          <div class="zara-form-note">익명으로 접수되며, 관리자만 관리할 수 있습니다.</div>
+          <button id="submitBtn" class="zara-submit-btn" type="button">등록하기</button>
+        </div>
+      </section>
+
+      <section class="zara-card zara-board-card">
+        <div class="zara-board-head">
+          <div>
+            <div class="zara-eyebrow">LIVE BOARD</div>
+            <h2 class="zara-board-title">최근 건의사항</h2>
+          </div>
+          <button class="zara-search-btn" type="button">검색</button>
+        </div>
+
+        <div id="postList" class="zara-post-list">
+          <div class="zara-empty-post">불러오는 중입니다.</div>
+        </div>
+      </section>
+    </main>
   </div>
 
   <script>
     let selectedType = "건의사항";
 
-    const typeButtons = document.querySelectorAll(".type-btn");
+    const typeButtons = document.querySelectorAll(".zara-type-btn");
+    const formLabel = document.getElementById("formLabel");
+    const textarea = document.getElementById("content");
+    const submitBtn = document.getElementById("submitBtn");
+    const postList = document.getElementById("postList");
 
-    typeButtons.forEach(btn => {
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function updateTypeUI(type) {
+      selectedType = type;
+
+      typeButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.type === type);
+      });
+
+      if (type === "불만사항") {
+        formLabel.textContent = "ZARA 불만사항";
+        textarea.placeholder = "자유롭게 불만사항을 남겨주세요.";
+      } else {
+        formLabel.textContent = "ZARA 건의사항";
+        textarea.placeholder = "자유롭게 건의해주세요.";
+      }
+    }
+
+    typeButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
-        typeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedType = btn.dataset.type;
+        updateTypeUI(btn.dataset.type);
       });
     });
 
-    document.getElementById("submitBtn").addEventListener("click", async () => {
-      const content = document.getElementById("content").value.trim();
+    function normalizePosts(data) {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.posts)) return data.posts;
+      return [];
+    }
+
+    function renderPosts(posts) {
+      if (!posts.length) {
+        postList.innerHTML = '<div class="zara-empty-post">아직 등록된 글이 없습니다.</div>';
+        return;
+      }
+
+      postList.innerHTML = posts.slice(0, 3).map((post) => {
+        const type = post.type || "건의사항";
+        const isComplaint = type.includes("불만");
+        const status = post.status || (post.comment ? "처리중" : "보류");
+        const content = post.content || post.title || "";
+        const dateText = post.date || post.created_at || "-";
+        const id = post.id ?? "-";
+
+        return `
+          <article class="zara-post-card">
+            <div class="zara-post-top">
+              <div class="zara-post-top-left">
+                <span class="zara-post-no">NO. ${id}</span>
+                <span class="zara-chip ${isComplaint ? "dark" : ""}">${escapeHtml(type)}</span>
+                <span class="zara-chip ${status === "처리중" ? "dark" : ""}">${escapeHtml(status)}</span>
+              </div>
+            </div>
+
+            <div class="zara-post-meta">${escapeHtml(dateText)} <span class="zara-heart">♡ 0</span></div>
+
+            <div class="zara-post-content ${content.includes("삭제된") ? "muted" : ""}">
+              ${escapeHtml(content)}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function loadPosts() {
+      try {
+        const res = await fetch("/api/posts");
+        if (!res.ok) throw new Error("목록 조회 실패");
+        const data = await res.json();
+        renderPosts(normalizePosts(data));
+      } catch (error) {
+        postList.innerHTML = '<div class="zara-empty-post">불러오기 실패</div>';
+      }
+    }
+
+    async function submitPost() {
+      const content = textarea.value.trim();
 
       if (!content) {
-        alert("내용을 입력해주세요");
+        alert("내용을 입력해주세요.");
         return;
       }
 
@@ -58,120 +181,29 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: selectedType,
-            content
+            content,
           }),
         });
 
-        if (!res.ok) throw new Error();
+        const data = await res.json().catch(() => ({}));
 
-        document.getElementById("content").value = "";
-        loadPosts();
-        alert("등록 완료!");
-      } catch {
-        alert("서버 오류");
-      }
-    });
-
-    async function loadPosts() {
-      try {
-        const res = await fetch("/api/posts");
-        const posts = await res.json();
-
-        const list = document.getElementById("postList");
-
-        if (!posts.length) {
-          list.innerHTML = "<p>등록된 글이 없습니다.</p>";
+        if (!res.ok) {
+          alert(data.error || "등록 실패");
           return;
         }
 
-        list.innerHTML = posts.map(p => `
-          <div class="post-item">
-            <div class="post-type">${p.type}</div>
-            <div class="post-content">${p.content}</div>
-            <div class="post-date">${p.created_at || p.date}</div>
-          </div>
-        `).join("");
-      } catch {
-        document.getElementById("postList").innerHTML = "불러오기 실패";
+        textarea.value = "";
+        await loadPosts();
+        alert("등록 완료");
+      } catch (error) {
+        alert("서버 연결 오류");
       }
     }
 
+    submitBtn.addEventListener("click", submitPost);
+
+    updateTypeUI("건의사항");
     loadPosts();
   </script>
-
-  <style>
-    .user-wrapper {
-      max-width: 600px;
-      margin: 40px auto;
-    }
-
-    .user-box {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-
-    .user-title {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .type-select {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .type-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 8px;
-      background: #eee;
-    }
-
-    .type-btn.active {
-      background: black;
-      color: white;
-    }
-
-    .user-textarea {
-      width: 100%;
-      height: 100px;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-    }
-
-    .submit-btn {
-      width: 100%;
-      margin-top: 10px;
-      padding: 12px;
-      background: black;
-      color: white;
-      border-radius: 8px;
-    }
-
-    .list-box {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-    }
-
-    .post-item {
-      border-bottom: 1px solid #eee;
-      padding: 10px 0;
-    }
-
-    .post-type {
-      font-weight: bold;
-    }
-
-    .post-date {
-      font-size: 12px;
-      color: gray;
-    }
-  </style>
 </body>
 </html>
