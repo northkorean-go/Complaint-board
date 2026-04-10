@@ -1000,3 +1000,45 @@ button {
     grid-template-columns: 1fr;
   }
 }
+.admin-inline-comments-wrap {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-inline-comments-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.admin-inline-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-inline-comment-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-inline-comment-time {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.admin-inline-comment-text {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.admin-comment-empty {
+  font-size: 13px;
+  opacity: 0.5;
+}
