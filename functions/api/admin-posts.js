@@ -35,11 +35,11 @@ export async function onRequestGet(context) {
       }
 
       commentMap[row.post_id].push({
-        id: row.id,
-        content: row.content || "",
-        date: row.created_at
-      });
-    }
+  id: row.id,
+  content: row.content || "",
+  date: row.created_at,
+  deleted: !!row.deleted
+});
 
     for (const post of posts) {
       post.comments = commentMap[post.id] || [];
