@@ -10,28 +10,45 @@ export async function onRequestPost(context) {
     const comment = String(body.comment || "").trim();
 
     if (!id) {
-      return json({ success: false, message: "잘못된 요청입니다." }, 400);
+      return json(
+        { success: false, message: "게시글 ID가 올바르지 않습니다." },
+        400
+      );
     }
 
-    const existing = await context.env.DB.prepare(`
-      SELECT id FROM posts WHERE id = ?
-    `)
-      .bind(id)
-      .first();
+    if (!comment) {
+      return json(
+        { success: false, message: "댓글 내용을 입력해주세요." },
+        400
+      );
+    }
 
-    if (!existing) {
-      return json({ success: false, message: "게시글을 찾을 수 없습니다." }, 404);
+    const createdAt = new Date().toISOString();
+
+    const post = await context.env.DB.prepare(`
+      SELECT id
+      FROM posts
+      WHERE id = ?
+    `).bind(id).first();
+
+    if (!post) {
+      return json(
+        { success: false, message: "게시글을 찾을 수 없습니다." },
+        404
+      );
     }
 
     await context.env.DB.prepare(`
-      UPDATE posts
-      SET comment = ?
-      WHERE id = ?
+      INSERT INTO comments (post_id, content, created_at)
+      VALUES (?, ?, ?)
     `)
-      .bind(comment, id)
+      .bind(id, comment, createdAt)
       .run();
 
-    return json({ success: true, message: "댓글이 저장되었습니다." });
+    return json({
+      success: true,
+      message: "댓글이 저장되었습니다."
+    });
   } catch (error) {
     return json(
       {
