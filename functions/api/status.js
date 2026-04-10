@@ -1,45 +1,54 @@
-const { getDB, json, requireAdmin } = require("./_utils");
+const { json, requireAdmin, readJson } = require("./_utils");
 
-module.exports = async (req, res) => {
+async function onRequest(context) {
+  const denied = requireAdmin(context.request);
+  if (denied) return denied;
+
   try {
-    if (req.method !== "POST") {
-      return json(res, 405, { error: "Method Not Allowed" });
+    if (context.request.method !== "POST") {
+      return json({ error: "Method Not Allowed" }, { status: 405 });
     }
 
-    const blocked = await requireAdmin(req, res);
-    if (blocked) return;
-
-    const body = req.body || {};
+    const body = await readJson(context.request);
     const id = Number(body.id);
     const status = String(body.status || "").trim();
 
     if (!id) {
-      return json(res, 400, { error: "게시글 id가 필요합니다." });
+      return json({ error: "게시글 id가 필요합니다." }, { status: 400 });
     }
 
-    if (!status || !["처리완료", "미처리"].includes(status)) {
-      return json(res, 400, { error: "올바른 상태값이 필요합니다." });
+    if (!["처리완료", "미처리"].includes(status)) {
+      return json({ error: "올바른 상태값이 필요합니다." }, { status: 400 });
     }
 
-    const db = getDB();
+    const exists = await context.env.DB.prepare(`
+      SELECT id
+      FROM posts
+      WHERE id = ?
+    `)
+      .bind(id)
+      .first();
 
-    const exists = db.prepare("SELECT id FROM posts WHERE id = ?").get(id);
     if (!exists) {
-      return json(res, 404, { error: "게시글을 찾을 수 없습니다." });
+      return json({ error: "게시글을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    db.prepare(`
+    await context.env.DB.prepare(`
       UPDATE posts
       SET status = ?
       WHERE id = ?
-    `).run(status, id);
+    `)
+      .bind(status, id)
+      .run();
 
-    return json(res, 200, {
+    return json({
       success: true,
       message: "상태 변경 완료",
     });
   } catch (error) {
     console.error("status error:", error);
-    return json(res, 500, { error: "상태 변경 중 오류가 발생했습니다." });
+    return json({ error: "상태 변경 중 오류가 발생했습니다." }, { status: 500 });
   }
-};
+}
+
+module.exports = { onRequest };
