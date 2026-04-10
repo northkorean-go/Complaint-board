@@ -2,325 +2,135 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZARA 건의사항</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <h1 class="topbar-title">ZARA 건의사항</h1>
-      <div class="topbar-tabs">
-        <button class="topbar-tab active" type="button">사용자 화면</button>
-        <button class="topbar-tab" type="button" id="adminTabBtn">관리자 화면</button>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="title">ZARA 건의사항</div>
+    <div class="switch">
+      <button class="active">사용자 화면</button>
+      <button onclick="location.href='login.html'">관리자 화면</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- LEFT -->
+  <section class="card">
+    <div class="logo">ZARA</div>
+    <h1 class="hero">SUGGESTION BOX</h1>
+    <p class="desc">
+      운영진도 작성자를 확인할 수 없는 익명 방식으로 운영되니 자유롭게 남겨주세요.
+    </p>
+
+    <div class="section-label">접수 유형 선택</div>
+
+    <div class="type-grid">
+      <div class="type-btn active" onclick="selectType('건의사항')">
+        <h3>건의사항</h3>
+        <p>부담 없이 자유롭게 건의해주세요.</p>
+      </div>
+
+      <div class="type-btn" onclick="selectType('불만사항')">
+        <h3>불만사항</h3>
+        <p>불편했던 점을 자유롭게 남겨주세요.</p>
       </div>
     </div>
-  </div>
 
-  <div class="page-shell">
-    <div class="public-grid">
-      <section class="panel panel-main">
-        <p class="brand">ZARA</p>
-        <h2 class="hero-title">SUGGESTION BOX</h2>
-        <p class="hero-desc">
-          운영진도 작성자를 확인할 수 없는 익명 방식으로 운영되니 자유롭게 남겨주세요.
-        </p>
+    <div class="section-label" id="label">ZARA 건의사항</div>
 
-        <div class="type-section">
-          <label class="mini-label">접수 유형 선택</label>
-
-          <div class="type-card-grid">
-            <button type="button" class="type-card active" data-type="suggestion">
-              <div class="type-card-title">건의사항</div>
-              <div class="type-card-desc">부담 없이 자유롭게 건의해주세요.</div>
-            </button>
-
-            <button type="button" class="type-card" data-type="complaint">
-              <div class="type-card-title">불만사항</div>
-              <div class="type-card-desc">불편했던 점, 개선이 필요한 문제 관련 불만사항을 자유롭게 남겨주세요.</div>
-            </button>
-          </div>
-        </div>
-
-        <form id="postForm" class="post-form">
-          <label id="formLabel" class="form-label">ZARA 건의사항</label>
-          <textarea
-            id="content"
-            class="main-textarea"
-            placeholder="자유롭게 건의해주세요."
-            required
-          ></textarea>
-
-          <div class="form-bottom-row">
-            <p class="form-note">익명으로 접수되며, 관리자만 관리할 수 있습니다.</p>
-            <button type="submit" class="primary-btn">등록하기</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="panel panel-board">
-        <div class="board-head">
-          <div>
-            <p class="board-eyebrow">LIVE BOARD</p>
-            <h3 class="board-title">최근 건의사항</h3>
-          </div>
-          <div class="search-pill">검색</div>
-        </div>
-
-        <div id="postList" class="board-list"></div>
-      </section>
+    <div class="textarea-box">
+      <textarea id="content" placeholder="자유롭게 건의해주세요."></textarea>
     </div>
-  </div>
 
-  <div id="loginModal" class="modal-backdrop hidden">
-    <div class="login-modal">
-      <p class="brand">ZARA</p>
-      <h3 class="login-modal-title">관리자 로그인</h3>
-      <p class="login-modal-desc">관리자 전용 페이지입니다. 로그인 후 접근할 수 있습니다.</p>
-
-      <form id="modalLoginForm" class="modal-login-form">
-        <div class="field-group">
-          <label for="modalUsername">아이디</label>
-          <input id="modalUsername" type="text" placeholder="아이디" required />
-        </div>
-
-        <div class="field-group">
-          <label for="modalPassword">비밀번호</label>
-          <input id="modalPassword" type="password" placeholder="비밀번호" required />
-        </div>
-
-        <p id="modalLoginMessage" class="error-text"></p>
-
-        <div class="modal-actions">
-          <button type="button" class="ghost-btn" id="modalCloseBtn">취소</button>
-          <button type="submit" class="primary-btn">로그인</button>
-        </div>
-      </form>
+    <div class="submit-wrap">
+      <span>익명으로 접수됩니다.</span>
+      <button class="submit-btn" onclick="submitPost()">등록하기</button>
     </div>
-  </div>
+  </section>
 
-  <script>
-    let selectedType = "suggestion";
+  <!-- RIGHT -->
+  <section class="card">
+    <div class="board-sub">LIVE BOARD</div>
+    <div class="board-title">최근 건의사항</div>
 
-    const adminTabBtn = document.getElementById("adminTabBtn");
-    const loginModal = document.getElementById("loginModal");
-    const modalCloseBtn = document.getElementById("modalCloseBtn");
-    const modalLoginForm = document.getElementById("modalLoginForm");
-    const modalLoginMessage = document.getElementById("modalLoginMessage");
+    <div id="postList">
+      <div class="post">
+        <div class="post-header">
+          <b>NO. 3</b>
+          <span class="badge">건의사항</span>
+          <span class="badge dark">보류</span>
+        </div>
+        <div class="post-meta">31분 전</div>
+        <div class="post-content">비공개 건의사항입니다.</div>
+      </div>
 
-    const typeCards = document.querySelectorAll(".type-card");
-    const formLabel = document.getElementById("formLabel");
-    const contentEl = document.getElementById("content");
-    const postForm = document.getElementById("postForm");
-    const postList = document.getElementById("postList");
+      <div class="post">
+        <div class="post-header">
+          <b>NO. 2</b>
+          <span class="badge dark">불만사항</span>
+          <span class="badge dark">처리중</span>
+        </div>
+        <div class="post-meta">48분 전</div>
+        <div class="post-content">비공개 건의사항입니다.</div>
+      </div>
+    </div>
+  </section>
 
-    function typeLabel(type) {
-      return type === "complaint" ? "불만사항" : "건의사항";
-    }
+</main>
 
-    function statusLabel(status) {
-      if (status === "done") return "완료";
-      if (status === "hold") return "보류";
-      return "처리중";
-    }
+<script>
+let currentType = "건의사항";
 
-    function statusClass(status) {
-      if (status === "done") return "done";
-      if (status === "hold") return "hold";
-      return "processing";
-    }
+function selectType(type) {
+  currentType = type;
 
-    function typeClass(type) {
-      return type === "complaint" ? "complaint" : "suggestion";
-    }
+  document.querySelectorAll(".type-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
 
-    function formatRelativeDate(dateString) {
-      if (!dateString) return "-";
+  event.currentTarget.classList.add("active");
 
-      const date = new Date(dateString);
-      if (Number.isNaN(date.getTime())) return dateString;
+  document.getElementById("label").innerText =
+    type === "건의사항" ? "ZARA 건의사항" : "ZARA 불만사항";
 
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMin = Math.floor(diffMs / 60000);
-      const diffHour = Math.floor(diffMs / 3600000);
-      const diffDay = Math.floor(diffMs / 86400000);
+  document.getElementById("content").placeholder =
+    type === "건의사항"
+      ? "자유롭게 건의해주세요."
+      : "불편했던 점을 남겨주세요.";
+}
 
-      if (diffMin < 1) return "방금 전";
-      if (diffMin < 60) return `${diffMin}분 전`;
-      if (diffHour < 24) return `${diffHour}시간 전`;
-      if (diffDay < 2) return "어제";
-      if (diffDay < 7) return `${diffDay}일 전`;
+async function submitPost() {
+  const content = document.getElementById("content").value;
 
-      return date.toLocaleDateString("ko-KR");
-    }
-
-    function setType(type) {
-      selectedType = type;
-
-      typeCards.forEach((card) => {
-        card.classList.toggle("active", card.dataset.type === type);
-      });
-
-      if (type === "suggestion") {
-        formLabel.textContent = "ZARA 건의사항";
-        contentEl.placeholder = "자유롭게 건의해주세요.";
-      } else {
-        formLabel.textContent = "ZARA 불만사항";
-        contentEl.placeholder = "불편했던 점, 개선이 필요한 문제 관련 불만사항을 자유롭게 남겨주세요.";
-      }
-    }
-
-    typeCards.forEach((card) => {
-      card.addEventListener("click", () => setType(card.dataset.type));
-    });
-
-    async function loadPosts() {
-      try {
-        const res = await fetch("/api/posts");
-        const posts = await res.json();
-
-        if (!Array.isArray(posts) || posts.length === 0) {
-          postList.innerHTML = `<div class="empty-box">아직 글이 없습니다</div>`;
-          return;
-        }
-
-        postList.innerHTML = posts.map((post) => `
-          <div class="board-item">
-            <div class="board-item-top">
-              <div class="badge-row">
-                <span class="no-badge">NO. ${post.id}</span>
-                <span class="type-badge ${typeClass(post.type)}">${typeLabel(post.type)}</span>
-                <span class="status-badge ${statusClass(post.status)}">${statusLabel(post.status)}</span>
-              </div>
-            </div>
-
-            <div class="meta-row">
-              <span>${formatRelativeDate(post.date)}</span>
-              <button class="like-link" onclick="likePost(${post.id})">♡ ${post.likes || 0}</button>
-            </div>
-
-            ${
-              post.deleted
-                ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
-                : `<div class="private-box">비공개 건의사항입니다.</div>`
-            }
-          </div>
-        `).join("");
-      } catch (error) {
-        postList.innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
-      }
-    }
-
-    async function likePost(id) {
-      try {
-        const res = await fetch("/api/like", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ id })
-        });
-
-        const result = await res.json();
-        if (!res.ok || !result.success) {
-          alert(result.message || "공감 처리 실패");
-          return;
-        }
-
-        loadPosts();
-      } catch (error) {
-        alert("공감 처리 중 오류가 발생했습니다.");
-      }
-    }
-
-    window.likePost = likePost;
-
-    postForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const content = contentEl.value.trim();
   if (!content) {
-    alert("내용을 입력해주세요.");
+    alert("내용 입력해");
     return;
   }
 
   try {
-    const res = await fetch("/api/post", {
+    await fetch("/api/post", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        type: currentType,
         content,
-        type: selectedType
-      })
+      }),
     });
 
-    const text = await res.text();
-    let result = {};
-
-    try {
-      result = JSON.parse(text);
-    } catch {
-      alert(`등록 실패: ${text}`);
-      return;
-    }
-
-    if (!res.ok || !result.success) {
-      alert(result.message || "등록 실패");
-      return;
-    }
-
-    alert("등록되었습니다.");
-    contentEl.value = "";
-    await loadPosts();
-  } catch (error) {
-    alert(`등록 중 오류가 발생하였습니다.: ${error.message}`);
+    alert("등록 완료");
+    location.reload();
+  } catch (e) {
+    alert("서버 연결 오류");
   }
-});
+}
+</script>
 
-    adminTabBtn.addEventListener("click", () => {
-      loginModal.classList.remove("hidden");
-    });
-
-    modalCloseBtn.addEventListener("click", () => {
-      loginModal.classList.add("hidden");
-      modalLoginMessage.textContent = "";
-    });
-
-    modalLoginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      modalLoginMessage.textContent = "";
-
-      const username = document.getElementById("modalUsername").value.trim();
-      const password = document.getElementById("modalPassword").value.trim();
-
-      try {
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ username, password })
-        });
-
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-          modalLoginMessage.textContent = result.message || "로그인 실패";
-          return;
-        }
-
-        location.href = "/admin.html";
-      } catch (error) {
-        modalLoginMessage.textContent = "로그인 중 오류가 발생했습니다.";
-      }
-    });
-
-    setType("suggestion");
-    loadPosts();
-  </script>
 </body>
 </html>
