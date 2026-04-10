@@ -1,15 +1,17 @@
-const { json, parseCookies } = require("./_utils");
+const { json, isAdmin } = require("./_utils");
 
-module.exports = async (req, res) => {
+async function onRequest(context) {
   try {
-    const cookies = parseCookies(req);
-    const isAdmin = cookies.adminAuth === "ok";
-
-    return json(res, 200, {
-      isAdmin,
-    });
+    return json(
+      {
+        isAdmin: isAdmin(context.request),
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("me error:", error);
-    return json(res, 500, { error: "로그인 상태 확인 실패" });
+    return json({ error: "로그인 상태 확인 실패" }, { status: 500 });
   }
-};
+}
+
+module.exports = { onRequest };
