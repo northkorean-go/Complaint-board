@@ -1,19 +1,27 @@
 const { json, clearAdminCookie } = require("./_utils");
 
-module.exports = async (req, res) => {
+async function onRequest(context) {
   try {
-    if (req.method !== "POST") {
-      return json(res, 405, { error: "Method Not Allowed" });
+    if (context.request.method !== "POST") {
+      return json({ error: "Method Not Allowed" }, { status: 405 });
     }
 
-    clearAdminCookie(res);
-
-    return json(res, 200, {
-      success: true,
-      message: "로그아웃 완료",
-    });
+    return json(
+      {
+        success: true,
+        message: "로그아웃 완료",
+      },
+      {
+        status: 200,
+        headers: {
+          "Set-Cookie": clearAdminCookie(),
+        },
+      }
+    );
   } catch (error) {
     console.error("logout error:", error);
-    return json(res, 500, { error: "로그아웃 처리 중 오류" });
+    return json({ error: "로그아웃 처리 중 오류" }, { status: 500 });
   }
-};
+}
+
+module.exports = { onRequest };
