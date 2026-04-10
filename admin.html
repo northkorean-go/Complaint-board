@@ -272,6 +272,19 @@
       }
     };
 
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function nl2br(value) {
+      return escapeHtml(value).replace(/\n/g, "<br>");
+    }
+
     function typeLabel(type) {
       return type === "complaint" ? "불만사항" : "건의사항";
     }
@@ -311,6 +324,20 @@
       return date.toLocaleDateString("ko-KR");
     }
 
+    function formatCommentDate(dateString) {
+      if (!dateString) return "-";
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return dateString;
+
+      return date.toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
     function setActivePage(page) {
       document.querySelectorAll(".admin-nav-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.page === page);
@@ -322,6 +349,23 @@
 
       document.getElementById("pageTitle").textContent = pageMeta[page].title;
       document.getElementById("pageDesc").textContent = pageMeta[page].desc;
+    }
+
+    function renderComments(comments = []) {
+      if (!comments.length) {
+        return `<div class="admin-comment-empty">등록된 댓글이 없습니다.</div>`;
+      }
+
+      return `
+        <div class="admin-inline-comment-list">
+          ${comments.map((comment) => `
+            <div class="admin-inline-comment-item">
+              <div class="admin-inline-comment-time">${formatCommentDate(comment.date)}</div>
+              <div class="admin-inline-comment-text">${nl2br(comment.content || "")}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function renderPostCard(post, withCommentButton = false) {
@@ -337,11 +381,17 @@
           </div>
 
           <div class="admin-post-body">
-  ${post.deleted
-    ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
-    : `<div class="private-box">${(post.content || "").replace(/\n/g, "<br>")}</div>`
-  }
-</div>
+            ${post.deleted
+              ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
+              : `
+                <div class="private-box">${nl2br(post.content || "")}</div>
+                <div class="admin-inline-comments-wrap">
+                  <div class="admin-inline-comments-title">관리자 댓글</div>
+                  ${renderComments(post.comments || [])}
+                </div>
+              `
+            }
+          </div>
 
           <div class="admin-post-actions">
             ${withCommentButton ? `<button class="ghost-btn" onclick="selectPost(${post.id})">선택</button>` : ""}
@@ -355,30 +405,40 @@
     }
 
     function renderAll() {
-      const suggestions = allPosts.filter(p => p.type === "suggestion");
-      const complaints = allPosts.filter(p => p.type === "complaint");
-      const comments = allPosts.filter(p => !p.deleted);
+      const suggestions = allPosts.filter((p) => p.type === "suggestion");
+      const complaints = allPosts.filter((p) => p.type === "complaint");
+      const comments = allPosts.filter((p) => !p.deleted);
 
       document.getElementById("totalCount").textContent = allPosts.length;
       document.getElementById("suggestionCount").textContent = suggestions.length;
       document.getElementById("complaintCount").textContent = complaints.length;
-      document.getElementById("commentCount").textContent = allPosts.filter(p => p.comment).length;
+      document.getElementById("commentCount").textContent = allPosts.reduce((sum, post) => {
+        return sum + ((post.comments || []).length);
+      }, 0);
 
-      document.getElementById("processingCount").textContent = allPosts.filter(p => p.status === "processing").length;
-      document.getElementById("holdCount").textContent = allPosts.filter(p => p.status === "hold").length;
-      document.getElementById("doneCount").textContent = allPosts.filter(p => p.status === "done").length;
+      document.getElementById("processingCount").textContent = allPosts.filter((p) => p.status === "processing").length;
+      document.getElementById("holdCount").textContent = allPosts.filter((p) => p.status === "hold").length;
+      document.getElementById("doneCount").textContent = allPosts.filter((p) => p.status === "done").length;
 
       document.getElementById("recentPosts").innerHTML =
-        allPosts.length ? allPosts.slice(0, 5).map(p => renderPostCard(p)).join("") : `<div class="empty-box">게시글이 없습니다.</div>`;
+        allPosts.length
+          ? allPosts.slice(0, 5).map((p) => renderPostCard(p)).join("")
+          : `<div class="empty-box">게시글이 없습니다.</div>`;
 
       document.getElementById("suggestionList").innerHTML =
-        suggestions.length ? suggestions.map(p => renderPostCard(p)).join("") : `<div class="empty-box">건의사항이 없습니다.</div>`;
+        suggestions.length
+          ? suggestions.map((p) => renderPostCard(p)).join("")
+          : `<div class="empty-box">건의사항이 없습니다.</div>`;
 
       document.getElementById("complaintList").innerHTML =
-        complaints.length ? complaints.map(p => renderPostCard(p)).join("") : `<div class="empty-box">불만사항이 없습니다.</div>`;
+        complaints.length
+          ? complaints.map((p) => renderPostCard(p)).join("")
+          : `<div class="empty-box">불만사항이 없습니다.</div>`;
 
       document.getElementById("commentTargetList").innerHTML =
-        comments.length ? comments.map(p => renderPostCard(p, true)).join("") : `<div class="empty-box">댓글 대상이 없습니다.</div>`;
+        comments.length
+          ? comments.map((p) => renderPostCard(p, true)).join("")
+          : `<div class="empty-box">댓글 대상이 없습니다.</div>`;
 
       const weekPosts = allPosts.filter((post) => {
         const date = new Date(post.date);
@@ -388,8 +448,8 @@
       });
 
       document.getElementById("weeklyTotal").textContent = `${weekPosts.length}건`;
-      document.getElementById("weeklySuggestion").textContent = `${weekPosts.filter(p => p.type === "suggestion").length}건`;
-      document.getElementById("weeklyComplaint").textContent = `${weekPosts.filter(p => p.type === "complaint").length}건`;
+      document.getElementById("weeklySuggestion").textContent = `${weekPosts.filter((p) => p.type === "suggestion").length}건`;
+      document.getElementById("weeklyComplaint").textContent = `${weekPosts.filter((p) => p.type === "complaint").length}건`;
     }
 
     async function loadPosts() {
@@ -405,6 +465,7 @@
 
         renderAll();
       } catch (error) {
+        allPosts = [];
         document.getElementById("recentPosts").innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
       }
     }
@@ -412,8 +473,10 @@
     async function selectPost(id) {
       selectedPostId = id;
       const post = allPosts.find((p) => p.id === id);
-      document.getElementById("selectedTitle").textContent = post ? `NO. ${post.id} 선택됨` : "게시글을 선택해주세요.";
-      document.getElementById("commentInput").value = post?.comment || "";
+      document.getElementById("selectedTitle").textContent = post
+        ? `NO. ${post.id} 댓글 작성`
+        : "게시글을 선택해주세요.";
+      document.getElementById("commentInput").value = "";
       setActivePage("comments");
     }
 
@@ -442,6 +505,7 @@
           return;
         }
 
+        document.getElementById("commentInput").value = "";
         await loadPosts();
         alert("댓글이 저장되었습니다.");
       } catch (error) {
