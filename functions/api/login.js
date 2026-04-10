@@ -1,37 +1,23 @@
-const { json, setAdminCookie, readJson } = require("./_utils");
+import { json, readJson, getAdminCredentials } from "./_utils.js";
 
-async function onRequest(context) {
-  try {
-    if (context.request.method !== "POST") {
-      return json({ error: "Method Not Allowed" }, { status: 405 });
-    }
+export async function onRequestPost(context) {
+  const body = await readJson(context.request);
+  const { username = "", password = "" } = body;
 
-    const body = await readJson(context.request);
-    const password = String(body.password || "").trim();
+  const admin = getAdminCredentials();
 
-    const ADMIN_PASSWORD = "1234";
-
-    if (!password) {
-      return json({ error: "비밀번호를 입력해주세요." }, { status: 400 });
-    }
-
-    if (password !== ADMIN_PASSWORD) {
-      return json({ error: "비밀번호가 올바르지 않습니다." }, { status: 401 });
-    }
-
+  if (username !== admin.id || password !== admin.password) {
     return json(
-      { success: true, isAdmin: true },
-      {
-        status: 200,
-        headers: {
-          "Set-Cookie": setAdminCookie(),
-        },
-      }
+      { success: false, message: "아이디 또는 비밀번호가 올바르지 않습니다." },
+      401
     );
-  } catch (error) {
-    console.error("login error:", error);
-    return json({ error: "로그인 처리 중 오류가 발생했습니다." }, { status: 500 });
   }
-}
 
-module.exports = { onRequest };
+  return json(
+    { success: true },
+    200,
+    {
+      "Set-Cookie": `admin_token=${admin.token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=604800`,
+    }
+  );
+}
