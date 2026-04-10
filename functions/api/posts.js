@@ -3,7 +3,7 @@ import { json } from "./_utils.js";
 export async function onRequestGet(context) {
   try {
     const { results } = await context.env.DB.prepare(`
-      SELECT id, type, status, likes, deleted, created_at
+      SELECT id, content, type, status, likes, deleted, created_at
       FROM posts
       ORDER BY id DESC
     `).all();
@@ -11,6 +11,7 @@ export async function onRequestGet(context) {
     return json(
       (results || []).map((row) => ({
         id: row.id,
+        content: row.content || "",
         type: row.type,
         status: row.status,
         likes: row.likes || 0,
