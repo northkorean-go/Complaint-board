@@ -1,85 +1,72 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZARA 관리자 로그인</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="zara-page">
-      <div class="zara-card login-card">
-        <div class="zara-logo-wrap">
-          <div class="zara-logo">ZARA</div>
-          <div class="zara-logo-sub">ADMIN LOGIN</div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA 관리자 로그인</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <p class="brand">ZARA</p>
+      <h1 class="login-title">관리자 로그인</h1>
+      <p class="login-desc">
+        관리자 전용 페이지입니다. 승인된 계정으로 로그인한 뒤에만 접근할 수 있습니다.
+      </p>
+
+      <form id="loginForm" class="login-form">
+        <div class="input-group">
+          <label for="username">아이디</label>
+          <input type="text" id="username" placeholder="아이디" required />
         </div>
 
-        <div class="section-line"></div>
-
-        <h1 class="page-title">관리자 로그인</h1>
-        <p class="page-desc">등록된 건의사항은 관리자만 확인할 수 있습니다.</p>
-
-        <label class="field-label">아이디</label>
-        <input id="id" type="text" placeholder="아이디 입력" />
-
-        <label class="field-label">비밀번호</label>
-        <input id="pw" type="password" placeholder="비밀번호 입력" />
-
-        <button type="button" class="main-btn" onclick="login()">로그인</button>
-
-        <p id="msg" class="message"></p>
-
-        <div class="bottom-area">
-          <a href="/" class="admin-link">건의사항 페이지로 돌아가기</a>
+        <div class="input-group">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" placeholder="비밀번호" required />
         </div>
-      </div>
+
+        <button type="submit" class="primary-btn full">로그인</button>
+      </form>
+
+      <p id="loginMessage" class="error-text"></p>
     </div>
+  </div>
 
-   <script>
-  async function login() {
-    const username = document.getElementById("id").value.trim();
-    const password = document.getElementById("pw").value.trim();
-    const msg = document.getElementById("msg");
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const loginMessage = document.getElementById("loginMessage");
 
-    if (!username || !password) {
-      msg.innerText = "아이디와 비밀번호를 입력해주세요.";
-      return;
-    }
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ username, password }),
-      });
+      loginMessage.textContent = "";
 
-      const text = await res.text();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      let data;
       try {
-        data = JSON.parse(text);
-      } catch {
-        console.error("login raw response:", text);
-        msg.innerText = `서버 응답 오류 (${res.status})`;
-        return;
-      }
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, password }),
+        });
 
-      if (!res.ok) {
-        msg.innerText = data.msg || `로그인 실패 (${res.status})`;
-        return;
-      }
+        const result = await res.json();
 
-      if (data.ok) {
-        window.location.href = "/admin.html";
-      } else {
-        msg.innerText = data.msg || "로그인 실패";
+        if (!res.ok || !result.success) {
+          loginMessage.textContent =
+            result.message || "아이디 또는 비밀번호가 올바르지 않습니다.";
+          return;
+        }
+
+        location.href = "/admin.html";
+      } catch (error) {
+        loginMessage.textContent = "로그인 중 오류가 발생했습니다.";
       }
-    } catch (e) {
-      console.error(e);
-      msg.innerText = "서버 연결 오류";
-    }
-  }
-</script>
-  </body>
+    });
+  </script>
+</body>
 </html>
