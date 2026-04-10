@@ -339,7 +339,7 @@
           <div class="admin-post-body">
   ${post.deleted
     ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
-    : `<div class="admin-post-content">${(post.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+    : `<div class="private-box">비공개 건의사항입니다.</div>`
   }
 </div>
 
