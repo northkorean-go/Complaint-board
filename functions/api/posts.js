@@ -12,7 +12,7 @@ export async function onRequestGet(context) {
   }
 
   const { results } = await env.DB.prepare(
-    `SELECT id, content, date, comment
+    `SELECT id, content, date, is_deleted, deleted_at
      FROM posts
      ORDER BY id DESC`
   ).all();
