@@ -585,7 +585,30 @@
     document.getElementById("logoutBtn").addEventListener("click", logout);
 
     loadPosts();
+    async function deleteComment(id) {
+  if (!confirm("댓글을 삭제할까요?")) return;
 
+  try {
+    const res = await fetch("/api/delete-comment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id })
+    });
+
+    const result = await res.json();
+
+    if (!res.ok || !result.success) {
+      alert(result.message || "삭제 실패");
+      return;
+    }
+
+    await loadPosts();
+  } catch (error) {
+    alert("삭제 중 오류 발생");
+  }
+}
     window.selectPost = selectPost;
     window.changeStatus = changeStatus;
     window.deletePost = deletePost;
