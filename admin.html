@@ -38,7 +38,6 @@
       </header>
 
       <div class="admin-content">
-        <!-- dashboard -->
         <section class="admin-section active" data-page="dashboard">
           <div class="admin-summary-grid">
             <div class="admin-card">
@@ -115,7 +114,6 @@
           </div>
         </section>
 
-        <!-- suggestions -->
         <section class="admin-section" data-page="suggestions">
           <div class="admin-panel">
             <div class="admin-panel-head">
@@ -128,7 +126,6 @@
           </div>
         </section>
 
-        <!-- complaints -->
         <section class="admin-section" data-page="complaints">
           <div class="admin-panel">
             <div class="admin-panel-head">
@@ -141,7 +138,6 @@
           </div>
         </section>
 
-        <!-- comments -->
         <section class="admin-section" data-page="comments">
           <div class="admin-layout-grid">
             <div class="admin-panel">
@@ -173,7 +169,6 @@
           </div>
         </section>
 
-        <!-- stats -->
         <section class="admin-section" data-page="stats">
           <div class="admin-panel">
             <div class="admin-panel-head">
@@ -211,7 +206,6 @@
           </div>
         </section>
 
-        <!-- settings -->
         <section class="admin-section" data-page="settings">
           <div class="admin-panel">
             <div class="admin-panel-head">
@@ -352,36 +346,23 @@
     }
 
     function renderComments(comments = []) {
-  if (!comments.length) {
-    return `<div class="admin-comment-empty">등록된 댓글이 없습니다.</div>`;
-  }
+      if (!comments.length) {
+        return `<div class="admin-comment-empty">등록된 댓글이 없습니다.</div>`;
+      }
 
-  return `
-    <div class="admin-inline-comment-list">
-      ${comments.map((comment) => `
-        <div class="admin-inline-comment-item">
-          <div class="admin-inline-comment-time">
-            ${formatCommentDate(comment.date)}
-          </div>
-
-          <div class="admin-inline-comment-text">
-            ${comment.deleted
-              ? `<span class="deleted-comment">삭제된 댓글입니다.</span>`
-              : nl2br(comment.content)
-            }
-          </div>
-
-          ${!comment.deleted ? `
-            <button class="ghost-btn danger"
-              onclick="deleteComment(${comment.id})">
-              삭제
-            </button>
-          ` : ""}
+      return `
+        <div class="admin-inline-comment-list">
+          ${comments.map((comment) => `
+            <div class="admin-inline-comment-item">
+              <div class="admin-inline-comment-time">${formatCommentDate(comment.date)}</div>
+              <div class="admin-inline-comment-text">
+                ${comment.deleted ? "삭제된 댓글입니다." : nl2br(comment.content || "")}
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("")}
-    </div>
-  `;
-}
+      `;
+    }
 
     function renderPostCard(post, withCommentButton = false) {
       return `
@@ -422,7 +403,7 @@
     function renderAll() {
       const suggestions = allPosts.filter((p) => p.type === "suggestion");
       const complaints = allPosts.filter((p) => p.type === "complaint");
-      const comments = allPosts.filter((p) => !p.deleted);
+      const commentTargets = allPosts.filter((p) => !p.deleted);
 
       document.getElementById("totalCount").textContent = allPosts.length;
       document.getElementById("suggestionCount").textContent = suggestions.length;
@@ -451,8 +432,8 @@
           : `<div class="empty-box">불만사항이 없습니다.</div>`;
 
       document.getElementById("commentTargetList").innerHTML =
-        comments.length
-          ? comments.map((p) => renderPostCard(p, true)).join("")
+        commentTargets.length
+          ? commentTargets.map((p) => renderPostCard(p, true)).join("")
           : `<div class="empty-box">댓글 대상이 없습니다.</div>`;
 
       const weekPosts = allPosts.filter((post) => {
@@ -585,34 +566,10 @@
     document.getElementById("logoutBtn").addEventListener("click", logout);
 
     loadPosts();
-    async function deleteComment(id) {
-  if (!confirm("댓글을 삭제할까요?")) return;
 
-  try {
-    const res = await fetch("/api/delete-comment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ id })
-    });
-
-    const result = await res.json();
-
-    if (!res.ok || !result.success) {
-      alert(result.message || "삭제 실패");
-      return;
-    }
-
-    await loadPosts();
-  } catch (error) {
-    alert("삭제 중 오류 발생");
-  }
-}
     window.selectPost = selectPost;
     window.changeStatus = changeStatus;
     window.deletePost = deletePost;
   </script>
 </body>
 </html>
-
