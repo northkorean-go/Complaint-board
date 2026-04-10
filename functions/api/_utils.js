@@ -1,5 +1,5 @@
 const ADMIN_ID = "admin";
-const ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD = "1558";
 const ADMIN_TOKEN = "zara-admin-token-v1";
 
 export function json(data, status = 200, extraHeaders = {}) {
