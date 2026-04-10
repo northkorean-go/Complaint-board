@@ -22,6 +22,7 @@ export async function readJson(request) {
 
 export function parseCookies(request) {
   const cookie = request.headers.get("cookie") || "";
+
   return Object.fromEntries(
     cookie
       .split(";")
@@ -29,7 +30,9 @@ export function parseCookies(request) {
       .filter(Boolean)
       .map((v) => {
         const i = v.indexOf("=");
-        return i === -1 ? [v, ""] : [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
+        return i === -1
+          ? [v, ""]
+          : [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
       })
   );
 }
