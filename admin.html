@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZARA 관리자 페이지</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="admin-body">
+    <div class="admin-shell">
+      <div class="admin-top">
+        <div>
+          <div class="zara-logo admin-logo">ZARA</div>
+          <div class="admin-subtitle">SUGGESTION MANAGEMENT</div>
+          <h1 class="admin-title">건의사항 관리자</h1>
+          <p class="admin-desc">
+            등록된 건의사항을 확인하고 댓글을 남길 수 있습니다.
+          </p>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
+      </div>
+
+      <div class="admin-divider"></div>
+
+      <p id="msg" class="message admin-message"></p>
+      <div id="list" class="post-list"></div>
+    </div>
+
+    <script>
+      async function load() {
+        const res = await fetch("/api/posts", {
+          credentials: "same-origin",
+        });
+
+        const list = document.getElementById("list");
+
+        if (!res.ok) {
+          location.href = "/login.html";
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.length) {
+          list.innerHTML = `
+          <div class="post-item empty-item">
+            <div class="empty-text">등록된 건의사항이 없습니다.</div>
+          </div>
+        `;
+          return;
+        }
+
+        let html = "";
+        data.forEach((p) => {
+          html += `
+          <div class="post-item">
+            <div class="post-head">
+              <div class="post-number">NO. ${p.id}</div>
+              <div class="post-date">${escapeHtml(p.date)}</div>
+            </div>
+
+            <div class="post-label">건의사항</div>
+            <div class="post-content">${escapeHtml(p.content).replace(/\n/g, "<br>")}</div>
+
+            <div class="comment-block">
+              <div class="post-label">관리자 댓글</div>
+              <textarea id="comment-${p.id}" class="comment-textarea" placeholder="댓글을 입력하세요.">${escapeHtml(p.comment || "")}</textarea>
+              <div class="post-footer">
+                <button class="comment-btn" onclick="saveComment(${p.id})">댓글 저장</button>
+              </div>
+            </div>
+
+            ${
+              p.comment
+                ? `
+              <div class="saved-comment">
+                <div class="saved-comment-title">저장된 댓글</div>
+                <div class="saved-comment-text">${escapeHtml(p.comment).replace(/\n/g, "<br>")}</div>
+              </div>
+            `
+                : ""
+            }
+
+            <div class="post-footer">
+              <button class="delete-btn" onclick="delPost(${p.id})">삭제</button>
+            </div>
+          </div>
+        `;
+        });
+
+        list.innerHTML = html;
+      }
+
+      async function saveComment(id) {
+        const comment = document.getElementById(`comment-${id}`).value;
+
+        const res = await fetch(`/api/comment/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ comment }),
+        });
+
+        if (res.ok) {
+          load();
+        } else {
+          alert("댓글 저장 실패");
+        }
+      }
+
+      async function delPost(id) {
+        const ok = confirm("이 건의사항을 삭제할까요?");
+        if (!ok) return;
+
+        const res = await fetch("/api/posts/" + id, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+
+        if (res.ok) {
+          load();
+        } else {
+          alert("삭제 실패");
+        }
+      }
+
+      async function logout() {
+        await fetch("/api/logout", {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        location.href = "/login.html";
+      }
+
+      function escapeHtml(text = "") {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      load();
+    </script>
+  </body>
+</html>

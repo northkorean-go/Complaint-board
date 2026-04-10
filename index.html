@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZARA 건의사항</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="zara-page">
+      <div class="zara-card">
+        <div class="zara-logo-wrap">
+          <div class="zara-logo">ZARA</div>
+          <div class="zara-logo-sub">SUGGESTION BOX</div>
+        </div>
+
+        <div class="section-line"></div>
+
+        <h1 class="page-title">건의사항</h1>
+        <p class="page-desc">
+          매장 운영, 근무 환경, 개선 아이디어 등 자유롭게 남겨주세요.
+        </p>
+
+        <label class="field-label">내용</label>
+        <textarea
+          id="content"
+          placeholder="건의사항을 입력해주세요."
+        ></textarea>
+
+        <button class="main-btn" onclick="send()">등록하기</button>
+
+        <p id="msg" class="message"></p>
+
+        <div class="bottom-area">
+          <a href="/login.html" class="admin-link">관리자 페이지</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function send() {
+        const contentEl = document.getElementById("content");
+        const msgEl = document.getElementById("msg");
+        const content = contentEl.value.trim();
+
+        if (!content) {
+          msgEl.innerText = "내용을 입력해주세요.";
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            msgEl.innerText = data.msg || "등록 실패";
+            return;
+          }
+
+          contentEl.value = "";
+          msgEl.style.color = "#006400";
+          msgEl.innerText = "등록이 완료되었습니다.";
+        } catch (e) {
+          msgEl.style.color = "#8b0000";
+          msgEl.innerText = "서버 연결 오류";
+        }
+      }
+    </script>
+  </body>
+</html>

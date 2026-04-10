@@ -1,0 +1,7 @@
+name = "complaint-board"
+compatibility_date = "2026-04-10"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "complaint-board-db"
+database_id = "나중에_넣기"

@@ -1,0 +1,374 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Times New Roman", Georgia, serif;
+  color: #111111;
+  background: #f6f4ef;
+}
+
+.zara-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(246,244,239,1)),
+    #f6f4ef;
+}
+
+.zara-card {
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  padding: 42px 38px;
+  border: 1px solid #e6e2da;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.06);
+}
+
+.login-card {
+  max-width: 480px;
+}
+
+.zara-logo-wrap {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.zara-logo {
+  font-size: 54px;
+  line-height: 1;
+  letter-spacing: 6px;
+  font-weight: 400;
+  color: #111111;
+}
+
+.zara-logo-sub {
+  margin-top: 10px;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #666666;
+}
+
+.section-line {
+  width: 100%;
+  height: 1px;
+  background: #ddd7cd;
+  margin: 24px 0 28px;
+}
+
+.page-title {
+  margin: 0 0 10px;
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.page-desc {
+  margin: 0 0 28px;
+  color: #555555;
+  font-size: 15px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #222222;
+}
+
+textarea,
+input {
+  width: 100%;
+  border: 1px solid #d9d4ca;
+  background: #fcfbf8;
+  padding: 15px 16px;
+  font-size: 15px;
+  font-family: "Times New Roman", Georgia, serif;
+  color: #111111;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+textarea {
+  min-height: 180px;
+  resize: vertical;
+  margin-bottom: 18px;
+}
+
+input {
+  margin-bottom: 16px;
+}
+
+textarea:focus,
+input:focus {
+  border-color: #111111;
+  background: #ffffff;
+}
+
+.main-btn {
+  width: 100%;
+  border: none;
+  background: #111111;
+  color: #ffffff;
+  padding: 16px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.main-btn:hover {
+  opacity: 0.9;
+}
+
+.message {
+  min-height: 24px;
+  margin: 16px 0 0;
+  text-align: center;
+  color: #8b0000;
+  font-size: 14px;
+}
+
+.bottom-area {
+  margin-top: 22px;
+  text-align: center;
+}
+
+.admin-link {
+  color: #111111;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #111111;
+  padding-bottom: 2px;
+}
+
+.admin-link:hover {
+  opacity: 0.7;
+}
+
+.admin-body {
+  background: #f6f4ef;
+  min-height: 100vh;
+}
+
+.admin-shell {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 42px 20px 60px;
+}
+
+.admin-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.admin-logo {
+  font-size: 42px;
+  letter-spacing: 5px;
+}
+
+.admin-subtitle {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #666666;
+}
+
+.admin-title {
+  margin: 18px 0 10px;
+  font-size: 34px;
+  font-weight: 400;
+}
+
+.admin-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #555555;
+}
+
+.logout-btn {
+  border: 1px solid #111111;
+  background: transparent;
+  color: #111111;
+  padding: 12px 18px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #111111;
+  color: #ffffff;
+}
+
+.admin-divider {
+  height: 1px;
+  background: #d8d2c8;
+  margin: 26px 0 28px;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-item {
+  background: #ffffff;
+  border: 1px solid #e2ddd4;
+  padding: 22px;
+}
+
+.empty-item {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-text {
+  color: #666666;
+  font-size: 15px;
+}
+
+.post-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ece8df;
+}
+
+.post-number {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #111111;
+}
+
+.post-date {
+  font-size: 13px;
+  color: #777777;
+}
+
+.post-label {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #666666;
+  margin-bottom: 10px;
+}
+
+.post-content {
+  font-size: 16px;
+  line-height: 1.9;
+  color: #111111;
+  word-break: break-word;
+  margin-bottom: 18px;
+}
+
+.comment-block {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #ece8df;
+}
+
+.comment-textarea {
+  min-height: 110px;
+  margin-bottom: 14px;
+}
+
+.post-footer {
+  margin-top: 14px;
+  text-align: right;
+}
+
+.comment-btn {
+  border: none;
+  background: #111111;
+  color: #ffffff;
+  padding: 10px 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.comment-btn:hover {
+  opacity: 0.88;
+}
+
+.saved-comment {
+  margin-top: 16px;
+  padding: 16px;
+  background: #faf8f3;
+  border: 1px solid #e8e1d6;
+}
+
+.saved-comment-title {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #666666;
+  margin-bottom: 8px;
+}
+
+.saved-comment-text {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #111111;
+  word-break: break-word;
+}
+
+.delete-btn {
+  border: none;
+  background: #111111;
+  color: #ffffff;
+  padding: 10px 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  opacity: 0.88;
+}
+
+@media (max-width: 640px) {
+  .zara-card {
+    padding: 30px 22px;
+  }
+
+  .zara-logo {
+    font-size: 40px;
+    letter-spacing: 4px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .admin-top {
+    flex-direction: column;
+  }
+
+  .logout-btn {
+    width: 100%;
+  }
+
+  .post-head {
+    flex-direction: column;
+  }
+}
