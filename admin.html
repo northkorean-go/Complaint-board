@@ -122,11 +122,15 @@
             <div class="post-item">
               <div class="post-head">
                 <div class="post-number">NO. ${p.id}</div>
-                <div class="post-date">${escapeHtml(p.date)}</div>
+                <div class="post-date">
+  ${p.is_deleted && p.deleted_at ? `삭제일: ${escapeHtml(p.deleted_at)}` : escapeHtml(p.date)}
+</div>
               </div>
 
               <div class="post-label">건의사항</div>
-              <div class="post-content">${escapeHtml(p.content).replace(/\n/g, "<br>")}</div>
+              <div class="post-content">
+  ${p.is_deleted ? "삭제된 건의사항입니다." : escapeHtml(p.content).replace(/\n/g, "<br>")}
+</div>
 
               <div class="comment-block">
                 <div class="post-label">관리자 댓글 작성</div>
@@ -146,8 +150,12 @@
               </div>
 
               <div class="post-footer">
-                <button class="delete-btn" onclick="delPost(${p.id})">건의사항 삭제</button>
-              </div>
+  ${
+    p.is_deleted
+      ? ""
+      : `<button class="delete-btn" onclick="delPost(${p.id})">건의사항 삭제</button>`
+  }
+</div>
             </div>
           `;
         });
