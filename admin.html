@@ -352,21 +352,36 @@
     }
 
     function renderComments(comments = []) {
-      if (!comments.length) {
-        return `<div class="admin-comment-empty">등록된 댓글이 없습니다.</div>`;
-      }
+  if (!comments.length) {
+    return `<div class="admin-comment-empty">등록된 댓글이 없습니다.</div>`;
+  }
 
-      return `
-        <div class="admin-inline-comment-list">
-          ${comments.map((comment) => `
-            <div class="admin-inline-comment-item">
-              <div class="admin-inline-comment-time">${formatCommentDate(comment.date)}</div>
-              <div class="admin-inline-comment-text">${nl2br(comment.content || "")}</div>
-            </div>
-          `).join("")}
+  return `
+    <div class="admin-inline-comment-list">
+      ${comments.map((comment) => `
+        <div class="admin-inline-comment-item">
+          <div class="admin-inline-comment-time">
+            ${formatCommentDate(comment.date)}
+          </div>
+
+          <div class="admin-inline-comment-text">
+            ${comment.deleted
+              ? `<span class="deleted-comment">삭제된 댓글입니다.</span>`
+              : nl2br(comment.content)
+            }
+          </div>
+
+          ${!comment.deleted ? `
+            <button class="ghost-btn danger"
+              onclick="deleteComment(${comment.id})">
+              삭제
+            </button>
+          ` : ""}
         </div>
-      `;
-    }
+      `).join("")}
+    </div>
+  `;
+}
 
     function renderPostCard(post, withCommentButton = false) {
       return `
