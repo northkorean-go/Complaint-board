@@ -265,9 +265,10 @@
         const me = await meRes.json();
 
         if (!me.isAdmin) {
-          location.href = "/login.html";
-          return;
-        }
+  adminPostList.innerHTML = `<div class="empty-box">로그인 세션이 확인되지 않았습니다. 다시 로그인해주세요.</div>`;
+  resetDetail();
+  return;
+}
 
         const res = await fetch("/api/admin-posts");
         const posts = await res.json();
