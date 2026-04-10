@@ -1,51 +1,18 @@
-function json(data, init = {}) {
-  const headers = new Headers(init.headers || {});
-  headers.set("Content-Type", "application/json; charset=utf-8");
+const ADMIN_ID = "admin";
+const ADMIN_PASSWORD = "1558";
+const ADMIN_TOKEN = "zara-admin-token-v1";
 
+export function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
-    ...init,
-    headers,
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      ...extraHeaders,
+    },
   });
 }
 
-function parseCookies(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookies = {};
-
-  cookieHeader.split(";").forEach((part) => {
-    const [key, ...rest] = part.trim().split("=");
-    if (!key) return;
-    cookies[key] = decodeURIComponent(rest.join("="));
-  });
-
-  return cookies;
-}
-
-function isAdmin(request) {
-  const cookies = parseCookies(request);
-  return cookies.adminAuth === "ok";
-}
-
-function unauthorized() {
-  return json({ error: "Unauthorized" }, { status: 401 });
-}
-
-function requireAdmin(request) {
-  if (!isAdmin(request)) {
-    return unauthorized();
-  }
-  return null;
-}
-
-function setAdminCookie() {
-  return "adminAuth=ok; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800";
-}
-
-function clearAdminCookie() {
-  return "adminAuth=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0";
-}
-
-async function readJson(request) {
+export async function readJson(request) {
   try {
     return await request.json();
   } catch {
@@ -53,25 +20,40 @@ async function readJson(request) {
   }
 }
 
-function normalizePost(row) {
+export function parseCookies(request) {
+  const cookie = request.headers.get("cookie") || "";
+
+  return Object.fromEntries(
+    cookie
+      .split(";")
+      .map((v) => v.trim())
+      .filter(Boolean)
+      .map((v) => {
+        const i = v.indexOf("=");
+        return i === -1
+          ? [v, ""]
+          : [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
+      })
+  );
+}
+
+export function isAdmin(request) {
+  const cookies = parseCookies(request);
+  return cookies.admin_token === ADMIN_TOKEN;
+}
+
+export function requireAdmin(request) {
+  if (!isAdmin(request)) {
+    return json({ success: false, message: "관리자만 접근 가능합니다." }, 401);
+  }
+  return null;
+}
+
+export function getAdminCredentials() {
   return {
-    id: row.id,
-    type: row.type || "건의사항",
-    title: row.content || "",
-    content: row.content || "",
-    date: row.created_at || "",
-    comment: row.comment || "",
-    status: row.status || (row.comment ? "처리완료" : "미처리"),
+    id: ADMIN_ID,
+    password: ADMIN_PASSWORD,
+    token: ADMIN_TOKEN,
   };
 }
 
-module.exports = {
-  json,
-  parseCookies,
-  isAdmin,
-  requireAdmin,
-  setAdminCookie,
-  clearAdminCookie,
-  readJson,
-  normalizePost,
-};
