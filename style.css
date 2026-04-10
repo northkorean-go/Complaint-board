@@ -1042,3 +1042,11 @@ button {
   font-size: 13px;
   opacity: 0.5;
 }
+.deleted-comment {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.admin-inline-comment-item .ghost-btn {
+  margin-top: 8px;
+}
