@@ -1,36 +1,60 @@
-import { json, readJson } from "./_utils.js";
+const { json, readJson, normalizePost } = require("./_utils");
 
-export async function onRequestPost(context) {
+async function onRequest(context) {
   try {
-    const body = await readJson(context.request);
-
-    const content = String(body.content || "").trim();
-    const type = body.type === "complaint" ? "complaint" : "suggestion";
-
-    if (!content) {
-      return json({ success: false, message: "내용을 입력해주세요." }, 400);
+    if (context.request.method !== "POST") {
+      return json({ error: "Method Not Allowed" }, { status: 405 });
     }
 
-    const createdAt = new Date().toISOString();
+    const body = await readJson(context.request);
+    const type = String(body.type || "").trim();
+    const content = String(body.content || "").trim();
 
-    await context.env.DB.prepare(`
-      INSERT INTO posts (type, content, status, comment, likes, deleted, created_at)
-      VALUES (?, ?, 'processing', '', 0, 0, ?)
+    if (!content) {
+      return json({ error: "내용을 입력해주세요." }, { status: 400 });
+    }
+
+    const finalType = type || "건의사항";
+    const createdAt = new Date().toLocaleString("ko-KR", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    const insertResult = await context.env.DB.prepare(`
+      INSERT INTO posts (type, content, created_at, comment, status)
+      VALUES (?, ?, ?, '', '미처리')
     `)
-      .bind(type, content, createdAt)
+      .bind(finalType, content, createdAt)
       .run();
+
+    const insertedId = insertResult.meta?.last_row_id;
+
+    if (!insertedId) {
+      return json({ success: true });
+    }
+
+    const row = await context.env.DB.prepare(`
+      SELECT id, type, content, created_at, comment, status
+      FROM posts
+      WHERE id = ?
+    `)
+      .bind(insertedId)
+      .first();
 
     return json({
       success: true,
-      message: "등록되었습니다."
+      post: row ? normalizePost(row) : null,
     });
   } catch (error) {
-    return json(
-      {
-        success: false,
-        message: `등록 실패: ${error.message || "알 수 없는 오류"}`
-      },
-      500
-    );
+    console.error("post error:", error);
+    return json({ error: "게시글 등록 실패" }, { status: 500 });
   }
 }
+
+module.exports = { onRequest };
