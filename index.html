@@ -1,75 +1,142 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZARA 건의사항</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="zara-page">
-      <div class="zara-card">
-        <div class="zara-logo-wrap">
-          <div class="zara-logo">ZARA</div>
-          <div class="zara-logo-sub">SUGGESTION BOX</div>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ZARA 건의사항</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="page">
+    <section class="hero-card">
+      <p class="brand">ZARA</p>
+      <h1 class="main-title">SUGGESTION BOX</h1>
+      <p class="hero-desc">
+        운영진도 작성자를 확인할 수 없는 익명 방식으로 운영되니 자유롭게 남겨주세요.
+      </p>
 
-        <div class="section-line"></div>
+      <!-- 유형 선택 -->
+      <div class="type-selector">
+        <label>접수 유형 선택</label>
 
-        <h1 class="page-title">건의사항</h1>
-        <p class="page-desc">
-          운영진도 작성자를 확인할 수 없는 익명 방식으로 운영되니 부담 없이 자유롭게 남겨주세요.
-        </p>
-
-        <label class="field-label">내용</label>
-        <textarea
-          id="content"
-          placeholder="건의사항을 입력해주세요."
-        ></textarea>
-
-        <button class="main-btn" onclick="send()">등록하기</button>
-
-        <p id="msg" class="message"></p>
-
-        <div class="bottom-area">
-          <a href="/login.html" class="admin-link">관리자 페이지</a>
+        <div class="type-grid">
+          <button type="button" class="type-btn active" data-type="suggestion">
+            건의사항
+          </button>
+          <button type="button" class="type-btn" data-type="complaint">
+            불만사항
+          </button>
         </div>
       </div>
-    </div>
 
-    <script>
-      async function send() {
-        const contentEl = document.getElementById("content");
-        const msgEl = document.getElementById("msg");
-        const content = contentEl.value.trim();
+      <!-- 입력 -->
+      <form id="postForm">
+        <label id="formLabel">ZARA 건의사항</label>
+        <textarea id="content" placeholder="자유롭게 건의해주세요." required></textarea>
 
-        if (!content) {
-          msgEl.innerText = "내용을 입력해주세요.";
+        <div class="form-bottom">
+          <button type="submit">등록하기</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 목록 -->
+    <section class="board">
+      <h2>최근 건의사항</h2>
+      <div id="postList"></div>
+    </section>
+  </div>
+
+  <script>
+    let selectedType = "suggestion";
+
+    const typeButtons = document.querySelectorAll(".type-btn");
+    const formLabel = document.getElementById("formLabel");
+    const contentEl = document.getElementById("content");
+    const postForm = document.getElementById("postForm");
+    const postList = document.getElementById("postList");
+
+    // 유형 선택
+    typeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedType = btn.dataset.type;
+
+        typeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        if (selectedType === "suggestion") {
+          formLabel.textContent = "ZARA 건의사항";
+          contentEl.placeholder = "자유롭게 건의해주세요.";
+        } else {
+          formLabel.textContent = "ZARA 불만사항";
+          contentEl.placeholder = "불편했던 점, 개선이 필요한 문제 관련 불만사항을 자유롭게 남겨주세요.";
+        }
+      });
+    });
+
+    // 목록 불러오기
+    async function loadPosts() {
+      try {
+        const res = await fetch("/api/posts");
+        const posts = await res.json();
+
+        if (!posts.length) {
+          postList.innerHTML = "<p>아직 글이 없습니다</p>";
           return;
         }
 
-        try {
-          const res = await fetch("/api/post", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            msgEl.innerText = data.msg || "등록 실패";
-            return;
-          }
-
-          contentEl.value = "";
-          msgEl.style.color = "#006400";
-          msgEl.innerText = "등록이 완료되었습니다.";
-        } catch (e) {
-          msgEl.style.color = "#8b0000";
-          msgEl.innerText = "서버 연결 오류";
-        }
+        postList.innerHTML = posts.map(post => `
+          <div class="post">
+            <div class="top">
+              <span>NO. ${post.id}</span>
+              <span>${post.type === "complaint" ? "불만사항" : "건의사항"}</span>
+              <span>${post.status}</span>
+              <span>❤ ${post.likes}</span>
+            </div>
+            <div class="content">
+              ${post.deleted ? "삭제된 건의사항입니다." : "비공개 건의사항입니다."}
+            </div>
+          </div>
+        `).join("");
+      } catch (e) {
+        postList.innerHTML = "<p>불러오기 실패</p>";
       }
-    </script>
-  </body>
+    }
+
+    // 등록
+    postForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const content = contentEl.value.trim();
+      if (!content) return;
+
+      try {
+        const res = await fetch("/api/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            content,
+            type: selectedType
+          })
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+          alert(result.message);
+          return;
+        }
+
+        contentEl.value = "";
+        loadPosts();
+      } catch (e) {
+        alert("등록 실패");
+      }
+    });
+
+    loadPosts();
+  </script>
+</body>
 </html>
