@@ -1,21 +1,25 @@
-const { json, requireAdmin, normalizePost } = require("./_utils");
+import { json, requireAdmin } from "./_utils.js";
 
-async function onRequest(context) {
+export async function onRequestGet(context) {
   const denied = requireAdmin(context.request);
   if (denied) return denied;
 
-  try {
-    const { results } = await context.env.DB.prepare(`
-      SELECT id, type, content, created_at, comment, status
-      FROM posts
-      ORDER BY id DESC
-    `).all();
+  const { results } = await context.env.DB.prepare(`
+    SELECT id, type, content, status, comment, likes, deleted, created_at
+    FROM posts
+    ORDER BY id DESC
+  `).all();
 
-    return json(results.map(normalizePost));
-  } catch (error) {
-    console.error("admin-posts error:", error);
-    return json({ error: "관리자 게시글 조회 실패" }, { status: 500 });
-  }
+  return json(
+    (results || []).map((row) => ({
+      id: row.id,
+      type: row.type,
+      content: row.content,
+      status: row.status,
+      comment: row.comment,
+      likes: row.likes,
+      deleted: !!row.deleted,
+      date: row.created_at,
+    }))
+  );
 }
-
-module.exports = { onRequest };
