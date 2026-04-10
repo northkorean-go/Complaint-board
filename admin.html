@@ -7,83 +7,97 @@
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <p class="brand">ZARA</p>
-      <h1 class="admin-title">SUGGESTION MANAGEMENT</h1>
-      <p class="admin-desc">관리자 전용 페이지입니다.</p>
-
-      <div id="adminPostList" class="admin-post-list"></div>
-    </aside>
-
-    <main class="admin-main">
-      <div class="admin-grid">
-        <section class="admin-detail-card">
-          <div class="detail-header">
-            <div>
-              <p class="section-mini">DETAIL</p>
-              <h2>건의사항 상세</h2>
-            </div>
-            <div class="detail-actions">
-              <span id="detailStatus" class="status-badge processing">처리중</span>
-              <button id="hideBtn" class="secondary-btn">숨김 처리</button>
-            </div>
-          </div>
-
-          <div class="detail-box">
-            <div class="detail-meta">
-              <div class="post-badges">
-                <span id="detailNo" class="post-no">NO. -</span>
-                <span id="detailType" class="type-badge suggestion">건의사항</span>
-              </div>
-              <div class="post-meta">
-                <span id="detailDate">-</span>
-                <span id="detailLikes">❤ 0</span>
-              </div>
-            </div>
-
-            <p id="detailContent" class="detail-content">선택된 항목이 없습니다.</p>
-          </div>
-
-          <div class="status-actions">
-            <button onclick="changeStatus('processing')" class="secondary-btn">처리중으로 변경</button>
-            <button onclick="changeStatus('done')" class="secondary-btn">완료로 변경</button>
-            <button onclick="changeStatus('hold')" class="secondary-btn">보류로 변경</button>
-          </div>
-
-          <div class="comment-box">
-            <label class="section-label">관리자 댓글 작성</label>
-            <textarea id="commentInput" placeholder="관리자 답변을 입력하세요."></textarea>
-            <div class="comment-actions">
-              <button id="saveCommentBtn" class="primary-btn">댓글 저장</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="admin-side-cards">
-          <div class="overview-card">
-            <p class="section-mini">OVERVIEW</p>
-            <h3>요약</h3>
-            <div id="overviewGrid" class="overview-grid"></div>
-          </div>
-
-          <div class="overview-card">
-            <p class="section-mini">SEARCH & FILTER</p>
-            <h3>관리 도구</h3>
-            <div class="filter-grid">
-              <button class="secondary-btn" onclick="setFilter('all')">전체</button>
-              <button class="secondary-btn" onclick="setFilter('suggestion')">건의사항</button>
-              <button class="secondary-btn" onclick="setFilter('complaint')">불만사항</button>
-              <button class="secondary-btn" onclick="setFilter('processing')">처리중</button>
-            </div>
-          </div>
-
-          <div class="overview-card">
-            <button id="logoutBtn" class="primary-btn full">로그아웃</button>
-          </div>
-        </section>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <h1 class="topbar-title">ZARA 건의사항</h1>
+      <div class="topbar-tabs">
+        <button class="topbar-tab" type="button" id="goPublicBtn">사용자 화면</button>
+        <button class="topbar-tab active" type="button">관리자 화면</button>
       </div>
-    </main>
+    </div>
+  </div>
+
+  <div class="admin-shell">
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <p class="brand">ZARA</p>
+        <h2 class="admin-side-title">SUGGESTION MANAGEMENT</h2>
+        <p class="admin-side-desc">관리자 전용 페이지입니다.</p>
+
+        <div id="adminPostList" class="sidebar-list"></div>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-main-grid">
+          <section class="panel admin-detail-panel">
+            <div class="detail-head">
+              <div>
+                <p class="board-eyebrow">DETAIL</p>
+                <h3 class="detail-title">건의사항 상세</h3>
+              </div>
+
+              <div class="detail-head-actions">
+                <span id="detailStatus" class="status-badge processing">처리중</span>
+                <button id="hideBtn" class="ghost-btn">숨김 처리</button>
+              </div>
+            </div>
+
+            <div class="detail-box">
+              <div class="detail-box-head">
+                <div class="badge-row">
+                  <span id="detailNo" class="no-badge">NO. -</span>
+                  <span id="detailType" class="type-badge suggestion">건의사항</span>
+                </div>
+
+                <div class="meta-row static">
+                  <span id="detailDate">-</span>
+                  <span id="detailLikes">♡ 0</span>
+                </div>
+              </div>
+
+              <p id="detailContent" class="detail-content">선택된 항목이 없습니다.</p>
+            </div>
+
+            <div class="status-action-grid">
+              <button class="ghost-btn full-width" onclick="changeStatus('processing')">처리중으로 변경</button>
+              <button class="ghost-btn full-width" onclick="changeStatus('done')">완료로 변경</button>
+              <button class="ghost-btn full-width" onclick="changeStatus('hold')">보류로 변경</button>
+            </div>
+
+            <div class="comment-section">
+              <div class="comment-label">관리자 댓글 작성</div>
+              <textarea id="commentInput" class="comment-textarea" placeholder="관리자 답변을 입력하세요."></textarea>
+              <div class="comment-save-row">
+                <button id="saveCommentBtn" class="primary-btn">댓글 저장</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-side-panels">
+            <div class="panel side-card">
+              <p class="board-eyebrow">OVERVIEW</p>
+              <h3 class="side-card-title">요약</h3>
+              <div id="overviewGrid" class="overview-grid"></div>
+            </div>
+
+            <div class="panel side-card">
+              <p class="board-eyebrow">SEARCH & FILTER</p>
+              <h3 class="side-card-title">관리 도구</h3>
+              <div class="filter-grid">
+                <button class="ghost-btn full-width" onclick="setFilter('all')">전체</button>
+                <button class="ghost-btn full-width" onclick="setFilter('suggestion')">건의사항</button>
+                <button class="ghost-btn full-width" onclick="setFilter('complaint')">불만사항</button>
+                <button class="ghost-btn full-width" onclick="setFilter('processing')">처리중</button>
+              </div>
+            </div>
+
+            <div class="panel side-card">
+              <button id="logoutBtn" class="primary-btn full-width">로그아웃</button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
   </div>
 
   <script>
@@ -91,6 +105,7 @@
     let currentPostId = null;
     let currentFilter = "all";
 
+    const goPublicBtn = document.getElementById("goPublicBtn");
     const adminPostList = document.getElementById("adminPostList");
     const detailNo = document.getElementById("detailNo");
     const detailType = document.getElementById("detailType");
@@ -108,10 +123,41 @@
       return type === "complaint" ? "불만사항" : "건의사항";
     }
 
+    function typeClass(type) {
+      return type === "complaint" ? "complaint" : "suggestion";
+    }
+
     function statusLabel(status) {
       if (status === "done") return "완료";
       if (status === "hold") return "보류";
       return "처리중";
+    }
+
+    function statusClass(status) {
+      if (status === "done") return "done";
+      if (status === "hold") return "hold";
+      return "processing";
+    }
+
+    function formatRelativeDate(dateString) {
+      if (!dateString) return "-";
+
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return dateString;
+
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHour = Math.floor(diffMs / 3600000);
+      const diffDay = Math.floor(diffMs / 86400000);
+
+      if (diffMin < 1) return "방금 전";
+      if (diffMin < 60) return `${diffMin}분 전`;
+      if (diffHour < 24) return `${diffHour}시간 전`;
+      if (diffDay < 2) return "어제";
+      if (diffDay < 7) return `${diffDay}일 전`;
+
+      return date.toLocaleDateString("ko-KR");
     }
 
     function getFilteredPosts() {
@@ -129,18 +175,18 @@
       const posts = getFilteredPosts();
 
       if (posts.length === 0) {
-        adminPostList.innerHTML = "<p class='empty-text'>표시할 항목이 없습니다.</p>";
+        adminPostList.innerHTML = `<div class="empty-box">표시할 항목이 없습니다.</div>`;
         return;
       }
 
       adminPostList.innerHTML = posts.map((post) => `
-        <button class="sidebar-post ${currentPostId === post.id ? "active" : ""}" onclick="selectPost(${post.id})">
-          <div class="sidebar-post-top">
+        <button class="sidebar-item ${currentPostId === post.id ? "active" : ""}" onclick="selectPost(${post.id})">
+          <div class="sidebar-item-top">
             <span>NO. ${post.id}</span>
-            <span>${post.date || "-"}</span>
+            <span>${formatRelativeDate(post.date)}</span>
           </div>
-          <div class="sidebar-post-text">
-            ${post.deleted ? "삭제된 건의사항입니다." : post.content}
+          <div class="sidebar-item-text">
+            ${post.deleted ? "삭제된 건의사항입니다." : "비공개 건의사항입니다."}
           </div>
         </button>
       `).join("");
@@ -164,25 +210,6 @@
       `;
     }
 
-    function selectPost(id) {
-      currentPostId = id;
-      const post = allPosts.find((item) => item.id === id);
-
-      if (!post) return;
-
-      detailNo.textContent = `NO. ${post.id}`;
-      detailType.textContent = typeLabel(post.type);
-      detailType.className = `type-badge ${post.type}`;
-      detailStatus.textContent = statusLabel(post.status);
-      detailStatus.className = `status-badge ${post.status}`;
-      detailDate.textContent = post.date || "-";
-      detailLikes.textContent = `❤ ${post.likes || 0}`;
-      detailContent.textContent = post.deleted ? "삭제된 건의사항입니다." : post.content;
-      commentInput.value = post.comment || "";
-
-      renderSidebar();
-    }
-
     function resetDetail() {
       detailNo.textContent = "NO. -";
       detailType.textContent = "건의사항";
@@ -190,9 +217,27 @@
       detailStatus.textContent = "처리중";
       detailStatus.className = "status-badge processing";
       detailDate.textContent = "-";
-      detailLikes.textContent = "❤ 0";
+      detailLikes.textContent = "♡ 0";
       detailContent.textContent = "선택된 항목이 없습니다.";
       commentInput.value = "";
+    }
+
+    function selectPost(id) {
+      currentPostId = id;
+      const post = allPosts.find((item) => item.id === id);
+      if (!post) return;
+
+      detailNo.textContent = `NO. ${post.id}`;
+      detailType.textContent = typeLabel(post.type);
+      detailType.className = `type-badge ${typeClass(post.type)}`;
+      detailStatus.textContent = statusLabel(post.status);
+      detailStatus.className = `status-badge ${statusClass(post.status)}`;
+      detailDate.textContent = formatRelativeDate(post.date);
+      detailLikes.textContent = `♡ ${post.likes || 0}`;
+      detailContent.textContent = post.deleted ? "삭제된 건의사항입니다." : (post.content || "");
+      commentInput.value = post.comment || "";
+
+      renderSidebar();
     }
 
     function setFilter(filter) {
@@ -228,7 +273,6 @@
         const posts = await res.json();
 
         allPosts = Array.isArray(posts) ? posts : [];
-
         renderOverview();
 
         const filtered = getFilteredPosts();
@@ -241,7 +285,7 @@
           resetDetail();
         }
       } catch (error) {
-        adminPostList.innerHTML = "<p class='empty-text'>목록을 불러오지 못했습니다.</p>";
+        adminPostList.innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
       }
     }
 
@@ -255,12 +299,12 @@
         const res = await fetch("/api/status", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             id: currentPostId,
-            status,
-          }),
+            status
+          })
         });
 
         const result = await res.json();
@@ -276,6 +320,10 @@
       }
     }
 
+    window.changeStatus = changeStatus;
+    window.selectPost = selectPost;
+    window.setFilter = setFilter;
+
     saveCommentBtn.addEventListener("click", async () => {
       if (!currentPostId) {
         alert("선택된 항목이 없습니다.");
@@ -286,12 +334,12 @@
         const res = await fetch("/api/comment", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
           body: JSON.stringify({
             id: currentPostId,
-            comment: commentInput.value,
-          }),
+            comment: commentInput.value
+          })
         });
 
         const result = await res.json();
@@ -322,11 +370,9 @@
         const res = await fetch("/api/delete", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            id: currentPostId,
-          }),
+          body: JSON.stringify({ id: currentPostId })
         });
 
         const result = await res.json();
@@ -345,12 +391,16 @@
     logoutBtn.addEventListener("click", async () => {
       try {
         await fetch("/api/logout", {
-          method: "POST",
+          method: "POST"
         });
-        location.href = "/login.html";
+        location.href = "/";
       } catch (error) {
         alert("로그아웃 중 오류가 발생했습니다.");
       }
+    });
+
+    goPublicBtn.addEventListener("click", () => {
+      location.href = "/";
     });
 
     loadAdminPosts();
