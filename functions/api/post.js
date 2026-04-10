@@ -8,10 +8,7 @@ export async function onRequestPost(context) {
     const type = body.type === "complaint" ? "complaint" : "suggestion";
 
     if (!content) {
-      return json(
-        { success: false, message: "내용을 입력해주세요." },
-        400
-      );
+      return json({ success: false, message: "내용을 입력해주세요." }, 400);
     }
 
     const createdAt = new Date().toISOString();
