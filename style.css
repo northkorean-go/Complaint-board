@@ -1000,9 +1000,3 @@ button {
     grid-template-columns: 1fr;
   }
 }
-.admin-post-content {
-  font-size: 15px;
-  line-height: 1.9;
-  color: #31343a;
-  white-space: pre-wrap;
-}
