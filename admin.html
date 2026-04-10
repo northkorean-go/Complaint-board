@@ -339,7 +339,7 @@
           <div class="admin-post-body">
   ${post.deleted
     ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
-    : `<div class="private-box">${(post.content || "").replace(/\n/g, "<br>")}</div>`
+    : `<div class="private-box">${JSON.stringify(post)}</div>`
   }
 </div>
 
@@ -394,23 +394,7 @@
 
     async function loadPosts() {
       try {
-        async function loadPosts() {
-  try {
-    const res = await fetch("/api/admin-posts");
-    const posts = await res.json();
-
-    if (!Array.isArray(posts)) {
-      allPosts = [];
-    } else {
-      allPosts = posts;
-    }
-
-    renderAll();
-  } catch (error) {
-    document.getElementById("recentPosts").innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
-    allPosts = [];
-  }
-}
+        const res = await fetch("/api/admin-posts");
         const posts = await res.json();
 
         if (!Array.isArray(posts)) {
