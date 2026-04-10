@@ -17,7 +17,15 @@ export async function onRequestDelete(context) {
     return json({ msg: "잘못된 번호입니다." }, 400);
   }
 
-  await env.DB.prepare(`DELETE FROM posts WHERE id = ?`).bind(id).run();
+  const deletedAt = new Date().toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
+
+  await env.DB.prepare(
+    "UPDATE posts SET is_deleted = 1, deleted_at = ? WHERE id = ?"
+  )
+    .bind(deletedAt, id)
+    .run();
 
   return json({ ok: true });
 }
