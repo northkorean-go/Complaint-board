@@ -175,43 +175,55 @@
       card.addEventListener("click", () => setType(card.dataset.type));
     });
 
-    async function loadPosts() {
-      try {
-        const res = await fetch("/api/posts");
-        const posts = await res.json();
+   async function loadPosts() {
+  try {
+    const res = await fetch("/api/posts");
+    const text = await res.text();
 
-        if (!Array.isArray(posts) || posts.length === 0) {
-          postList.innerHTML = `<div class="empty-box">아직 글이 없습니다</div>`;
-          return;
-        }
-
-        postList.innerHTML = posts.map((post) => `
-          <div class="board-item">
-            <div class="board-item-top">
-              <div class="badge-row">
-                <span class="no-badge">NO. ${post.id}</span>
-                <span class="type-badge ${typeClass(post.type)}">${typeLabel(post.type)}</span>
-                <span class="status-badge ${statusClass(post.status)}">${statusLabel(post.status)}</span>
-              </div>
-            </div>
-
-            <div class="meta-row">
-              <span>${formatRelativeDate(post.date)}</span>
-              <button class="like-link" onclick="likePost(${post.id})">♡ ${post.likes || 0}</button>
-            </div>
-
-            ${
-              post.deleted
-                ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
-                : `<div class="private-box">비공개 건의사항입니다.</div>`
-            }
-          </div>
-        `).join("");
-      } catch (error) {
-        postList.innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
-      }
+    let posts;
+    try {
+      posts = JSON.parse(text);
+    } catch {
+      postList.innerHTML = `<div class="empty-box">목록 오류: ${text}</div>`;
+      return;
     }
 
+    if (!res.ok) {
+      postList.innerHTML = `<div class="empty-box">${posts.message || "목록을 불러오지 못했습니다."}</div>`;
+      return;
+    }
+
+    if (!Array.isArray(posts) || posts.length === 0) {
+      postList.innerHTML = `<div class="empty-box">아직 글이 없습니다</div>`;
+      return;
+    }
+
+    postList.innerHTML = posts.map((post) => `
+      <div class="board-item">
+        <div class="board-item-top">
+          <div class="badge-row">
+            <span class="no-badge">NO. ${post.id}</span>
+            <span class="type-badge ${typeClass(post.type)}">${typeLabel(post.type)}</span>
+            <span class="status-badge ${statusClass(post.status)}">${statusLabel(post.status)}</span>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <span>${formatRelativeDate(post.date)}</span>
+          <button class="like-link" onclick="likePost(${post.id})">♡ ${post.likes || 0}</button>
+        </div>
+
+        ${
+          post.deleted
+            ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
+            : `<div class="private-box">비공개 건의사항입니다.</div>`
+        }
+      </div>
+    `).join("");
+  } catch (error) {
+    postList.innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다: ${error.message}</div>`;
+  }
+}
     async function likePost(id) {
       try {
         const res = await fetch("/api/like", {
