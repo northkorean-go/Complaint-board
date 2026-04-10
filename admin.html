@@ -1,1 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA 관리자 페이지</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="admin-page-body">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-brand">ZARA</div>
 
+      <nav class="admin-sidebar-nav">
+        <button class="admin-nav-btn active" data-page="dashboard">대시보드</button>
+        <button class="admin-nav-btn" data-page="suggestions">건의사항</button>
+        <button class="admin-nav-btn" data-page="complaints">불만사항</button>
+        <button class="admin-nav-btn" data-page="comments">댓글 관리</button>
+        <button class="admin-nav-btn" data-page="stats">통계</button>
+        <button class="admin-nav-btn" data-page="settings">설정</button>
+      </nav>
+
+      <div class="admin-sidebar-bottom">
+        <button id="logoutBtn" class="admin-logout-btn">로그아웃</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <p class="admin-topbar-eyebrow">ZARA ADMIN</p>
+          <h1 id="pageTitle" class="admin-topbar-title">관리자 대시보드</h1>
+          <p id="pageDesc" class="admin-topbar-desc">전체 현황과 최근 접수 내역을 확인할 수 있습니다.</p>
+        </div>
+        <div class="admin-topbar-right">
+          <button class="admin-user-switch" onclick="location.href='index.html'">사용자 화면</button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <!-- dashboard -->
+        <section class="admin-section active" data-page="dashboard">
+          <div class="admin-summary-grid">
+            <div class="admin-card">
+              <p class="admin-card-label">전체 등록 수</p>
+              <div class="admin-card-value-row">
+                <span class="admin-card-value" id="totalCount">0</span>
+                <span class="admin-card-unit">건</span>
+              </div>
+              <p class="admin-card-sub">전체 접수 기준</p>
+            </div>
+
+            <div class="admin-card">
+              <p class="admin-card-label">건의사항</p>
+              <div class="admin-card-value-row">
+                <span class="admin-card-value" id="suggestionCount">0</span>
+                <span class="admin-card-unit">건</span>
+              </div>
+              <p class="admin-card-sub">건의사항 누적</p>
+            </div>
+
+            <div class="admin-card">
+              <p class="admin-card-label">불만사항</p>
+              <div class="admin-card-value-row">
+                <span class="admin-card-value" id="complaintCount">0</span>
+                <span class="admin-card-unit">건</span>
+              </div>
+              <p class="admin-card-sub">불만사항 누적</p>
+            </div>
+
+            <div class="admin-card">
+              <p class="admin-card-label">댓글 등록 수</p>
+              <div class="admin-card-value-row">
+                <span class="admin-card-value" id="commentCount">0</span>
+                <span class="admin-card-unit">건</span>
+              </div>
+              <p class="admin-card-sub">관리자 답변 기준</p>
+            </div>
+          </div>
+
+          <div class="admin-layout-grid">
+            <div class="admin-panel">
+              <div class="admin-panel-head">
+                <div>
+                  <p class="admin-panel-eyebrow">LIVE DATA</p>
+                  <h2 class="admin-panel-title">최근 접수</h2>
+                </div>
+              </div>
+              <div id="recentPosts" class="admin-post-list"></div>
+            </div>
+
+            <div class="admin-panel">
+              <div class="admin-panel-head">
+                <div>
+                  <p class="admin-panel-eyebrow">WEEKLY</p>
+                  <h2 class="admin-panel-title">주간 요약</h2>
+                </div>
+              </div>
+
+              <div class="admin-mini-stack">
+                <div class="admin-mini-card">
+                  <span>이번 주 등록</span>
+                  <strong id="weeklyTotal">0건</strong>
+                </div>
+                <div class="admin-mini-card">
+                  <span>이번 주 건의</span>
+                  <strong id="weeklySuggestion">0건</strong>
+                </div>
+                <div class="admin-mini-card">
+                  <span>이번 주 불만</span>
+                  <strong id="weeklyComplaint">0건</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- suggestions -->
+        <section class="admin-section" data-page="suggestions">
+          <div class="admin-panel">
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-panel-eyebrow">SUGGESTION</p>
+                <h2 class="admin-panel-title">건의사항 관리</h2>
+              </div>
+            </div>
+            <div id="suggestionList" class="admin-post-list"></div>
+          </div>
+        </section>
+
+        <!-- complaints -->
+        <section class="admin-section" data-page="complaints">
+          <div class="admin-panel">
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-panel-eyebrow">COMPLAINT</p>
+                <h2 class="admin-panel-title">불만사항 관리</h2>
+              </div>
+            </div>
+            <div id="complaintList" class="admin-post-list"></div>
+          </div>
+        </section>
+
+        <!-- comments -->
+        <section class="admin-section" data-page="comments">
+          <div class="admin-layout-grid">
+            <div class="admin-panel">
+              <div class="admin-panel-head">
+                <div>
+                  <p class="admin-panel-eyebrow">COMMENT STATUS</p>
+                  <h2 class="admin-panel-title">댓글 대상 목록</h2>
+                </div>
+              </div>
+              <div id="commentTargetList" class="admin-post-list"></div>
+            </div>
+
+            <div class="admin-panel">
+              <div class="admin-panel-head">
+                <div>
+                  <p class="admin-panel-eyebrow">WRITE COMMENT</p>
+                  <h2 class="admin-panel-title">댓글 작성</h2>
+                </div>
+              </div>
+
+              <div class="admin-comment-box">
+                <div class="admin-comment-selected" id="selectedTitle">게시글을 선택해주세요.</div>
+                <textarea id="commentInput" class="admin-comment-textarea" placeholder="관리자 댓글을 입력하세요."></textarea>
+                <div class="admin-comment-actions">
+                  <button id="saveCommentBtn" class="primary-btn" type="button">댓글 저장</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- stats -->
+        <section class="admin-section" data-page="stats">
+          <div class="admin-panel">
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-panel-eyebrow">ANALYTICS</p>
+                <h2 class="admin-panel-title">통계</h2>
+              </div>
+            </div>
+
+            <div class="admin-summary-grid">
+              <div class="admin-card">
+                <p class="admin-card-label">처리중</p>
+                <div class="admin-card-value-row">
+                  <span class="admin-card-value" id="processingCount">0</span>
+                  <span class="admin-card-unit">건</span>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <p class="admin-card-label">보류</p>
+                <div class="admin-card-value-row">
+                  <span class="admin-card-value" id="holdCount">0</span>
+                  <span class="admin-card-unit">건</span>
+                </div>
+              </div>
+
+              <div class="admin-card">
+                <p class="admin-card-label">완료</p>
+                <div class="admin-card-value-row">
+                  <span class="admin-card-value" id="doneCount">0</span>
+                  <span class="admin-card-unit">건</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- settings -->
+        <section class="admin-section" data-page="settings">
+          <div class="admin-panel">
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-panel-eyebrow">SETTINGS</p>
+                <h2 class="admin-panel-title">설정</h2>
+              </div>
+            </div>
+
+            <div class="admin-settings-box">
+              <div class="admin-setting-row">
+                <span>관리자 페이지</span>
+                <strong>활성화</strong>
+              </div>
+              <div class="admin-setting-row">
+                <span>댓글 기능</span>
+                <strong>사용 중</strong>
+              </div>
+              <div class="admin-setting-row">
+                <span>데이터 로드 방식</span>
+                <strong>API 연결</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let selectedPostId = null;
+    let allPosts = [];
+
+    const pageMeta = {
+      dashboard: {
+        title: "관리자 대시보드",
+        desc: "전체 현황과 최근 접수 내역을 확인할 수 있습니다."
+      },
+      suggestions: {
+        title: "건의사항 관리",
+        desc: "건의사항 목록을 확인하고 필요한 조치를 진행합니다."
+      },
+      complaints: {
+        title: "불만사항 관리",
+        desc: "불만사항을 확인하고 상태를 관리합니다."
+      },
+      comments: {
+        title: "댓글 관리",
+        desc: "댓글을 작성하고 관리할 수 있습니다."
+      },
+      stats: {
+        title: "통계",
+        desc: "누적 현황과 처리 상태를 확인합니다."
+      },
+      settings: {
+        title: "설정",
+        desc: "관리자 페이지 기본 설정입니다."
+      }
+    };
+
+    function typeLabel(type) {
+      return type === "complaint" ? "불만사항" : "건의사항";
+    }
+
+    function statusLabel(status) {
+      if (status === "done") return "완료";
+      if (status === "hold") return "보류";
+      return "처리중";
+    }
+
+    function statusClass(status) {
+      if (status === "done") return "done";
+      if (status === "hold") return "hold";
+      return "processing";
+    }
+
+    function typeClass(type) {
+      return type === "complaint" ? "complaint" : "suggestion";
+    }
+
+    function formatRelativeDate(dateString) {
+      if (!dateString) return "-";
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return dateString;
+
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMin = Math.floor(diffMs / 60000);
+      const diffHour = Math.floor(diffMs / 3600000);
+      const diffDay = Math.floor(diffMs / 86400000);
+
+      if (diffMin < 1) return "방금 전";
+      if (diffMin < 60) return `${diffMin}분 전`;
+      if (diffHour < 24) return `${diffHour}시간 전`;
+      if (diffDay < 7) return `${diffDay}일 전`;
+
+      return date.toLocaleDateString("ko-KR");
+    }
+
+    function setActivePage(page) {
+      document.querySelectorAll(".admin-nav-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.page === page);
+      });
+
+      document.querySelectorAll(".admin-section").forEach((section) => {
+        section.classList.toggle("active", section.dataset.page === page);
+      });
+
+      document.getElementById("pageTitle").textContent = pageMeta[page].title;
+      document.getElementById("pageDesc").textContent = pageMeta[page].desc;
+    }
+
+    function renderPostCard(post, withCommentButton = false) {
+      return `
+        <article class="admin-post-card">
+          <div class="admin-post-top">
+            <div class="admin-post-badges">
+              <span class="admin-no-badge">NO. ${post.id}</span>
+              <span class="type-badge ${typeClass(post.type)}">${typeLabel(post.type)}</span>
+              <span class="status-badge ${statusClass(post.status)}">${statusLabel(post.status)}</span>
+            </div>
+            <div class="admin-post-time">${formatRelativeDate(post.date)}</div>
+          </div>
+
+          <div class="admin-post-body">
+  ${post.deleted
+    ? `<div class="deleted-box">삭제된 건의사항입니다.</div>`
+    : `<div class="admin-post-content">${(post.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`
+  }
+</div>
+
+          <div class="admin-post-actions">
+            ${withCommentButton ? `<button class="ghost-btn" onclick="selectPost(${post.id})">선택</button>` : ""}
+            <button class="ghost-btn" onclick="changeStatus(${post.id}, 'processing')">처리중</button>
+            <button class="ghost-btn" onclick="changeStatus(${post.id}, 'hold')">보류</button>
+            <button class="ghost-btn" onclick="changeStatus(${post.id}, 'done')">완료</button>
+            <button class="ghost-btn danger" onclick="deletePost(${post.id})">삭제</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAll() {
+      const suggestions = allPosts.filter(p => p.type === "suggestion");
+      const complaints = allPosts.filter(p => p.type === "complaint");
+      const comments = allPosts.filter(p => !p.deleted);
+
+      document.getElementById("totalCount").textContent = allPosts.length;
+      document.getElementById("suggestionCount").textContent = suggestions.length;
+      document.getElementById("complaintCount").textContent = complaints.length;
+      document.getElementById("commentCount").textContent = allPosts.filter(p => p.comment).length;
+
+      document.getElementById("processingCount").textContent = allPosts.filter(p => p.status === "processing").length;
+      document.getElementById("holdCount").textContent = allPosts.filter(p => p.status === "hold").length;
+      document.getElementById("doneCount").textContent = allPosts.filter(p => p.status === "done").length;
+
+      document.getElementById("recentPosts").innerHTML =
+        allPosts.length ? allPosts.slice(0, 5).map(p => renderPostCard(p)).join("") : `<div class="empty-box">게시글이 없습니다.</div>`;
+
+      document.getElementById("suggestionList").innerHTML =
+        suggestions.length ? suggestions.map(p => renderPostCard(p)).join("") : `<div class="empty-box">건의사항이 없습니다.</div>`;
+
+      document.getElementById("complaintList").innerHTML =
+        complaints.length ? complaints.map(p => renderPostCard(p)).join("") : `<div class="empty-box">불만사항이 없습니다.</div>`;
+
+      document.getElementById("commentTargetList").innerHTML =
+        comments.length ? comments.map(p => renderPostCard(p, true)).join("") : `<div class="empty-box">댓글 대상이 없습니다.</div>`;
+
+      const weekPosts = allPosts.filter((post) => {
+        const date = new Date(post.date);
+        if (Number.isNaN(date.getTime())) return false;
+        const now = new Date();
+        return now - date < 7 * 24 * 60 * 60 * 1000;
+      });
+
+      document.getElementById("weeklyTotal").textContent = `${weekPosts.length}건`;
+      document.getElementById("weeklySuggestion").textContent = `${weekPosts.filter(p => p.type === "suggestion").length}건`;
+      document.getElementById("weeklyComplaint").textContent = `${weekPosts.filter(p => p.type === "complaint").length}건`;
+    }
+
+    async function loadPosts() {
+      try {
+        const res = await fetch("/api/posts");
+        const posts = await res.json();
+
+        if (!Array.isArray(posts)) {
+          allPosts = [];
+        } else {
+          allPosts = posts;
+        }
+
+        renderAll();
+      } catch (error) {
+        document.getElementById("recentPosts").innerHTML = `<div class="empty-box">목록을 불러오지 못했습니다.</div>`;
+      }
+    }
+
+    async function selectPost(id) {
+      selectedPostId = id;
+      const post = allPosts.find((p) => p.id === id);
+      document.getElementById("selectedTitle").textContent = post ? `NO. ${post.id} 선택됨` : "게시글을 선택해주세요.";
+      document.getElementById("commentInput").value = post?.comment || "";
+      setActivePage("comments");
+    }
+
+    async function saveComment() {
+      if (!selectedPostId) {
+        alert("게시글을 먼저 선택해주세요.");
+        return;
+      }
+
+      const comment = document.getElementById("commentInput").value.trim();
+      if (!comment) {
+        alert("댓글 내용을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/comment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selectedPostId, comment })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          alert(result.message || "댓글 저장 실패");
+          return;
+        }
+
+        await loadPosts();
+        alert("댓글이 저장되었습니다.");
+      } catch (error) {
+        alert("댓글 저장 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function changeStatus(id, status) {
+      try {
+        const res = await fetch("/api/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          alert(result.message || "상태 변경 실패");
+          return;
+        }
+
+        await loadPosts();
+      } catch (error) {
+        alert("상태 변경 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function deletePost(id) {
+      if (!confirm("정말 삭제할까요?")) return;
+
+      try {
+        const res = await fetch("/api/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          alert(result.message || "삭제 실패");
+          return;
+        }
+
+        await loadPosts();
+      } catch (error) {
+        alert("삭제 중 오류가 발생했습니다.");
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch("/api/logout", { method: "POST" });
+      } catch (error) {}
+      location.href = "/index.html";
+    }
+
+    document.querySelectorAll(".admin-nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => setActivePage(btn.dataset.page));
+    });
+
+    document.getElementById("saveCommentBtn").addEventListener("click", saveComment);
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+
+    loadPosts();
+
+    window.selectPost = selectPost;
+    window.changeStatus = changeStatus;
+    window.deletePost = deletePost;
+  </script>
+</body>
+</html>
