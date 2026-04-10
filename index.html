@@ -237,39 +237,48 @@
     window.likePost = likePost;
 
     postForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  e.preventDefault();
 
-      const content = contentEl.value.trim();
-      if (!content) {
-        alert("내용을 입력해주세요.");
-        return;
-      }
+  const content = contentEl.value.trim();
+  if (!content) {
+    alert("내용을 입력해주세요.");
+    return;
+  }
 
-      try {
-        const res = await fetch("/api/post", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            content,
-            type: selectedType
-          })
-        });
-
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-          alert(result.message || "등록 실패");
-          return;
-        }
-
-        contentEl.value = "";
-        await loadPosts();
-      } catch (error) {
-        alert("등록 중 오류가 발생했습니다.");
-      }
+  try {
+    const res = await fetch("/api/post", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content,
+        type: selectedType
+      })
     });
+
+    const text = await res.text();
+    let result = {};
+
+    try {
+      result = JSON.parse(text);
+    } catch {
+      alert(`등록 실패: ${text}`);
+      return;
+    }
+
+    if (!res.ok || !result.success) {
+      alert(result.message || "등록 실패");
+      return;
+    }
+
+    alert("등록되었습니다.");
+    contentEl.value = "";
+    await loadPosts();
+  } catch (error) {
+    alert(`등록 중 오류가 발생하였습니다.: ${error.message}`);
+  }
+});
 
     adminTabBtn.addEventListener("click", () => {
       loginModal.classList.remove("hidden");
