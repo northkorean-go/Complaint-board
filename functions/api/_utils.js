@@ -42,10 +42,42 @@ export function isAdmin(request) {
   return cookies.admin_token === ADMIN_TOKEN;
 }
 
+export function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=UTF-8"
+    }
+  });
+}
+
+function parseCookies(cookieHeader = "") {
+  return Object.fromEntries(
+    cookieHeader
+      .split(";")
+      .map(v => v.trim())
+      .filter(Boolean)
+      .map(v => {
+        const i = v.indexOf("=");
+        if (i === -1) return [v, ""];
+        return [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
+      })
+  );
+}
+
 export function requireAdmin(request) {
-  if (!isAdmin(request)) {
-    return json({ success: false, message: "관리자만 접근 가능합니다." }, 401);
+  const cookieHeader = request.headers.get("cookie") || "";
+  const cookies = parseCookies(cookieHeader);
+
+  const isAdmin = cookies.admin_auth === "1";
+
+  if (!isAdmin) {
+    return json(
+      { success: false, message: "관리자만 접근 가능합니다." },
+      401
+    );
   }
+
   return null;
 }
 
