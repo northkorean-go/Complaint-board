@@ -481,7 +481,9 @@
 
     async function loadPosts() {
       try {
-        const res = await fetch("/api/admin-posts");
+        const res = await fetch("/api/admin-posts", {
+  credentials: "include"
+})
         const posts = await res.json();
 
         if (!Array.isArray(posts)) {
