@@ -1,23 +1,34 @@
-import { json, readJson, getAdminCredentials } from "./_utils.js";
+const ADMIN_PASSWORD = "1234";
 
 export async function onRequestPost(context) {
-  const body = await readJson(context.request);
-  const { username = "", password = "" } = body;
+  try {
+    const body = await context.request.json();
+    const password = body.password;
 
-  const admin = getAdminCredentials();
+    if (password !== ADMIN_PASSWORD) {
+      return new Response(
+        JSON.stringify({ success: false, message: "비밀번호가 틀렸습니다." }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json; charset=UTF-8" }
+        }
+      );
+    }
 
-  if (username !== admin.id || password !== admin.password) {
-    return json(
-      { success: false, message: "아이디 또는 비밀번호가 올바르지 않습니다." },
-      401
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+        "Set-Cookie": "admin_auth=1; Path=/; HttpOnly; SameSite=Lax"
+      }
+    });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ success: false, message: "로그인 처리 오류" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json; charset=UTF-8" }
+      }
     );
   }
-
-  return json(
-    { success: true },
-    200,
-    {
-      "Set-Cookie": `admin_token=${admin.token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=604800`,
-    }
-  );
 }
