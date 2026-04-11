@@ -19,7 +19,7 @@ export async function onRequestPost(context) {
       status: 200,
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
-        "Set-Cookie": "admin_auth=1; Path=/; HttpOnly; SameSite=Lax"
+        "Set-Cookie": "admin_auth=1; Path=/; HttpOnly; Max-Age=3600; SameSite=Lax"
       }
     });
   } catch (e) {
