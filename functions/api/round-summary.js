@@ -1,9 +1,9 @@
-import { json, serverError, getOpenRound } from './_utils';
+import { json, getOpenRound, getLatestRound } from "./_utils.js";
 
 function sortCountItems(items) {
   return items.sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
-    return String(a.name).localeCompare(String(b.name), 'ko');
+    return String(a.name).localeCompare(String(b.name), "ko");
   });
 }
 
@@ -11,21 +11,34 @@ export async function onRequestGet(context) {
   const { env } = context;
 
   try {
-    const round = await getOpenRound(env);
+    let round = await getOpenRound(env);
+    if (!round) {
+      round = await getLatestRound(env);
+    }
 
     if (!round) {
       return json({
         ok: true,
         round: null,
+        roundRecords: [],
         ranking: [],
         mvpRanking: [],
-        benefitText: '',
-        nextScheduleText: '미정',
+        benefitText: "",
+        nextScheduleText: "미정",
       });
     }
 
-    const matchRows = await env.DB.prepare(`
-      SELECT winner_members_json, mvp_name
+    const result = await env.DB.prepare(`
+      SELECT
+        id,
+        match_date,
+        match_date_text,
+        winner_team,
+        winner_score,
+        winner_members_json,
+        mvp_name,
+        mvp_score,
+        created_at
       FROM match_results
       WHERE round_id = ?
       ORDER BY match_date DESC, id DESC
@@ -33,24 +46,25 @@ export async function onRequestGet(context) {
       .bind(round.id)
       .all();
 
-    const winnerCounts = Object.create(null);
-    const mvpCounts = Object.create(null);
+    const items = result.results || [];
+    const winnerCounts = {};
+    const mvpCounts = {};
 
-    for (const row of matchRows.results || []) {
+    for (const item of items) {
       let members = [];
       try {
-        members = JSON.parse(row.winner_members_json || '[]');
+        members = JSON.parse(item.winner_members_json || "[]");
       } catch {
         members = [];
       }
 
-      for (const name of members) {
-        const key = String(name || '').trim();
-        if (!key) continue;
-        winnerCounts[key] = (winnerCounts[key] || 0) + 1;
+      for (const member of members) {
+        const name = String(member || "").trim();
+        if (!name) continue;
+        winnerCounts[name] = (winnerCounts[name] || 0) + 1;
       }
 
-      const mvpName = String(row.mvp_name || '').trim();
+      const mvpName = String(item.mvp_name || "").trim();
       if (mvpName) {
         mvpCounts[mvpName] = (mvpCounts[mvpName] || 0) + 1;
       }
@@ -77,12 +91,19 @@ export async function onRequestGet(context) {
         name: round.name,
         is_open: !!round.is_open,
       },
+      roundRecords: items,
       ranking,
       mvpRanking,
-      benefitText: round.benefit_text || '',
-      nextScheduleText: round.next_schedule_text || '미정',
+      benefitText: round.benefit_text || "",
+      nextScheduleText: round.next_schedule_text || "미정",
     });
   } catch (error) {
-    return serverError(error);
+    return json(
+      {
+        ok: false,
+        error: error.message || "회차 집계 조회 실패",
+      },
+      500
+    );
   }
 }
