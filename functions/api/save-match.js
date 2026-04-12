@@ -10,11 +10,18 @@ export async function onRequest(context) {
   }
 
   try {
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
+    const CSV_URL =
+      'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
 
-    const res = await fetch(CSV_URL, { cf: { cacheTtl: 0, cacheEverything: false } });
+    const res = await fetch(CSV_URL, {
+      cf: { cacheTtl: 0, cacheEverything: false },
+    });
+
     if (!res.ok) {
-      return json({ ok: false, error: '시트 로드 실패', status: res.status }, 500);
+      return json(
+        { ok: false, error: '시트 로드 실패', status: res.status },
+        500
+      );
     }
 
     const csvText = await res.text();
@@ -27,15 +34,19 @@ export async function onRequest(context) {
     const mvp = findMVPPlayer(rows);
 
     if (!recentMatch) {
-      return json({ ok: false, error: '최근 내전 결과를 찾지 못했습니다.' }, 400);
+      return json(
+        { ok: false, error: '최근 내전 결과를 찾지 못했습니다.' },
+        400
+      );
     }
 
     const displayDate = normalizeDisplayDate(recentMatch.date);
     const storageDate = normalizeStorageDate(recentMatch.date);
     const snapshotKey = `${storageDate}|${recentMatch.summary}`;
 
-    const exists = await env.DB
-      .prepare(`SELECT id FROM match_results WHERE snapshot_key = ? LIMIT 1`)
+    const exists = await env.DB.prepare(
+      `SELECT id FROM match_results WHERE snapshot_key = ? LIMIT 1`
+    )
       .bind(snapshotKey)
       .first();
 
@@ -44,25 +55,24 @@ export async function onRequest(context) {
         ok: true,
         saved: false,
         message: '이미 저장된 내전 결과입니다.',
-        id: exists.id
+        id: exists.id,
       });
     }
 
-    const insertResult = await env.DB
-      .prepare(`
-        INSERT INTO match_results (
-          snapshot_key,
-          match_date,
-          match_date_text,
-          title,
-          summary_text,
-          winner_team,
-          winner_score,
-          winner_members_json,
-          mvp_name,
-          mvp_score
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
+    const insertResult = await env.DB.prepare(`
+      INSERT INTO match_results (
+        snapshot_key,
+        match_date,
+        match_date_text,
+        title,
+        summary_text,
+        winner_team,
+        winner_score,
+        winner_members_json,
+        mvp_name,
+        mvp_score
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
       .bind(
         snapshotKey,
         storageDate,
@@ -77,9 +87,12 @@ export async function onRequest(context) {
       )
       .run();
 
-    const resultId = insertResult.meta && insertResult.meta.last_row_id;
+    const resultId = insertResult.meta?.last_row_id;
     if (!resultId) {
-      return json({ ok: false, error: '결과 저장 후 ID를 가져오지 못했습니다.' }, 500);
+      return json(
+        { ok: false, error: '결과 저장 후 ID를 가져오지 못했습니다.' },
+        500
+      );
     }
 
     const rowStatements = [];
@@ -115,13 +128,16 @@ export async function onRequest(context) {
       winner_score: topTeamInfo.score ?? null,
       winner_members: winnerMembers,
       mvp_name: mvp ? mvp.name : '',
-      mvp_score: mvp ? mvp.score : null
+      mvp_score: mvp ? mvp.score : null,
     });
   } catch (error) {
-    return json({
-      ok: false,
-      error: error.message || '저장 중 오류가 발생했습니다.'
-    }, 500);
+    return json(
+      {
+        ok: false,
+        error: error.message || '저장 중 오류가 발생했습니다.',
+      },
+      500
+    );
   }
 }
 
@@ -130,14 +146,14 @@ function corsHeaders() {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type',
   };
 }
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
-    headers: corsHeaders()
+    headers: corsHeaders(),
   });
 }
 
@@ -209,11 +225,16 @@ function normalizeDisplayDate(dateText) {
   const raw = normalizeDateText(dateText);
   if (!raw) {
     const now = new Date();
-    return `${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+    return `${String(now.getMonth() + 1).padStart(2, '0')}.${String(
+      now.getDate()
+    ).padStart(2, '0')}`;
   }
 
   const [m, d] = raw.split('.');
-  return `${String(Number(m)).padStart(2, '0')}.${String(Number(d)).padStart(2, '0')}`;
+  return `${String(Number(m)).padStart(2, '0')}.${String(Number(d)).padStart(
+    2,
+    '0'
+  )}`;
 }
 
 function normalizeStorageDate(dateText) {
@@ -241,21 +262,45 @@ function buildTopTeamText(rows) {
   const bi15 = getCell(rows, 14, 60);
 
   if (
-    !m11 && !b12 && !l15 &&
-    !o12 && !y15 &&
-    !aa12 && !ak15 &&
-    !am12 && !aw15 &&
-    !ay12 && !bi15
+    !m11 &&
+    !b12 &&
+    !l15 &&
+    !o12 &&
+    !y15 &&
+    !aa12 &&
+    !ak15 &&
+    !am12 &&
+    !aw15 &&
+    !ay12 &&
+    !bi15
   ) {
     return '';
   }
 
-  return '[' + m11 + '] ' +
-    b12 + '팀 ' + l15 + ' : ' +
-    o12 + '팀 ' + y15 + ' : ' +
-    aa12 + '팀 ' + ak15 + ' : ' +
-    am12 + '팀 ' + aw15 + ' : ' +
-    ay12 + '팀 ' + bi15;
+  return (
+    '[' +
+    m11 +
+    '] ' +
+    b12 +
+    '팀 ' +
+    l15 +
+    ' : ' +
+    o12 +
+    '팀 ' +
+    y15 +
+    ' : ' +
+    aa12 +
+    '팀 ' +
+    ak15 +
+    ' : ' +
+    am12 +
+    '팀 ' +
+    aw15 +
+    ' : ' +
+    ay12 +
+    '팀 ' +
+    bi15
+  );
 }
 
 function parseSummaryTeamEntries(summaryText) {
@@ -267,7 +312,7 @@ function parseSummaryTeamEntries(summaryText) {
     entries.push({
       teamName: match[1].trim() + '팀',
       baseName: match[1].trim(),
-      score: parseFloat(match[2])
+      score: parseFloat(match[2]),
     });
   }
 
@@ -320,7 +365,11 @@ function findRecentDetailedMatch(rows) {
       let title = '';
       let date = '';
 
-      for (let rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
+      for (
+        let rr = Math.max(0, r - 3);
+        rr <= Math.min(rows.length - 1, r + 1);
+        rr++
+      ) {
         const left = Math.max(0, c - 6);
         const right = Math.min((rows[rr] || []).length - 1, c + 12);
 
@@ -376,7 +425,7 @@ function findRecentDetailedMatch(rows) {
         title: title || '최근 내전 결과',
         date: date || '',
         summary: summary,
-        rows: tableRows
+        rows: tableRows,
       };
     }
   }
@@ -395,7 +444,9 @@ function findWinningTeamMembers(rows, topTeamText) {
   const teams = parseSummaryTeamEntries(recentMatch.summary);
   if (!teams.length) return [];
 
-  const winnerColIndex = teams.findIndex(team => team.baseName === winnerBaseName);
+  const winnerColIndex = teams.findIndex(
+    (team) => team.baseName === winnerBaseName
+  );
   if (winnerColIndex === -1) return [];
 
   const members = [];
@@ -434,141 +485,3 @@ function findMVPPlayer(rows) {
 
   return best;
 }
-  <script>
-    async function loadHistoryList() {
-      const listEl = document.getElementById('historyList');
-      const detailHead = document.getElementById('detailHead');
-      const detailMeta = document.getElementById('detailMeta');
-      const detailSummary = document.getElementById('detailSummary');
-      const detailTableBody = document.getElementById('detailTableBody');
-
-      try {
-        const res = await fetch('/api/matches');
-        const data = await res.json();
-
-        if (!data.ok) {
-          listEl.innerHTML = '<div class="empty-box">기록 목록을 불러오지 못했습니다.</div>';
-          return;
-        }
-
-        if (!data.items || !data.items.length) {
-          listEl.innerHTML = '<div class="empty-box">저장된 기록이 없습니다.</div>';
-          detailHead.textContent = '기록 없음';
-          detailMeta.textContent = '';
-          detailSummary.textContent = '';
-          detailTableBody.innerHTML = '';
-          return;
-        }
-
-        listEl.innerHTML = data.items.map(function(item) {
-          return (
-            '<button class="history-item" data-id="' + item.id + '">' +
-              '<div class="history-item-date">' + escapeHtml(item.match_date_text) + '</div>' +
-              '<div class="history-item-title">' + escapeHtml(item.title || '최근 내전 결과') + '</div>' +
-              '<div class="history-item-meta">' +
-                '1등팀 ' + escapeHtml(item.winner_team || '-') +
-                (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
-              '</div>' +
-            '</button>'
-          );
-        }).join('');
-
-        const buttons = listEl.querySelectorAll('.history-item');
-        buttons.forEach(function(btn, index) {
-          btn.addEventListener('click', function() {
-            loadHistoryDetail(btn.getAttribute('data-id'), buttons);
-          });
-
-          if (index === 0) {
-            btn.click();
-          }
-        });
-      } catch (error) {
-        listEl.innerHTML = '<div class="empty-box">기록 목록을 불러오지 못했습니다.</div>';
-      }
-
-      async function loadHistoryDetail(id, buttons) {
-        try {
-          buttons.forEach(function(b) { b.classList.remove('active'); });
-          const activeBtn = Array.from(buttons).find(function(b) { return b.getAttribute('data-id') === String(id); });
-          if (activeBtn) activeBtn.classList.add('active');
-
-          const res = await fetch('/api/match-detail?id=' + encodeURIComponent(id));
-          const data = await res.json();
-
-          if (!data.ok || !data.item) {
-            detailHead.textContent = '기록을 불러오지 못했습니다.';
-            detailMeta.textContent = '';
-            detailSummary.textContent = '';
-            detailTableBody.innerHTML = '';
-            return;
-          }
-
-          const item = data.item;
-          detailHead.textContent = item.title || '최근 내전 결과';
-
-          var metaText =
-            item.match_date_text +
-            ' · 1등팀 ' + (item.winner_team || '-');
-
-          if (item.winner_score !== null && item.winner_score !== undefined) {
-            metaText += ' ' + item.winner_score + '점';
-          }
-
-          if (item.mvp_name) {
-            metaText += ' · MVP ' + item.mvp_name;
-            if (item.mvp_score !== null && item.mvp_score !== undefined) {
-              metaText += ' ' + item.mvp_score + '점';
-            }
-          }
-
-          detailMeta.textContent = metaText;
-          detailSummary.textContent = item.summary_text || '';
-
-          detailTableBody.innerHTML = (item.rows || []).map(function(row) {
-            return (
-              '<tr>' +
-                '<td>' + escapeHtml(row.col1 || '') + '</td>' +
-                '<td>' + escapeHtml(row.col2 || '') + '</td>' +
-                '<td>' + escapeHtml(row.col3 || '') + '</td>' +
-                '<td>' + escapeHtml(row.col4 || '') + '</td>' +
-                '<td>' + escapeHtml(row.col5 || '') + '</td>' +
-              '</tr>'
-            );
-          }).join('');
-        } catch (error) {
-          detailHead.textContent = '기록을 불러오지 못했습니다.';
-          detailMeta.textContent = '';
-          detailSummary.textContent = '';
-          detailTableBody.innerHTML = '';
-        }
-      }
-    }
-
-    document.getElementById('saveSnapshotBtn').addEventListener('click', async function() {
-      const resultEl = document.getElementById('saveResult');
-      resultEl.textContent = '저장 중...';
-
-      try {
-        const res = await fetch('/api/save-match', { method: 'POST' });
-        const data = await res.json();
-
-        if (!data.ok) {
-          resultEl.textContent = '저장 실패: ' + (data.error || '알 수 없는 오류');
-          return;
-        }
-
-        resultEl.textContent = data.saved
-          ? '저장 완료: ' + data.match_date + ' 기록이 저장됐습니다.'
-          : (data.message || '이미 저장된 기록입니다.');
-
-        loadHistoryList();
-      } catch (error) {
-        resultEl.textContent = '저장 실패';
-      }
-    });
-
-    loadHistoryList();
-  </script>
-</body>
-</html>
