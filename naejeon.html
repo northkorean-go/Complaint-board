@@ -782,40 +782,52 @@
       body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
     }
 
-    function renderRankingFromSheet(rows) {
-      var list = document.getElementById('rankingList');
-      if (!list) return;
-
+    function extractNameCountPairs(rows) {
       var items = [];
       var seen = new Set();
 
       rows.forEach(function(row) {
-        for (var i = 0; i < row.length - 2; i++) {
-          var name = normalizeCell(row[i]);
-          var participate = normalizeCell(row[i + 1]);
-          var wins = normalizeCell(row[i + 2]);
+        row.forEach(function(cell) {
+          var text = normalizeCell(cell);
+          if (!text) return;
 
-          if (!name) continue;
-          if (!/^[가-힣A-Za-z0-9]+$/.test(name)) continue;
-          if (!/^\d+$/.test(participate)) continue;
-          if (!/^\d+$/.test(wins)) continue;
+          var matches = text.match(/[가-힣A-Za-z0-9]+(?:팀)?\d+/g);
+          if (!matches) return;
 
-          var key = name + '_' + participate + '_' + wins;
-          if (seen.has(key)) continue;
-          seen.add(key);
+          matches.forEach(function(token) {
+            var match = token.match(/^([가-힣A-Za-z0-9]+(?:팀)?)(\d+)$/);
+            if (!match) return;
 
-          items.push({
-            name: name,
-            participate: Number(participate),
-            wins: Number(wins)
+            var name = match[1];
+            var count = Number(match[2]);
+
+            if (!name || Number.isNaN(count)) return;
+
+            var key = name + '_' + count;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            items.push({
+              name: name,
+              count: count
+            });
           });
-        }
+        });
       });
 
       items.sort(function(a, b) {
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        return b.participate - a.participate;
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
       });
+
+      return items;
+    }
+
+    function renderRankingFromSheet(rows) {
+      var list = document.getElementById('rankingList');
+      if (!list) return;
+
+      var items = extractNameCountPairs(rows);
 
       if (!items.length) {
         list.innerHTML =
@@ -836,7 +848,7 @@
               '<span class="ranking-no">' + (index + 1) + '</span>' +
               '<span class="ranking-name">' + item.name + '</span>' +
             '</div>' +
-            '<div class="ranking-count">' + item.wins + '회</div>' +
+            '<div class="ranking-count">' + item.count + '회</div>' +
           '</div>'
         );
       }).join('');
@@ -846,32 +858,7 @@
       var list = document.getElementById('mvpList');
       if (!list) return;
 
-      var items = [];
-      var seen = new Set();
-
-      rows.forEach(function(row) {
-        for (var i = 0; i < row.length - 1; i++) {
-          var name = normalizeCell(row[i]);
-          var count = normalizeCell(row[i + 1]);
-
-          if (!name) continue;
-          if (!/^[가-힣A-Za-z0-9]+$/.test(name)) continue;
-          if (!/^\d+$/.test(count)) continue;
-
-          var key = name + '_' + count;
-          if (seen.has(key)) continue;
-          seen.add(key);
-
-          items.push({
-            name: name,
-            count: Number(count)
-          });
-        }
-      });
-
-      items.sort(function(a, b) {
-        return b.count - a.count;
-      });
+      var items = extractNameCountPairs(rows);
 
       if (!items.length) {
         list.innerHTML =
@@ -903,15 +890,18 @@
       var scheduleEl = document.getElementById('scheduleText');
 
       if (benefitEl) {
-        var benefitRow = rows.find(function(row) {
-          return row.some(function(cell) {
-            return normalizeCell(cell).indexOf('특별혜택') !== -1;
+        var benefitText = '';
+
+        rows.forEach(function(row) {
+          row.forEach(function(cell) {
+            var text = normalizeCell(cell);
+            if (text.indexOf('특별혜택') !== -1) {
+              benefitText = text.replace(/^특별혜택\s*/, '').trim();
+            }
           });
         });
 
-        benefitEl.textContent = benefitRow
-          ? benefitRow.map(normalizeCell).filter(Boolean).join(' ')
-          : '시트 데이터 대기중';
+        benefitEl.textContent = benefitText || '시트 데이터 대기중';
       }
 
       if (scheduleEl) {
