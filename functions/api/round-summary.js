@@ -212,7 +212,7 @@ function buildAutoNextScheduleText(currentRound, fallbackText = "미정") {
     return fallbackText || "미정";
   }
 
-  return upcoming.map(formatScheduleLine).join("\n");
+  return upcoming.map(formatScheduleLine).join(" / ");
 }
 
 export async function onRequestGet(context) {
