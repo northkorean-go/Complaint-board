@@ -221,8 +221,7 @@
     }
 
     .ranking-list,
-    .mvp-list,
-    .round-record-list {
+    .mvp-list {
       display: grid;
       gap: 10px;
     }
@@ -239,17 +238,8 @@
       min-height: 46px;
     }
 
-    .round-record-item {
-      display: grid;
-      grid-template-columns: 64px 1fr;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    }
-
     .ranking-item:last-child,
-    .mvp-item:last-child,
-    .round-record-item:last-child {
+    .mvp-item:last-child {
       border-bottom: none;
     }
 
@@ -282,33 +272,6 @@
       flex-shrink: 0;
       min-width: 36px;
       text-align: right;
-    }
-
-    .round-record-date {
-      font-size: 14px;
-      font-weight: 900;
-      color: #111;
-      padding-top: 2px;
-    }
-
-    .round-record-main {
-      min-width: 0;
-    }
-
-    .round-record-members {
-      font-size: 14px;
-      font-weight: 800;
-      color: #111;
-      line-height: 1.6;
-      word-break: keep-all;
-    }
-
-    .round-record-team {
-      margin-top: 4px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #677180;
-      line-height: 1.5;
     }
 
     .summary-text {
@@ -476,6 +439,38 @@
       font-weight: 700;
     }
 
+    .round-record-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    .round-record-table {
+      width: 100%;
+      min-width: 420px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .round-record-table th,
+    .round-record-table td {
+      border: 1px solid #e7e7e7;
+      text-align: center;
+      padding: 10px 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #111;
+      background: #fff;
+      word-break: keep-all;
+      white-space: nowrap;
+    }
+
+    .round-record-table th {
+      background: #fafafa;
+      font-size: 12px;
+    }
+
     @media (max-width: 1100px) {
       .naejeon-grid {
         grid-template-columns: 1fr;
@@ -542,9 +537,10 @@
         padding: 9px 4px;
       }
 
-      .round-record-item {
-        grid-template-columns: 1fr;
-        gap: 6px;
+      .round-record-table th,
+      .round-record-table td {
+        font-size: 12px;
+        padding: 9px 4px;
       }
     }
   </style>
@@ -655,8 +651,8 @@
 
         <div class="summary-card ranking-card">
           <div class="summary-card-title">회차별 1등 기록</div>
-          <div class="round-record-list" id="roundRecordList">
-            <div class="summary-text">기록을 불러오는 중입니다.</div>
+          <div id="roundRecordTableWrap" class="round-record-table-wrap">
+            <div class="summary-text" style="padding:16px;">기록을 불러오는 중입니다.</div>
           </div>
         </div>
 
@@ -1101,39 +1097,44 @@
       return html;
     }
 
-    function renderRoundRecordList(items) {
-      const listEl = document.getElementById('roundRecordList');
-      if (!listEl) return;
+    function renderRoundRecordTable(items) {
+      const wrap = document.getElementById('roundRecordTableWrap');
+      if (!wrap) return;
 
       if (!items || !items.length) {
-        listEl.innerHTML = '<div class="summary-text">저장된 회차 기록이 없습니다.</div>';
+        wrap.innerHTML = '<div class="summary-text" style="padding:16px;">저장된 회차 기록이 없습니다.</div>';
         return;
       }
 
-      listEl.innerHTML = items.map(function(item) {
-        let members = [];
+      let html = `
+        <table class="round-record-table">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>1등</th>
+              <th>2등</th>
+              <th>3등</th>
+              <th>4등</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
-        try {
-          members = item.winner_members || JSON.parse(item.winner_members_json || '[]');
-        } catch (e) {
-          members = [];
-        }
+      items.forEach((item) => {
+        const members = Array.isArray(item.winner_members) ? item.winner_members : [];
+        html += `
+          <tr>
+            <td>${escapeHtml(item.match_date_text || '')}</td>
+            <td>${escapeHtml(members[0] || '')}</td>
+            <td>${escapeHtml(members[1] || '')}</td>
+            <td>${escapeHtml(members[2] || '')}</td>
+            <td>${escapeHtml(members[3] || '')}</td>
+          </tr>
+        `;
+      });
 
-        const membersText = members.length ? members.join(' / ') : '-';
-
-        return (
-          '<div class="round-record-item">' +
-            '<div class="round-record-date">' + escapeHtml(item.match_date_text || '-') + '</div>' +
-            '<div class="round-record-main">' +
-              '<div class="round-record-members">' + escapeHtml(membersText) + '</div>' +
-              '<div class="round-record-team">' +
-                '1등팀 ' + escapeHtml(item.winner_team || '-') +
-                (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
-              '</div>' +
-            '</div>' +
-          '</div>'
-        );
-      }).join('');
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
     }
 
     async function loadRoundSummary() {
@@ -1141,7 +1142,7 @@
         const res = await fetch('/api/round-summary', { cache: 'no-store' });
         const data = await res.json();
 
-        renderRoundRecordList(data.roundRecords || []);
+        renderRoundRecordTable(data.roundRecords || []);
 
         const rankingList = document.getElementById('rankingList');
         if (rankingList) {
@@ -1164,7 +1165,7 @@
         }
       } catch (error) {
         console.error('회차 요약 로드 실패:', error);
-        renderRoundRecordList([]);
+        renderRoundRecordTable([]);
 
         const rankingList = document.getElementById('rankingList');
         if (rankingList) {
