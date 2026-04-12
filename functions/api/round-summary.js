@@ -162,6 +162,59 @@ async function buildAutoBenefitText(env, latestMatch) {
   return `${latestMatch.match_date_text || "-"} ${lowestPlayer.name}`;
 }
 
+function getKoreaNowDate() {
+  const now = new Date();
+  const koreaText = now.toLocaleString("sv-SE", { timeZone: "Asia/Seoul" });
+  return new Date(koreaText.replace(" ", "T"));
+}
+
+function formatScheduleLine(date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const weekday = weekNames[date.getDay()];
+  return `${month}.${day} (${weekday}) 22:00`;
+}
+
+function getUpcomingTargetDates(baseDate) {
+  const targets = [4, 6]; // 목, 토
+  const result = [];
+
+  for (const targetDay of targets) {
+    const date = new Date(baseDate);
+    date.setHours(22, 0, 0, 0);
+
+    let diff = targetDay - date.getDay();
+    if (diff < 0) diff += 7;
+
+    date.setDate(date.getDate() + diff);
+
+    if (diff === 0 && baseDate >= date) {
+      date.setDate(date.getDate() + 7);
+    }
+
+    result.push(date);
+  }
+
+  result.sort((a, b) => a - b);
+  return result;
+}
+
+function buildAutoNextScheduleText(currentRound, fallbackText = "미정") {
+  if (!currentRound || !currentRound.is_open) {
+    return fallbackText || "미정";
+  }
+
+  const nowKorea = getKoreaNowDate();
+  const upcoming = getUpcomingTargetDates(nowKorea);
+
+  if (!upcoming.length) {
+    return fallbackText || "미정";
+  }
+
+  return upcoming.map(formatScheduleLine).join("\n");
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
 
@@ -257,6 +310,10 @@ export async function onRequestGet(context) {
 
     const latestMatch = items.length ? items[0] : null;
     const autoBenefitText = await buildAutoBenefitText(env, latestMatch);
+    const autoNextScheduleText = buildAutoNextScheduleText(
+      currentRound,
+      summaryRound?.next_schedule_text || "미정"
+    );
 
     return json({
       ok: true,
@@ -267,7 +324,7 @@ export async function onRequestGet(context) {
       ranking,
       mvpRanking,
       benefitText: autoBenefitText,
-      nextScheduleText: summaryRound?.next_schedule_text || "미정",
+      nextScheduleText: autoNextScheduleText,
     });
   } catch (error) {
     return json(
