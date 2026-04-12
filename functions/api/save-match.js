@@ -13,19 +13,37 @@ export async function onRequest(context) {
     const CSV_URL =
       'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
 
-    const res = await fetch(CSV_URL, {
-      cf: { cacheTtl: 0, cacheEverything: false },
-    });
+    const RANKING_CSV_URL =
+      'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
-    if (!res.ok) {
+    const [mainRes, rankingRes] = await Promise.all([
+      fetch(CSV_URL, {
+        cf: { cacheTtl: 0, cacheEverything: false },
+      }),
+      fetch(RANKING_CSV_URL, {
+        cf: { cacheTtl: 0, cacheEverything: false },
+      }),
+    ]);
+
+    if (!mainRes.ok) {
       return json(
-        { ok: false, error: '시트 로드 실패', status: res.status },
+        { ok: false, error: '메인 시트 로드 실패', status: mainRes.status },
         500
       );
     }
 
-    const csvText = await res.text();
+    if (!rankingRes.ok) {
+      return json(
+        { ok: false, error: '랭킹 시트 로드 실패', status: rankingRes.status },
+        500
+      );
+    }
+
+    const csvText = await mainRes.text();
+    const rankingCsvText = await rankingRes.text();
+
     const rows = parseCSV(csvText);
+    const rankingRows = parseCSV(rankingCsvText);
 
     const topTeamText = buildTopTeamText(rows) || '';
     const recentMatch = findRecentDetailedMatch(rows);
@@ -40,8 +58,9 @@ export async function onRequest(context) {
       );
     }
 
-    const displayDate = normalizeDisplayDate(recentMatch.date);
-    const storageDate = normalizeStorageDate(recentMatch.date);
+    const latestRankingDate = findLastDateInRows(rankingRows);
+    const displayDate = normalizeDisplayDate(latestRankingDate || recentMatch.date);
+    const storageDate = normalizeStorageDate(latestRankingDate || recentMatch.date);
     const snapshotKey = `${storageDate}|${recentMatch.summary}`;
 
     const exists = await env.DB.prepare(
@@ -219,6 +238,21 @@ function normalizeDateText(value) {
   if (match) return `${match[2]}.${match[3]}`;
 
   return '';
+}
+
+function findLastDateInRows(rows) {
+  let lastDate = '';
+
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < rows[r].length; c++) {
+      const normalized = normalizeDateText(rows[r][c]);
+      if (normalized) {
+        lastDate = normalized;
+      }
+    }
+  }
+
+  return lastDate;
 }
 
 function normalizeDisplayDate(dateText) {
