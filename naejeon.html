@@ -4,8 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZARA 내전 현황판</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="/style.css" />
   <style>
+    .naejeon-back-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 28px 0;
+    }
+
+    .naejeon-back-btn {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .naejeon-topbar {
+      background: #f3f3f3;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      margin-top: 12px;
+    }
+
+    .naejeon-topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .naejeon-topbar-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .naejeon-topbar-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: #ededed;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .naejeon-topbar-tab {
+      height: 48px;
+      padding: 0 24px;
+      border-radius: 999px;
+      color: rgba(0, 0, 0, 0.35);
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    .naejeon-topbar-tab.active {
+      background: #000;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
     .naejeon-shell {
       max-width: 1280px;
       margin: 0 auto;
@@ -312,6 +380,10 @@
       font-weight: 700;
     }
 
+    .loading-text {
+      color: #777;
+    }
+
     @media (max-width: 1100px) {
       .naejeon-grid {
         grid-template-columns: 1fr;
@@ -333,9 +405,16 @@
     }
 
     @media (max-width: 720px) {
+      .naejeon-back-wrap,
+      .naejeon-topbar-inner,
       .naejeon-shell {
         padding-left: 16px;
         padding-right: 16px;
+      }
+
+      .naejeon-topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
       }
 
       .naejeon-title {
@@ -358,14 +437,17 @@
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="topbar-inner">
-      <h1 class="topbar-title">ZARA CLAN</h1>
-      <div class="topbar-tabs">
-        <button class="topbar-tab" type="button" onclick="location.href='/index.html'">메인</button>
-        <button class="topbar-tab" type="button" onclick="location.href='/suggestion.html'">건의&불만</button>
-        <button class="topbar-tab active" type="button">내전</button>
-        <button class="topbar-tab" type="button" onclick="location.href='/admin.html'">관리자 화면</button>
+
+  <div class="naejeon-back-wrap">
+    <button class="naejeon-back-btn" type="button" onclick="location.href='/index.html'">← 메인으로</button>
+  </div>
+
+  <div class="naejeon-topbar">
+    <div class="naejeon-topbar-inner">
+      <h1 class="naejeon-topbar-title">ZARA CLAN</h1>
+      <div class="naejeon-topbar-tabs">
+        <button class="naejeon-topbar-tab active" type="button" onclick="location.href='/naejeon.html'">사용자 화면</button>
+        <button class="naejeon-topbar-tab" type="button" onclick="location.href='/admin.html'">관리자 화면</button>
       </div>
     </div>
   </div>
@@ -386,7 +468,7 @@
           </div>
           <div class="result-hero-right">
             <div class="result-hero-rank">🏆 1등팀</div>
-            <div class="result-hero-lines" id="topTeamLines"></div>
+            <div class="result-hero-lines" id="topTeamLines">데이터를 불러오는 중입니다.</div>
           </div>
         </div>
 
@@ -397,13 +479,13 @@
               <tr>
                 <th>날짜</th>
                 <th>승리 팀</th>
-                <th>스코어</th>
+                <th>점수</th>
                 <th>상태</th>
               </tr>
             </thead>
             <tbody id="recentResultBody">
               <tr>
-                <td colspan="4">데이터를 불러오는 중입니다.</td>
+                <td colspan="4" class="loading-text">데이터를 불러오는 중입니다.</td>
               </tr>
             </tbody>
           </table>
@@ -411,8 +493,8 @@
 
         <div class="section-mini-label">티어표</div>
         <div class="tier-board">
-          <div class="tier-board-header">ZARA 내전 티어표</div>
-          <div class="tier-board-sub">수스킬</div>
+          <div class="tier-board-header">ZARA 내전 티어</div>
+          <div class="tier-board-sub">매주 목,토 22:00-24:00 내전 진행</div>
           <table class="tier-table">
             <thead>
               <tr>
@@ -468,7 +550,7 @@
       </section>
 
       <aside class="naejeon-panel">
-        <p class="naejeon-eyebrow">TEAM RANKING</p>
+        <p class="naejeon-eyebrow">PLAYER RANKING</p>
 
         <div class="section-mini-label" style="margin-top: 8px;">이번 회차 순위</div>
         <div class="summary-card">
@@ -476,7 +558,7 @@
             <div class="ranking-item">
               <div class="ranking-left">
                 <span class="ranking-no">1</span>
-                <span class="ranking-name">데이터 대기중</span>
+                <span class="ranking-name">데이터를 불러오는 중입니다.</span>
               </div>
               <div class="ranking-count">-</div>
             </div>
@@ -491,7 +573,7 @@
               <div class="mvp-item">
                 <div class="mvp-left">
                   <span class="mvp-no">1</span>
-                  <span class="mvp-name">데이터 대기중</span>
+                  <span class="mvp-name">데이터를 불러오는 중입니다.</span>
                 </div>
                 <div class="mvp-count">-</div>
               </div>
@@ -513,9 +595,8 @@
   </div>
 
   <script>
-    // =========================
-    // 여기에 네 공개 CSV 링크 넣기
-    // =========================
+    // 반드시 공개된 CSV 링크로 바꿔야 함
+    // 예: https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv
     var CSV_URL = 'https://docs.google.com/spreadsheets/d/1BTLhtByx22xJ4-cRjR4IuagHu7JieoPUIa6dNgqMXzU/edit?gid=0#gid=0';
 
     function updateTodayTitle() {
@@ -596,15 +677,12 @@
       if (!body) return;
 
       if (!rows || rows.length <= 4) {
-        body.innerHTML = '<tr><td colspan=\"4\">최근 내전 결과 데이터가 없습니다.</td></tr>';
+        body.innerHTML = '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
         return;
       }
 
-      var startIndex = 4;
-      var endIndex = Math.min(rows.length, 9);
       var html = '';
-
-      for (var i = startIndex; i < endIndex; i++) {
+      for (var i = 4; i < Math.min(rows.length, 8); i++) {
         var row = rows[i];
         var date = safeText(row[0]);
         var winner = safeText(row[1]);
@@ -618,11 +696,11 @@
             '<td>' + (date || '-') + '</td>' +
             '<td>' + (winner || '-') + '</td>' +
             '<td>' + (score || '-') + '</td>' +
-            '<td><span class=\"done-pill\">' + status + '</span></td>' +
+            '<td><span class="done-pill">' + status + '</span></td>' +
           '</tr>';
       }
 
-      body.innerHTML = html || '<tr><td colspan=\"4\">최근 내전 결과 데이터가 없습니다.</td></tr>';
+      body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
     }
 
     function renderRanking(rows) {
@@ -635,18 +713,18 @@
       for (var i = 10; i < Math.min(rows.length, 20); i++) {
         var row = rows[i];
         var rank = safeText(row[0]);
-        var team = safeText(row[1]);
+        var name = safeText(row[1]);
         var count = safeText(row[2]);
 
-        if (!rank && !team && !count) continue;
+        if (!rank && !name && !count) continue;
 
         html +=
-          '<div class=\"ranking-item\">' +
-            '<div class=\"ranking-left\">' +
-              '<span class=\"ranking-no\">' + (rank || '-') + '</span>' +
-              '<span class=\"ranking-name\">' + (team || '-') + '</span>' +
+          '<div class="ranking-item">' +
+            '<div class="ranking-left">' +
+              '<span class="ranking-no">' + (rank || '-') + '</span>' +
+              '<span class="ranking-name">' + (name || '-') + '</span>' +
             '</div>' +
-            '<div class=\"ranking-count\">' + (count || '-') + '</div>' +
+            '<div class="ranking-count">' + (count || '-') + '회</div>' +
           '</div>';
       }
 
@@ -669,12 +747,12 @@
         if (!rank && !name && !count) continue;
 
         html +=
-          '<div class=\"mvp-item\">' +
-            '<div class=\"mvp-left\">' +
-              '<span class=\"mvp-no\">' + (rank || '-') + '</span>' +
-              '<span class=\"mvp-name\">' + (name || '-') + '</span>' +
+          '<div class="mvp-item">' +
+            '<div class="mvp-left">' +
+              '<span class="mvp-no">' + (rank || '-') + '</span>' +
+              '<span class="mvp-name">' + (name || '-') + '</span>' +
             '</div>' +
-            '<div class=\"mvp-count\">' + (count || '-') + '</div>' +
+            '<div class="mvp-count">' + (count || '-') + '회</div>' +
           '</div>';
       }
 
@@ -725,28 +803,7 @@
       }
     }
 
-    function runDevTests() {
-      var sample = 'A,B,C\n1,2,3\n4,5,6';
-      var parsedSample = parseCSV(sample);
-      console.assert(parsedSample.length === 3, 'CSV 줄 수 파싱 실패');
-      console.assert(parsedSample[1][1] === '2', '기본 CSV 파싱 실패');
-
-      var sampleCRLF = 'A,B\r\nhello,world\r\nfoo,bar';
-      var parsedCRLF = parseCSV(sampleCRLF);
-      console.assert(parsedCRLF.length === 3, 'CRLF 파싱 실패');
-      console.assert(parsedCRLF[2][0] === 'foo', 'CRLF 값 파싱 실패');
-
-      var sampleQuotes = 'A,B\n\"냄주팀, A\",69\n\"땅콩팀\",60';
-      var parsedQuotes = parseCSV(sampleQuotes);
-      console.assert(parsedQuotes[1][0] === '냄주팀, A', '따옴표 CSV 파싱 실패');
-      console.assert(parsedQuotes[1][1] === '69', '따옴표 점수 파싱 실패');
-
-      var topText = buildTopTeamText(['', '냄주팀', '69', '땅콩팀', '60', '형규팀', '60', '윤태팀', '100']);
-      console.assert(topText === '냄주팀 69 / 땅콩팀 60 / 형규팀 60 / 윤태팀 100', '상단 팀 문자열 생성 실패');
-    }
-
     updateTodayTitle();
-    runDevTests();
     loadSpreadsheetData();
   </script>
 </body>
