@@ -516,6 +516,10 @@ button {
   font-weight: 700;
 }
 
+.ghost-btn.danger {
+  color: #c63b3b;
+}
+
 /* =========================
    RESPONSIVE
 ========================= */
@@ -575,7 +579,6 @@ button {
 /* =========================
    LOGIN PAGE
 ========================= */
-
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -590,8 +593,8 @@ button {
   background: white;
   border-radius: 30px;
   padding: 32px 28px;
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
 }
 
 .login-title {
@@ -645,10 +648,10 @@ button {
   text-align: center;
   width: 100%;
 }
+
 /* =========================
    ADMIN PAGE
 ========================= */
-
 .admin-page-body {
   background: #efefef;
 }
@@ -890,10 +893,6 @@ button {
   gap: 8px;
 }
 
-.ghost-btn.danger {
-  color: #c63b3b;
-}
-
 .admin-mini-stack {
   margin-top: 18px;
   display: grid;
@@ -964,6 +963,174 @@ button {
   padding: 16px 18px;
 }
 
+/* =========================
+   ADMIN INLINE COMMENTS
+========================= */
+.admin-inline-comments-wrap {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.admin-inline-comments-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.admin-inline-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-inline-comment-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f6f6f6;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.admin-inline-comment-time {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.admin-inline-comment-text {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  color: #222;
+}
+
+.admin-comment-empty {
+  font-size: 13px;
+  opacity: 0.5;
+}
+
+.deleted-comment {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.admin-inline-comment-item .ghost-btn {
+  margin-top: 8px;
+}
+
+/* =========================
+   ROUND MANAGER
+========================= */
+.round-panel {
+  margin-top: 18px;
+}
+
+.round-status-box {
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.round-status-title {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: #8a94a7;
+}
+
+.round-status-value {
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #111;
+  line-height: 1.35;
+}
+
+.round-status-sub {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #666f7c;
+  white-space: pre-line;
+}
+
+.round-form-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.round-form-group {
+  display: grid;
+  gap: 8px;
+}
+
+.round-form-group-full {
+  grid-column: 1 / -1;
+}
+
+.round-form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555d67;
+}
+
+.round-input,
+.round-textarea {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  padding: 14px 16px;
+  outline: none;
+  font-size: 14px;
+  color: #111;
+}
+
+.round-input {
+  height: 48px;
+}
+
+.round-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.round-input:focus,
+.round-textarea:focus {
+  border-color: rgba(0, 0, 0, 0.24);
+}
+
+.round-action-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.round-message {
+  margin-top: 12px;
+  min-height: 24px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  white-space: pre-line;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================
+   ADMIN RESPONSIVE
+========================= */
 @media (max-width: 1180px) {
   .admin-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -999,55 +1166,8 @@ button {
   .admin-summary-grid {
     grid-template-columns: 1fr;
   }
-}
-.admin-inline-comments-wrap {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
 
-.admin-inline-comments-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0.7;
-  margin-bottom: 10px;
+  .round-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
-
-.admin-inline-comment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.admin-inline-comment-item {
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.admin-inline-comment-time {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-bottom: 6px;
-}
-
-.admin-inline-comment-text {
-  font-size: 14px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.admin-comment-empty {
-  font-size: 13px;
-  opacity: 0.5;
-}
-.deleted-comment {
-  opacity: 0.5;
-  font-style: italic;
-}
-
-.admin-inline-comment-item .ghost-btn {
-  margin-top: 8px;
-}
-
