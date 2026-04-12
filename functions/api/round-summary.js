@@ -7,6 +7,31 @@ function sortCountItems(items) {
   });
 }
 
+function parseMembers(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value.map(v => String(v || '').trim()).filter(Boolean);
+  }
+
+  const text = String(value).trim();
+  if (!text) return [];
+
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) {
+      return parsed.map(v => String(v || '').trim()).filter(Boolean);
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return text
+    .split(/[,\n/|]/)
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
 
@@ -31,8 +56,11 @@ export async function onRequestGet(context) {
     const result = await env.DB.prepare(`
       SELECT
         id,
+        round_id,
         match_date,
         match_date_text,
+        title,
+        summary_text,
         winner_team,
         winner_score,
         winner_members_json,
@@ -46,17 +74,22 @@ export async function onRequestGet(context) {
       .bind(round.id)
       .all();
 
-    const items = result.results || [];
+    const items = (result.results || []).map((row) => {
+      const members = parseMembers(row.winner_members_json);
+      return {
+        ...row,
+        winner_members_json: JSON.stringify(members),
+        winner_members: members,
+      };
+    });
+
     const winnerCounts = {};
     const mvpCounts = {};
 
     for (const item of items) {
-      let members = [];
-      try {
-        members = JSON.parse(item.winner_members_json || '[]');
-      } catch {
-        members = [];
-      }
+      const members = Array.isArray(item.winner_members)
+        ? item.winner_members
+        : parseMembers(item.winner_members_json);
 
       for (const member of members) {
         const name = String(member || '').trim();
