@@ -6,29 +6,12 @@
   <title>ZARA 건의사항</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
-    .suggestion-back-wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 16px 28px 0;
-    }
-
-    .suggestion-back-btn {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 20px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .suggestion-topbar {
+    .site-topbar {
       background: #f3f3f3;
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-      margin-top: 12px;
     }
 
-    .suggestion-topbar-inner {
+    .site-topbar-inner {
       max-width: 1280px;
       margin: 0 auto;
       padding: 14px 28px;
@@ -38,13 +21,14 @@
       gap: 20px;
     }
 
-    .suggestion-topbar-title {
+    .site-brand {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.02em;
+      color: #111;
     }
 
-    .suggestion-topbar-tabs {
+    .site-tabs {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -55,50 +39,54 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
-    .suggestion-topbar-tab {
-      height: 48px;
-      padding: 0 24px;
+    .site-tab {
+      height: 44px;
+      padding: 0 22px;
       border-radius: 999px;
-      color: rgba(0, 0, 0, 0.35);
-      font-size: 15px;
-      font-weight: 700;
-      transition: all 0.2s ease;
+      color: rgba(0, 0, 0, 0.38);
+      font-size: 14px;
+      font-weight: 800;
       border: none;
       background: none;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .suggestion-topbar-tab.active {
+    .site-tab.active {
       background: #000;
       color: #fff;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
     @media (max-width: 720px) {
-      .suggestion-back-wrap,
-      .suggestion-topbar-inner {
+      .site-topbar-inner {
         padding-left: 16px;
         padding-right: 16px;
-      }
-
-      .suggestion-topbar-inner {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .site-tabs {
+        width: 100%;
+        display: flex;
+      }
+
+      .site-tab {
+        flex: 1;
+        padding: 0 10px;
+        font-size: 13px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="suggestion-back-wrap">
-    <button class="suggestion-back-btn" type="button" onclick="location.href='/'">← 메인으로</button>
-  </div>
-
-  <div class="suggestion-topbar">
-    <div class="suggestion-topbar-inner">
-      <h1 class="suggestion-topbar-title">ZARA CLAN</h1>
-      <div class="suggestion-topbar-tabs">
-        <button class="suggestion-topbar-tab active" type="button">사용자 화면</button>
-        <button class="suggestion-topbar-tab" type="button" id="adminTabBtn">관리자 화면</button>
+  <div class="site-topbar">
+    <div class="site-topbar-inner">
+      <div class="site-brand">ZARA CLAN</div>
+      <div class="site-tabs">
+        <button class="site-tab" type="button" onclick="location.href='/'">메인</button>
+        <button class="site-tab active" type="button" onclick="location.href='/suggestion'">건의&불만</button>
+        <button class="site-tab" type="button" id="adminTabBtn">관리자 화면</button>
       </div>
     </div>
   </div>
