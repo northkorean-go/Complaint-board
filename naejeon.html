@@ -675,25 +675,45 @@
       return String(value || '').trim();
     }
 
-    function buildTopTeamText(row) {
-      if (!row || row.length < 9) return '';
+    function getCell(rows, r, c) {
+  if (!rows[r]) return '';
+  return safeText(rows[r][c]);
+}
 
-      var pairs = [
-        [safeText(row[1]), safeText(row[2])],
-        [safeText(row[3]), safeText(row[4])],
-        [safeText(row[5]), safeText(row[6])],
-        [safeText(row[7]), safeText(row[8])]
-      ];
+function buildTopTeamText(rows) {
+  var m11 = getCell(rows, 10, 12);
+  var b12 = getCell(rows, 11, 1);
+  var l15 = getCell(rows, 14, 11);
 
-      return pairs
-        .filter(function(pair) {
-          return pair[0] !== '';
-        })
-        .map(function(pair) {
-          return pair[1] ? pair[0] + ' ' + pair[1] : pair[0];
-        })
-        .join(' / ');
-    }
+  var o12 = getCell(rows, 11, 14);
+  var y15 = getCell(rows, 14, 24);
+
+  var aa12 = getCell(rows, 11, 26);
+  var ak15 = getCell(rows, 14, 36);
+
+  var am12 = getCell(rows, 11, 38);
+  var aw15 = getCell(rows, 14, 48);
+
+  var ay12 = getCell(rows, 11, 50);
+  var bi15 = getCell(rows, 14, 60);
+
+  if (
+    !m11 && !b12 && !l15 &&
+    !o12 && !y15 &&
+    !aa12 && !ak15 &&
+    !am12 && !aw15 &&
+    !ay12 && !bi15
+  ) {
+    return '';
+  }
+
+  return '[' + m11 + '] ' +
+    b12 + '팀 ' + l15 + ' : ' +
+    o12 + '팀 ' + y15 + ' : ' +
+    aa12 + '팀 ' + ak15 + ' : ' +
+    am12 + '팀 ' + aw15 + ' : ' +
+    ay12 + '팀 ' + bi15;
+}
 
     function renderRecentResults(rows) {
       var body = document.getElementById('recentResultBody');
@@ -808,7 +828,7 @@
         var rows = parseCSV(text);
 
         if (topTeamEl) {
-          topTeamEl.textContent = buildTopTeamText(rows[2]) || '시트 데이터가 비어 있습니다.';
+          topTeamEl.textContent = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
         }
 
         renderRecentResults(rows);
