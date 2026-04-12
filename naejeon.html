@@ -507,8 +507,13 @@
   </div>
 
   <div class="naejeon-top-actions">
-    <button class="back-btn" type="button" onclick="location.href='/'">← 메인으로</button>
-  </div>
+    <div class="naejeon-top-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
+  <button class="back-btn" onclick="location.href='/'">← 메인으로</button>
+  <button class="back-btn" onclick="location.href='/history.html'">📚 내전 기록</button>
+  <button class="back-btn" id="saveBtn">💾 결과 저장</button>
+</div>
+
+<div id="saveStatus" style="margin-top:10px; font-weight:700;"></div>
 
   <div class="naejeon-shell">
     <div class="naejeon-grid">
