@@ -5,11 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZARA 건의사항</title>
   <link rel="stylesheet" href="./style.css" />
+  <style>
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 999px;
+      background: #fff;
+      color: #111;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .topbar-home-btn:hover {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    @media (max-width: 768px) {
+      .topbar-inner {
+        align-items: flex-start;
+      }
+
+      .topbar-left,
+      .topbar-tabs {
+        width: 100%;
+      }
+
+      .topbar-left {
+        justify-content: space-between;
+      }
+
+      .topbar-tabs {
+        display: flex;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="topbar">
     <div class="topbar-inner">
-      <h1 class="topbar-title">ZARA 건의사항</h1>
+      <div class="topbar-left">
+        <h1 class="topbar-title">ZARA 건의사항</h1>
+        <a href="/" class="topbar-home-btn">메인으로</a>
+      </div>
+
       <div class="topbar-tabs">
         <button class="topbar-tab active" type="button">사용자 화면</button>
         <button class="topbar-tab" type="button" id="adminTabBtn">관리자 화면</button>
@@ -237,48 +297,48 @@
     window.likePost = likePost;
 
     postForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+      e.preventDefault();
 
-  const content = contentEl.value.trim();
-  if (!content) {
-    alert("내용을 입력해주세요.");
-    return;
-  }
+      const content = contentEl.value.trim();
+      if (!content) {
+        alert("내용을 입력해주세요.");
+        return;
+      }
 
-  try {
-    const res = await fetch("/api/post", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content,
-        type: selectedType
-      })
+      try {
+        const res = await fetch("/api/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            content,
+            type: selectedType
+          })
+        });
+
+        const text = await res.text();
+        let result = {};
+
+        try {
+          result = JSON.parse(text);
+        } catch {
+          alert(`등록 실패: ${text}`);
+          return;
+        }
+
+        if (!res.ok || !result.success) {
+          alert(result.message || "등록 실패");
+          return;
+        }
+
+        alert("등록되었습니다.");
+        contentEl.value = "";
+        await loadPosts();
+      } catch (error) {
+        alert(`등록 중 오류가 발생하였습니다.: ${error.message}`);
+      }
     });
-
-    const text = await res.text();
-    let result = {};
-
-    try {
-      result = JSON.parse(text);
-    } catch {
-      alert(`등록 실패: ${text}`);
-      return;
-    }
-
-    if (!res.ok || !result.success) {
-      alert(result.message || "등록 실패");
-      return;
-    }
-
-    alert("등록되었습니다.");
-    contentEl.value = "";
-    await loadPosts();
-  } catch (error) {
-    alert(`등록 중 오류가 발생하였습니다.: ${error.message}`);
-  }
-});
 
     adminTabBtn.addEventListener("click", () => {
       loginModal.classList.remove("hidden");
@@ -313,7 +373,7 @@
           return;
         }
 
-        location.href = "/admin.html";
+        location.href = "/admin";
       } catch (error) {
         modalLoginMessage.textContent = "로그인 중 오류가 발생했습니다.";
       }
