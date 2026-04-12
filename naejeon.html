@@ -1098,44 +1098,57 @@
     }
 
     function renderRoundRecordTable(items) {
-      const wrap = document.getElementById('roundRecordTableWrap');
-      if (!wrap) return;
+  const wrap = document.getElementById('roundRecordTableWrap');
+  if (!wrap) return;
 
-      if (!items || !items.length) {
-        wrap.innerHTML = '<div class="summary-text" style="padding:16px;">저장된 회차 기록이 없습니다.</div>';
-        return;
-      }
+  const rows = Array.isArray(items) ? items.slice(0, 4) : [];
 
-      let html = `
-        <table class="round-record-table">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>1등</th>
-              <th>2등</th>
-              <th>3등</th>
-              <th>4등</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+  while (rows.length < 4) {
+    rows.push({
+      match_date_text: '',
+      winner_members: ['', '', '', '']
+    });
+  }
 
-      items.forEach((item) => {
-        const members = Array.isArray(item.winner_members) ? item.winner_members : [];
-        html += `
-          <tr>
-            <td>${escapeHtml(item.match_date_text || '')}</td>
-            <td>${escapeHtml(members[0] || '')}</td>
-            <td>${escapeHtml(members[1] || '')}</td>
-            <td>${escapeHtml(members[2] || '')}</td>
-            <td>${escapeHtml(members[3] || '')}</td>
-          </tr>
-        `;
-      });
+  let html = `
+    <table class="round-record-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>1등</th>
+          <th>2등</th>
+          <th>3등</th>
+          <th>4등</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
 
-      html += '</tbody></table>';
-      wrap.innerHTML = html;
+  rows.forEach((item) => {
+    let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
+
+    while (members.length < 4) {
+      members.push('');
     }
+
+    html += `
+      <tr>
+        <td>${escapeHtml(item.match_date_text || '')}</td>
+        <td>${escapeHtml(members[0] || '')}</td>
+        <td>${escapeHtml(members[1] || '')}</td>
+        <td>${escapeHtml(members[2] || '')}</td>
+        <td>${escapeHtml(members[3] || '')}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  wrap.innerHTML = html;
+}
 
     async function loadRoundSummary() {
       try {
