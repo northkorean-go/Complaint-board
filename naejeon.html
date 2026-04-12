@@ -452,16 +452,14 @@
   table-layout: fixed;
 }
 
-.round-record-table col {
-  width: 20%;
-}
-
 .round-record-table th,
 .round-record-table td {
+  width: 20%;
+  box-sizing: border-box;
   border: 1px solid #e7e7e7;
   text-align: center;
   vertical-align: middle;
-  padding: 10px 6px;
+  padding: 10px 0;
   font-size: 13px;
   font-weight: 800;
   color: #111;
@@ -1115,24 +1113,17 @@
 
   let html = `
   <table class="round-record-table">
-    <colgroup>
-      <col style="width:20%">
-      <col style="width:20%">
-      <col style="width:20%">
-      <col style="width:20%">
-      <col style="width:20%">
-    </colgroup>
     <thead>
-        <tr>
-          <th>날짜</th>
-          <th>1등</th>
-          <th>2등</th>
-          <th>3등</th>
-          <th>4등</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+      <tr>
+        <th>날짜</th>
+        <th>1등</th>
+        <th>2등</th>
+        <th>3등</th>
+        <th>4등</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
 
   rows.forEach((item) => {
     let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
