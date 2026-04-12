@@ -816,73 +816,84 @@
     }
 
     function findRecentDetailedMatch(rows) {
-      for (var r = rows.length - 1; r >= 0; r--) {
-        for (var c = 0; c < rows[r].length; c++) {
-          var summary = safeText(rows[r][c]);
-          if (!isMatchSummaryCell(summary)) continue;
+  for (var r = rows.length - 1; r >= 0; r--) {
+    for (var c = 0; c < rows[r].length; c++) {
+      var summary = safeText(rows[r][c]);
+      if (!isMatchSummaryCell(summary)) continue;
 
-          var title = '';
-          var date = '';
+      var title = '';
+      var date = '';
 
-          for (var rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
-            var left = Math.max(0, c - 2);
-            var right = Math.min((rows[rr] || []).length - 1, c + 2);
+      // 제목/날짜는 summary 근처에서 찾기
+      for (var rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
+        var left = Math.max(0, c - 6);
+        var right = Math.min((rows[rr] || []).length - 1, c + 12);
 
-            for (var cc = left; cc <= right; cc++) {
-              var cell = safeText(rows[rr][cc]);
-              if (!cell) continue;
+        for (var cc = left; cc <= right; cc++) {
+          var cell = safeText(rows[rr][cc]);
+          if (!cell) continue;
 
-              var normalizedDate = normalizeDateText(cell);
-              if (normalizedDate) {
-                date = normalizedDate;
-                continue;
-              }
-
-              if (
-                !title &&
-                !isMatchSummaryCell(cell) &&
-                !isDateCell(cell) &&
-                cell.length <= 12 &&
-                cell.indexOf('팀') === -1 &&
-                cell.indexOf('[') === -1 &&
-                cell.indexOf(']') === -1
-              ) {
-                title = cell;
-              }
-            }
+          var normalizedDate = normalizeDateText(cell);
+          if (normalizedDate) {
+            date = normalizedDate;
+            continue;
           }
 
-          var tableRows = [];
-          for (var rr = r + 1; rr <= r + 5; rr++) {
-            if (!rows[rr]) continue;
-
-            var rowItems = [];
-            for (var cc = c; cc < c + 5; cc++) {
-              rowItems.push(safeText(rows[rr][cc]));
-            }
-
-            var hasAny = rowItems.some(function(item) {
-              return !!item;
-            });
-
-            if (hasAny) {
-              tableRows.push(rowItems);
-            }
+          if (
+            !title &&
+            !isMatchSummaryCell(cell) &&
+            !isDateCell(cell) &&
+            cell.length <= 12 &&
+            cell.indexOf('팀') === -1 &&
+            cell.indexOf('[') === -1 &&
+            cell.indexOf(']') === -1
+          ) {
+            title = cell;
           }
-
-          if (!tableRows.length) continue;
-
-          return {
-            title: title || '최근 내전 결과',
-            date: date || '',
-            summary: summary,
-            rows: tableRows
-          };
         }
       }
 
-      return null;
+      var tableRows = [];
+
+      // summary 아래 5행 읽기
+      for (var rr = r + 1; rr <= r + 5; rr++) {
+        if (!rows[rr]) continue;
+
+        // 표가 있는 범위만 넓게 훑고, 비어있지 않은 값만 추출
+        var startCol = Math.max(0, c - 6);
+        var endCol = Math.min((rows[rr] || []).length - 1, c + 12);
+        var filledCells = [];
+
+        for (var cc = startCol; cc <= endCol; cc++) {
+          var text = safeText(rows[rr][cc]);
+          if (text) {
+            filledCells.push(text);
+          }
+        }
+
+        // 5칸짜리 표로 맞추기
+        if (filledCells.length) {
+          filledCells = filledCells.slice(0, 5);
+          while (filledCells.length < 5) {
+            filledCells.push('');
+          }
+          tableRows.push(filledCells);
+        }
+      }
+
+      if (!tableRows.length) continue;
+
+      return {
+        title: title || '최근 내전 결과',
+        date: date || '',
+        summary: summary,
+        rows: tableRows
+      };
     }
+  }
+
+  return null;
+}
 
     function renderRecentDetailedMatch(rows) {
       var card = document.getElementById('recentMatchCard');
