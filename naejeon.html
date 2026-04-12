@@ -183,50 +183,6 @@
       color: #8a94a7;
     }
 
-    .naejeon-table-wrap {
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      background: #fff;
-    }
-
-    .naejeon-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .naejeon-table th,
-    .naejeon-table td {
-      padding: 16px 18px;
-      text-align: left;
-      font-size: 14px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    }
-
-    .naejeon-table th {
-      font-size: 12px;
-      color: #7d838b;
-      letter-spacing: 0.18em;
-      background: #fafafa;
-    }
-
-    .naejeon-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .done-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 34px;
-      padding: 0 12px;
-      border-radius: 999px;
-      background: #000;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
     .summary-grid {
       display: grid;
       gap: 14px;
@@ -309,6 +265,72 @@
       line-height: 1.8;
       color: #666f7c;
       white-space: pre-line;
+    }
+
+    .recent-match-card {
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .recent-match-head {
+      background: #111;
+      color: #fff;
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .recent-match-summary {
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      border-bottom: 1px solid #ececec;
+      background: #fcfcfc;
+      color: #111;
+      line-height: 1.7;
+    }
+
+    .recent-match-date {
+      padding: 12px 18px 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: #7d838b;
+      text-align: right;
+    }
+
+    .recent-match-table-wrap {
+      padding: 12px 18px 18px;
+      background: #fff;
+    }
+
+    .recent-match-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .recent-match-table td {
+      border: 1px solid #e7e7e7;
+      text-align: center;
+      padding: 11px 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #111;
+      background: #fff;
+      word-break: keep-all;
+    }
+
+    .recent-match-empty {
+      padding: 24px 18px;
+      text-align: center;
+      color: #777;
+      font-size: 14px;
     }
 
     .tier-board {
@@ -402,10 +424,6 @@
       font-weight: 700;
     }
 
-    .loading-text {
-      color: #777;
-    }
-
     @media (max-width: 1100px) {
       .naejeon-grid {
         grid-template-columns: 1fr;
@@ -466,6 +484,11 @@
         border-right: none;
         border-bottom: 1px solid #ececec;
       }
+
+      .recent-match-table td {
+        font-size: 12px;
+        padding: 9px 4px;
+      }
     }
   </style>
 </head>
@@ -490,7 +513,7 @@
         <p class="naejeon-eyebrow">ZARA CLAN MATCH</p>
         <h2 class="naejeon-title">내전 현황판</h2>
         <p class="naejeon-sub">
-          스프레드시트 자동집계 결과를 불러와서 금일 내전 결과와 최근 내전 결과를 보여주는 전용 페이지입니다.
+          스프레드시트 자동집계 결과를 불러온 내전 결과와 최근 내전 결과입니다.
         </p>
 
         <div class="result-hero">
@@ -505,22 +528,8 @@
         </div>
 
         <div class="section-mini-label">최근 내전 결과</div>
-        <div class="naejeon-table-wrap">
-          <table class="naejeon-table">
-            <thead>
-              <tr>
-                <th>날짜</th>
-                <th>승리 팀</th>
-                <th>점수</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody id="recentResultBody">
-              <tr>
-                <td colspan="4" class="loading-text">데이터를 불러오는 중입니다.</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="recent-match-card" id="recentMatchCard">
+          <div class="recent-match-empty">데이터를 불러오는 중입니다.</div>
         </div>
 
         <div class="section-mini-label">티어표</div>
@@ -684,24 +693,16 @@
       if (!text) return '';
 
       var match = text.match(/^(\d{1,2})\.(\d{1,2})$/);
-      if (match) {
-        return Number(match[1]) + '.' + Number(match[2]);
-      }
+      if (match) return Number(match[1]) + '.' + Number(match[2]);
 
       match = text.match(/^(\d{1,2})\/(\d{1,2})$/);
-      if (match) {
-        return Number(match[1]) + '.' + Number(match[2]);
-      }
+      if (match) return Number(match[1]) + '.' + Number(match[2]);
 
       match = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
-      if (match) {
-        return Number(match[2]) + '.' + Number(match[3]);
-      }
+      if (match) return Number(match[2]) + '.' + Number(match[3]);
 
       match = text.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-      if (match) {
-        return Number(match[2]) + '.' + Number(match[3]);
-      }
+      if (match) return Number(match[2]) + '.' + Number(match[3]);
 
       return '';
     }
@@ -730,10 +731,7 @@
       if (!titleEl) return;
 
       var lastDate = findLastDateInRows(rows);
-
-      titleEl.textContent = lastDate
-        ? lastDate + ' 금일 내전 결과'
-        : '금일 내전 결과';
+      titleEl.textContent = lastDate ? lastDate + ' 금일 내전 결과' : '금일 내전 결과';
     }
 
     function buildTopTeamText(rows) {
@@ -802,30 +800,117 @@
       labelEl.textContent = winner ? '🏆 1등팀 ' + winner : '🏆 1등팀';
     }
 
-    function renderRecentResults(rows) {
-      var body = document.getElementById('recentResultBody');
-      if (!body) return;
+    function isMatchSummaryCell(text) {
+      var value = safeText(text);
+      return value.indexOf('[') !== -1 && value.indexOf(']') !== -1 && value.indexOf('팀') !== -1;
+    }
 
-      var html = '';
-      for (var i = 4; i < Math.min(rows.length, 8); i++) {
-        var row = rows[i];
-        var date = safeText(row[0]);
-        var winner = safeText(row[1]);
-        var score = safeText(row[2]);
-        var status = safeText(row[3]) || '완료';
+    function findRecentDetailedMatch(rows) {
+      for (var r = rows.length - 1; r >= 0; r--) {
+        for (var c = 0; c < rows[r].length; c++) {
+          var summary = safeText(rows[r][c]);
+          if (!isMatchSummaryCell(summary)) continue;
 
-        if (!date && !winner && !score) continue;
+          var title = '';
+          var date = '';
 
-        html +=
-          '<tr>' +
-            '<td>' + (date || '-') + '</td>' +
-            '<td>' + (winner || '-') + '</td>' +
-            '<td>' + (score || '-') + '</td>' +
-            '<td><span class="done-pill">' + status + '</span></td>' +
-          '</tr>';
+          for (var rr = r - 3; rr <= r + 1; rr++) {
+            if (!rows[rr]) continue;
+
+            for (var cc = 0; cc < rows[rr].length; cc++) {
+              var cell = safeText(rows[rr][cc]);
+
+              if (!title && cell && !isDateCell(cell) && !isMatchSummaryCell(cell) && cell.length <= 12 && cell.indexOf('팀') === -1) {
+                title = cell;
+              }
+
+              var normalizedDate = normalizeDateText(cell);
+              if (normalizedDate) {
+                date = normalizedDate;
+              }
+            }
+          }
+
+          var tableRows = [];
+          var maxWidth = 0;
+
+          for (var rr = r + 1; rr <= r + 5; rr++) {
+            if (!rows[rr]) continue;
+
+            var rowItems = [];
+            for (var cc = 0; cc < rows[rr].length; cc++) {
+              var text = safeText(rows[rr][cc]);
+              if (text) {
+                rowItems.push(text);
+              }
+            }
+
+            if (rowItems.length >= 2) {
+              tableRows.push(rowItems);
+              if (rowItems.length > maxWidth) {
+                maxWidth = rowItems.length;
+              }
+            }
+          }
+
+          if (!tableRows.length) continue;
+
+          for (var i = 0; i < tableRows.length; i++) {
+            while (tableRows[i].length < maxWidth) {
+              tableRows[i].push('');
+            }
+          }
+
+          return {
+            title: title || '최근 내전 상세 결과',
+            date: date || '',
+            summary: summary,
+            rows: tableRows
+          };
+        }
       }
 
-      body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
+      return null;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderRecentDetailedMatch(rows) {
+      var card = document.getElementById('recentMatchCard');
+      if (!card) return;
+
+      var match = findRecentDetailedMatch(rows);
+
+      if (!match) {
+        card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
+        return;
+      }
+
+      var tableHtml = '';
+      for (var r = 0; r < match.rows.length; r++) {
+        tableHtml += '<tr>';
+        for (var c = 0; c < match.rows[r].length; c++) {
+          tableHtml += '<td>' + escapeHtml(match.rows[r][c]) + '</td>';
+        }
+        tableHtml += '</tr>';
+      }
+
+      card.innerHTML =
+        '<div class="recent-match-head">' + escapeHtml(match.title) + '</div>' +
+        '<div class="recent-match-summary">' + escapeHtml(match.summary) + '</div>' +
+        (match.date ? '<div class="recent-match-date">' + escapeHtml(match.date) + '</div>' : '') +
+        '<div class="recent-match-table-wrap">' +
+          '<table class="recent-match-table">' +
+            '<tbody>' + tableHtml + '</tbody>' +
+          '</table>' +
+        '</div>';
     }
 
     function findRankingHeaderRow(rows) {
@@ -873,52 +958,52 @@
     }
 
     function extractRankingItemsFromTopRightTable(rows) {
-  var counts = {};
+      var counts = {};
 
-  for (var r = 0; r < rows.length; r++) {
-    var row = rows[r] || [];
-    var dateCol = -1;
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r] || [];
+        var dateCol = -1;
 
-    for (var c = 0; c < row.length; c++) {
-      var cell = safeText(row[c]);
-      if (isDateCell(cell)) {
-        dateCol = c;
-        break;
+        for (var c = 0; c < row.length; c++) {
+          var cell = safeText(row[c]);
+          if (isDateCell(cell)) {
+            dateCol = c;
+            break;
+          }
+        }
+
+        if (dateCol === -1) continue;
+
+        for (var c = dateCol + 1; c < row.length; c++) {
+          var name = normalizeCell(row[c]);
+
+          if (!name) continue;
+          if (isDateCell(name)) continue;
+          if (/^\d+$/.test(name)) continue;
+          if (/순위|1위|2위|3위|4위|MVP|특별혜택/.test(name)) continue;
+
+          if (!counts[name]) {
+            counts[name] = 0;
+          }
+
+          counts[name] += 1;
+        }
       }
+
+      var items = Object.keys(counts).map(function(name) {
+        return {
+          name: name,
+          count: counts[name]
+        };
+      });
+
+      items.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      return items;
     }
-
-    if (dateCol === -1) continue;
-
-    for (var c = dateCol + 1; c < row.length; c++) {
-      var name = normalizeCell(row[c]);
-
-      if (!name) continue;
-      if (isDateCell(name)) continue;
-      if (/^\d+$/.test(name)) continue;
-      if (/순위|1위|2위|3위|4위|MVP|특별혜택/.test(name)) continue;
-
-      if (!counts[name]) {
-        counts[name] = 0;
-      }
-
-      counts[name] += 1;
-    }
-  }
-
-  var items = Object.keys(counts).map(function(name) {
-    return {
-      name: name,
-      count: counts[name]
-    };
-  });
-
-  items.sort(function(a, b) {
-    if (b.count !== a.count) return b.count - a.count;
-    return a.name.localeCompare(b.name, 'ko');
-  });
-
-  return items;
-}
 
     function buildFixedRankingHtml(items, className) {
       var maxRows = className === 'mvp' ? 5 : 10;
@@ -1019,6 +1104,7 @@
 
     async function loadSpreadsheetData() {
       var topTeamEl = document.getElementById('topTeamLines');
+      var recentCard = document.getElementById('recentMatchCard');
 
       try {
         var res = await fetch(CSV_URL, { cache: 'no-store' });
@@ -1035,11 +1121,12 @@
         }
 
         updateTopTeamLabel(topTeamText);
-        renderRecentResults(rows);
+        renderRecentDetailedMatch(rows);
         await loadRankingSheetData();
       } catch (error) {
         console.error('시트 로드 실패:', error);
         if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
+        if (recentCard) recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
       }
     }
 
