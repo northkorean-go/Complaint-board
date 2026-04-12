@@ -13,6 +13,20 @@ export function json(data, status = 200, extraHeaders = {}) {
   });
 }
 
+export function badRequest(message) {
+  return json({ ok: false, error: message }, 400);
+}
+
+export function serverError(error) {
+  return json(
+    {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    },
+    500
+  );
+}
+
 export async function readJson(request) {
   try {
     return await request.json();
@@ -38,7 +52,6 @@ function parseCookies(cookieHeader = "") {
 export function requireAdmin(request) {
   const cookieHeader = request.headers.get("cookie") || "";
   const cookies = parseCookies(cookieHeader);
-
   const isAdmin = cookies.admin_auth === "1";
 
   if (!isAdmin) {
