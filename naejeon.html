@@ -1351,25 +1351,30 @@
       return '';
     }
 
-    function renderScheduleText(rawText) {
+    function renderScheduleText(rawValue) {
   const scheduleText = document.getElementById('scheduleText');
   if (!scheduleText) return;
 
-  const raw = String(rawText || '미정').trim();
+  let lines = [];
 
-  if (!raw || raw === '미정') {
-    scheduleText.textContent = '미정';
-    return;
+  if (Array.isArray(rawValue)) {
+    lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
+  } else {
+    const raw = String(rawValue || '미정').trim();
+
+    if (!raw || raw === '미정') {
+      scheduleText.textContent = '미정';
+      return;
+    }
+
+    lines = raw
+      .split(/\s*\/\s*|\n+/)
+      .map(v => v.trim())
+      .filter(Boolean);
   }
 
-  // "/", " / ", 줄바꿈 전부 대응
-  const lines = raw
-    .split(/\s*\/\s*|\n+/)
-    .map(v => v.trim())
-    .filter(Boolean);
-
   if (!lines.length) {
-    scheduleText.textContent = raw;
+    scheduleText.textContent = '미정';
     return;
   }
 
@@ -1414,7 +1419,7 @@
           benefitText.textContent = data.benefitText || '미설정';
         }
 
-        renderScheduleText(data.nextScheduleText || '미정');
+        renderScheduleText(data.nextScheduleItems || data.nextScheduleText || '미정');
       } catch (error) {
         console.error('회차 요약 로드 실패:', error);
         renderRoundRecordTable([]);
