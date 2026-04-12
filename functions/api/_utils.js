@@ -136,32 +136,74 @@ export function normalizeDateText(value) {
   return "";
 }
 
-export function normalizeDisplayDate(dateText) {
-  const raw = normalizeDateText(dateText);
-  if (!raw) {
-    const now = new Date();
-    return `${String(now.getMonth() + 1).padStart(2, "0")}.${String(
-      now.getDate()
-    ).padStart(2, "0")}`;
+/* =========================
+   날짜 처리 핵심 수정
+========================= */
+
+// 한국 시간 기준 현재 시각(Date 객체)
+export function getKoreaNowDate() {
+  const now = new Date();
+  return new Date(now.getTime() + 9 * 60 * 60 * 1000);
+}
+
+// 경기 기준 날짜 계산
+// 새벽 6시 이전 저장은 전날 경기로 간주
+export function getMatchBaseDate() {
+  const korea = getKoreaNowDate();
+  const hour = korea.getUTCHours();
+
+  const base = new Date(
+    Date.UTC(
+      korea.getUTCFullYear(),
+      korea.getUTCMonth(),
+      korea.getUTCDate()
+    )
+  );
+
+  if (hour < 6) {
+    base.setUTCDate(base.getUTCDate() - 1);
   }
 
-  const [m, d] = raw.split(".");
-  return `${String(Number(m)).padStart(2, "0")}.${String(Number(d)).padStart(
-    2,
-    "0"
-  )}`;
+  return base;
+}
+
+export function normalizeDisplayDate(dateText) {
+  const raw = normalizeDateText(dateText);
+
+  if (raw) {
+    const [m, d] = raw.split(".");
+    return `${String(Number(m)).padStart(2, "0")}.${String(Number(d)).padStart(
+      2,
+      "0"
+    )}`;
+  }
+
+  const base = getMatchBaseDate();
+  const month = String(base.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(base.getUTCDate()).padStart(2, "0");
+  return `${month}.${day}`;
 }
 
 export function normalizeStorageDate(dateText) {
-  const display = normalizeDisplayDate(dateText);
-  const [m, d] = display.split(".");
-  const year = new Date().getFullYear();
-  return `${year}-${m}-${d}`;
+  const raw = normalizeDateText(dateText);
+
+  if (raw) {
+    const [m, d] = raw.split(".");
+    const year = getMatchBaseDate().getUTCFullYear();
+    return `${year}-${String(Number(m)).padStart(2, "0")}-${String(
+      Number(d)
+    ).padStart(2, "0")}`;
+  }
+
+  const base = getMatchBaseDate();
+  const year = base.getUTCFullYear();
+  const month = String(base.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(base.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getKoreaNowString() {
-  const now = new Date();
-  const korea = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const korea = getKoreaNowDate();
 
   const year = korea.getUTCFullYear();
   const month = String(korea.getUTCMonth() + 1).padStart(2, "0");
@@ -433,4 +475,3 @@ export async function getLatestRound(env) {
     LIMIT 1
   `).first();
 }
-
