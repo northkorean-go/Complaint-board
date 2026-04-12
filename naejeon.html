@@ -621,6 +621,7 @@
 
   <script>
     var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
+    var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
     function updateTodayTitle() {
       var titleEl = document.getElementById('todayTitle');
@@ -673,6 +674,10 @@
 
     function safeText(value) {
       return String(value || '').trim();
+    }
+
+    function normalizeCell(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
     }
 
     function getCell(rows, r, c) {
@@ -777,72 +782,158 @@
       body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
     }
 
-    function renderRanking(rows) {
+    function renderRankingFromSheet(rows) {
       var list = document.getElementById('rankingList');
       if (!list) return;
 
-      if (!rows || rows.length <= 10) return;
+      var items = [];
+      var seen = new Set();
 
-      var html = '';
-      for (var i = 10; i < Math.min(rows.length, 20); i++) {
-        var row = rows[i];
-        var rank = safeText(row[0]);
-        var name = safeText(row[1]);
-        var count = safeText(row[2]);
+      rows.forEach(function(row) {
+        for (var i = 0; i < row.length - 2; i++) {
+          var name = normalizeCell(row[i]);
+          var participate = normalizeCell(row[i + 1]);
+          var wins = normalizeCell(row[i + 2]);
 
-        if (!rank && !name && !count) continue;
+          if (!name) continue;
+          if (!/^[가-힣A-Za-z0-9]+$/.test(name)) continue;
+          if (!/^\d+$/.test(participate)) continue;
+          if (!/^\d+$/.test(wins)) continue;
 
-        html +=
+          var key = name + '_' + participate + '_' + wins;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          items.push({
+            name: name,
+            participate: Number(participate),
+            wins: Number(wins)
+          });
+        }
+      });
+
+      items.sort(function(a, b) {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return b.participate - a.participate;
+      });
+
+      if (!items.length) {
+        list.innerHTML =
           '<div class="ranking-item">' +
             '<div class="ranking-left">' +
-              '<span class="ranking-no">' + (rank || '-') + '</span>' +
-              '<span class="ranking-name">' + (name || '-') + '</span>' +
+              '<span class="ranking-no">1</span>' +
+              '<span class="ranking-name">데이터를 불러오지 못했습니다.</span>' +
             '</div>' +
-            '<div class="ranking-count">' + (count || '-') + '회</div>' +
+            '<div class="ranking-count">-</div>' +
           '</div>';
+        return;
       }
 
-      if (html) list.innerHTML = html;
+      list.innerHTML = items.slice(0, 10).map(function(item, index) {
+        return (
+          '<div class="ranking-item">' +
+            '<div class="ranking-left">' +
+              '<span class="ranking-no">' + (index + 1) + '</span>' +
+              '<span class="ranking-name">' + item.name + '</span>' +
+            '</div>' +
+            '<div class="ranking-count">' + item.wins + '회</div>' +
+          '</div>'
+        );
+      }).join('');
     }
 
-    function renderMVP(rows) {
+    function renderMVPFromSheet(rows) {
       var list = document.getElementById('mvpList');
       if (!list) return;
 
-      if (!rows || rows.length <= 22) return;
+      var items = [];
+      var seen = new Set();
 
-      var html = '';
-      for (var i = 22; i < Math.min(rows.length, 25); i++) {
-        var row = rows[i];
-        var rank = safeText(row[0]);
-        var name = safeText(row[1]);
-        var count = safeText(row[2]);
+      rows.forEach(function(row) {
+        for (var i = 0; i < row.length - 1; i++) {
+          var name = normalizeCell(row[i]);
+          var count = normalizeCell(row[i + 1]);
 
-        if (!rank && !name && !count) continue;
+          if (!name) continue;
+          if (!/^[가-힣A-Za-z0-9]+$/.test(name)) continue;
+          if (!/^\d+$/.test(count)) continue;
 
-        html +=
+          var key = name + '_' + count;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          items.push({
+            name: name,
+            count: Number(count)
+          });
+        }
+      });
+
+      items.sort(function(a, b) {
+        return b.count - a.count;
+      });
+
+      if (!items.length) {
+        list.innerHTML =
           '<div class="mvp-item">' +
             '<div class="mvp-left">' +
-              '<span class="mvp-no">' + (rank || '-') + '</span>' +
-              '<span class="mvp-name">' + (name || '-') + '</span>' +
+              '<span class="mvp-no">1</span>' +
+              '<span class="mvp-name">데이터를 불러오지 못했습니다.</span>' +
             '</div>' +
-            '<div class="mvp-count">' + (count || '-') + '회</div>' +
+            '<div class="mvp-count">-</div>' +
           '</div>';
+        return;
       }
 
-      if (html) list.innerHTML = html;
+      list.innerHTML = items.slice(0, 3).map(function(item, index) {
+        return (
+          '<div class="mvp-item">' +
+            '<div class="mvp-left">' +
+              '<span class="mvp-no">' + (index + 1) + '</span>' +
+              '<span class="mvp-name">' + item.name + '</span>' +
+            '</div>' +
+            '<div class="mvp-count">' + item.count + '회</div>' +
+          '</div>'
+        );
+      }).join('');
     }
 
-    function applySummaryText(rows) {
+    function applySummaryTextFromSheet(rows) {
       var benefitEl = document.getElementById('benefitText');
       var scheduleEl = document.getElementById('scheduleText');
 
-      if (benefitEl && rows[26] && rows[26][1]) {
-        benefitEl.textContent = safeText(rows[26][1]);
+      if (benefitEl) {
+        var benefitRow = rows.find(function(row) {
+          return row.some(function(cell) {
+            return normalizeCell(cell).indexOf('특별혜택') !== -1;
+          });
+        });
+
+        benefitEl.textContent = benefitRow
+          ? benefitRow.map(normalizeCell).filter(Boolean).join(' ')
+          : '시트 데이터 대기중';
       }
 
-      if (scheduleEl && rows[27] && rows[27][1]) {
-        scheduleEl.textContent = safeText(rows[27][1]);
+      if (scheduleEl) {
+        scheduleEl.textContent = '티어표 시트 기준 집계 반영';
+      }
+    }
+
+    async function loadRankingSheetData() {
+      try {
+        var res = await fetch(RANKING_CSV_URL, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('랭킹 CSV 요청 실패: ' + res.status);
+        }
+
+        var text = await res.text();
+        var rows = parseCSV(text);
+
+        renderRankingFromSheet(rows);
+        renderMVPFromSheet(rows);
+        applySummaryTextFromSheet(rows);
+      } catch (error) {
+        console.error('랭킹 시트 로드 실패:', error);
       }
     }
 
@@ -865,9 +956,7 @@
 
         updateTopTeamLabel(topTeamText);
         renderRecentResults(rows);
-        renderRanking(rows);
-        renderMVP(rows);
-        applySummaryText(rows);
+        await loadRankingSheetData();
       } catch (error) {
         console.error('시트 로드 실패:', error);
         if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
