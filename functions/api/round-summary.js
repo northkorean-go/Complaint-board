@@ -11,7 +11,7 @@ function parseMembers(value) {
   if (!value) return [];
 
   if (Array.isArray(value)) {
-    return value.map(v => String(v || '').trim()).filter(Boolean);
+    return value.map((v) => String(v || '').trim()).filter(Boolean);
   }
 
   const text = String(value).trim();
@@ -20,7 +20,7 @@ function parseMembers(value) {
   try {
     const parsed = JSON.parse(text);
     if (Array.isArray(parsed)) {
-      return parsed.map(v => String(v || '').trim()).filter(Boolean);
+      return parsed.map((v) => String(v || '').trim()).filter(Boolean);
     }
   } catch (e) {
     // ignore
@@ -28,7 +28,7 @@ function parseMembers(value) {
 
   return text
     .split(/[,\n/|]/)
-    .map(v => String(v || '').trim())
+    .map((v) => String(v || '').trim())
     .filter(Boolean);
 }
 
