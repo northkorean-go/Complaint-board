@@ -62,6 +62,7 @@ export async function onRequest(context) {
     const displayDate = normalizeDisplayDate(latestRankingDate || recentMatch.date);
     const storageDate = normalizeStorageDate(latestRankingDate || recentMatch.date);
     const snapshotKey = `${storageDate}|${recentMatch.summary}`;
+    const createdAtKST = getKoreaNowString();
 
     const exists = await env.DB.prepare(
       `SELECT id FROM match_results WHERE snapshot_key = ? LIMIT 1`
@@ -89,8 +90,9 @@ export async function onRequest(context) {
         winner_score,
         winner_members_json,
         mvp_name,
-        mvp_score
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        mvp_score,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .bind(
         snapshotKey,
@@ -102,7 +104,8 @@ export async function onRequest(context) {
         topTeamInfo.score ?? null,
         JSON.stringify(winnerMembers || []),
         mvp ? mvp.name : '',
-        mvp ? mvp.score : null
+        mvp ? mvp.score : null,
+        createdAtKST
       )
       .run();
 
@@ -148,6 +151,7 @@ export async function onRequest(context) {
       winner_members: winnerMembers,
       mvp_name: mvp ? mvp.name : '',
       mvp_score: mvp ? mvp.score : null,
+      created_at: createdAtKST,
     });
   } catch (error) {
     return json(
@@ -276,6 +280,20 @@ function normalizeStorageDate(dateText) {
   const [m, d] = display.split('.');
   const year = new Date().getFullYear();
   return `${year}-${m}-${d}`;
+}
+
+function getKoreaNowString() {
+  const now = new Date();
+  const korea = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+  const year = korea.getUTCFullYear();
+  const month = String(korea.getUTCMonth() + 1).padStart(2, '0');
+  const date = String(korea.getUTCDate()).padStart(2, '0');
+  const hours = String(korea.getUTCHours()).padStart(2, '0');
+  const minutes = String(korea.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(korea.getUTCSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
 }
 
 function buildTopTeamText(rows) {
