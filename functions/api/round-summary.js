@@ -22,7 +22,9 @@ function parseMembers(value) {
     if (Array.isArray(parsed)) {
       return parsed.map((v) => String(v || "").trim()).filter(Boolean);
     }
-  } catch (e) {}
+  } catch (e) {
+    // ignore
+  }
 
   return text
     .split(/[,\n/|]/)
@@ -32,6 +34,7 @@ function parseMembers(value) {
 
 function normalizeRound(round) {
   if (!round) return null;
+
   return {
     id: round.id,
     name: round.name,
@@ -72,6 +75,7 @@ function extractPlayerInfoFromCell(cellText) {
   const score = parseFloat(match[2]);
 
   if (!name || Number.isNaN(score)) return null;
+
   return { name, score };
 }
 
@@ -121,20 +125,6 @@ async function getMatchRows(env, resultId) {
 }
 
 async function buildAutoBenefitText(env, latestMatch) {
-  if (!latestMatch) return "미설정";
-
-  const teams = parseSummaryTeamEntries(latestMatch.summary_text || "");
-  if (!teams.length) return "미설정";
-
-  let lowestTeam = teams[0];
-  for (let i = 1; i < teams.length; i++) {
-    if (teams[i].score < lowestTeam.score) {
-      lowestTeam = teams[i];
-    }
-  }
-
-  const rows = await getMatchRows(env, latestMatch.id);
-  async function buildAutoBenefitText(env, latestMatch) {
   if (!latestMatch) return "미설정";
 
   const teams = parseSummaryTeamEntries(latestMatch.summary_text || "");
@@ -201,6 +191,7 @@ export async function onRequestGet(context) {
 
         if (latestClosedRound) {
           const closedItems = await getRoundRecords(env, latestClosedRound.id);
+
           if (closedItems.length > 0) {
             summaryRoundRaw = latestClosedRound;
             items = closedItems;
