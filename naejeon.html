@@ -637,640 +637,675 @@
       </aside>
     </div>
   </div>
+
   <script>
-  var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
-  var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
+    var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
+    var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
-  function parseCSVLine(line) {
-    var result = [];
-    var current = '';
-    var inQuotes = false;
+    function parseCSVLine(line) {
+      var result = [];
+      var current = '';
+      var inQuotes = false;
 
-    for (var i = 0; i < line.length; i++) {
-      var char = line[i];
-      var next = line[i + 1];
+      for (var i = 0; i < line.length; i++) {
+        var char = line[i];
+        var next = line[i + 1];
 
-      if (char === '"') {
-        if (inQuotes && next === '"') {
-          current += '"';
-          i += 1;
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
         } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-
-    result.push(current.trim());
-    return result;
-  }
-
-  function parseCSV(text) {
-    return text
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .split('\n')
-      .map(parseCSVLine);
-  }
-
-  function safeText(value) {
-    return String(value || '').trim();
-  }
-
-  function normalizeCell(value) {
-    return String(value || '').replace(/\s+/g, ' ').trim();
-  }
-
-  function getCell(rows, r, c) {
-    if (!rows[r]) return '';
-    return safeText(rows[r][c]);
-  }
-
-  function escapeHtml(text) {
-    return String(text || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function normalizeDateText(value) {
-    var text = safeText(value);
-    if (!text) return '';
-
-    var match = text.match(/^(\d{1,2})\.(\d{1,2})$/);
-    if (match) return Number(match[1]) + '.' + Number(match[2]);
-
-    match = text.match(/^(\d{1,2})\/(\d{1,2})$/);
-    if (match) return Number(match[1]) + '.' + Number(match[2]);
-
-    match = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
-    if (match) return Number(match[2]) + '.' + Number(match[3]);
-
-    match = text.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-    if (match) return Number(match[2]) + '.' + Number(match[3]);
-
-    return '';
-  }
-
-  function isDateCell(value) {
-    return !!normalizeDateText(value);
-  }
-
-  function findLastDateInRows(rows) {
-    var lastDate = '';
-
-    for (var r = 0; r < rows.length; r++) {
-      for (var c = 0; c < rows[r].length; c++) {
-        var normalized = normalizeDateText(rows[r][c]);
-        if (normalized) {
-          lastDate = normalized;
+          current += char;
         }
       }
+
+      result.push(current.trim());
+      return result;
     }
 
-    return lastDate;
-  }
+    function parseCSV(text) {
+      return text
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map(parseCSVLine);
+    }
 
-  function updateTodayTitleFromRankingSheet(rows) {
-    var titleEl = document.getElementById('todayTitle');
-    if (!titleEl) return;
+    function safeText(value) {
+      return String(value || '').trim();
+    }
 
-    var lastDate = findLastDateInRows(rows);
-    titleEl.textContent = lastDate ? lastDate + ' 금일 내전 결과' : '금일 내전 결과';
-  }
+    function normalizeCell(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
+    }
 
-  function buildTopTeamText(rows) {
-    var m11 = getCell(rows, 10, 12);
-    var b12 = getCell(rows, 11, 1);
-    var l15 = getCell(rows, 14, 11);
+    function getCell(rows, r, c) {
+      if (!rows[r]) return '';
+      return safeText(rows[r][c]);
+    }
 
-    var o12 = getCell(rows, 11, 14);
-    var y15 = getCell(rows, 14, 24);
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-    var aa12 = getCell(rows, 11, 26);
-    var ak15 = getCell(rows, 14, 36);
+    function normalizeDateText(value) {
+      var text = safeText(value);
+      if (!text) return '';
 
-    var am12 = getCell(rows, 11, 38);
-    var aw15 = getCell(rows, 14, 48);
+      var match = text.match(/^(\d{1,2})\.(\d{1,2})$/);
+      if (match) return Number(match[1]) + '.' + Number(match[2]);
 
-    var ay12 = getCell(rows, 11, 50);
-    var bi15 = getCell(rows, 14, 60);
+      match = text.match(/^(\d{1,2})\/(\d{1,2})$/);
+      if (match) return Number(match[1]) + '.' + Number(match[2]);
 
-    if (
-      !m11 && !b12 && !l15 &&
-      !o12 && !y15 &&
-      !aa12 && !ak15 &&
-      !am12 && !aw15 &&
-      !ay12 && !bi15
-    ) {
+      match = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+      if (match) return Number(match[2]) + '.' + Number(match[3]);
+
+      match = text.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+      if (match) return Number(match[2]) + '.' + Number(match[3]);
+
       return '';
     }
 
-    return '[' + m11 + '] ' +
-      b12 + '팀 ' + l15 + ' : ' +
-      o12 + '팀 ' + y15 + ' : ' +
-      aa12 + '팀 ' + ak15 + ' : ' +
-      am12 + '팀 ' + aw15 + ' : ' +
-      ay12 + '팀 ' + bi15;
-  }
-
-  function parseSummaryTeamEntries(summaryText) {
-    var entries = [];
-    var regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
-    var match;
-
-    while ((match = regex.exec(summaryText)) !== null) {
-      entries.push({
-        teamName: match[1].trim() + '팀',
-        baseName: match[1].trim(),
-        score: parseFloat(match[2])
-      });
+    function isDateCell(value) {
+      return !!normalizeDateText(value);
     }
 
-    return entries;
-  }
+    function findLastDateInRows(rows) {
+      var lastDate = '';
 
-  function parseTopTeamInfo(text) {
-    var entries = parseSummaryTeamEntries(text);
-    if (!entries.length) {
+      for (var r = 0; r < rows.length; r++) {
+        for (var c = 0; c < rows[r].length; c++) {
+          var normalized = normalizeDateText(rows[r][c]);
+          if (normalized) {
+            lastDate = normalized;
+          }
+        }
+      }
+
+      return lastDate;
+    }
+
+    function updateTodayTitleFromRankingSheet(rows) {
+      var titleEl = document.getElementById('todayTitle');
+      if (!titleEl) return;
+
+      var lastDate = findLastDateInRows(rows);
+      titleEl.textContent = lastDate ? lastDate + ' 금일 내전 결과' : '금일 내전 결과';
+    }
+
+    function buildTopTeamText(rows) {
+      var m11 = getCell(rows, 10, 12);
+      var b12 = getCell(rows, 11, 1);
+      var l15 = getCell(rows, 14, 11);
+
+      var o12 = getCell(rows, 11, 14);
+      var y15 = getCell(rows, 14, 24);
+
+      var aa12 = getCell(rows, 11, 26);
+      var ak15 = getCell(rows, 14, 36);
+
+      var am12 = getCell(rows, 11, 38);
+      var aw15 = getCell(rows, 14, 48);
+
+      var ay12 = getCell(rows, 11, 50);
+      var bi15 = getCell(rows, 14, 60);
+
+      if (
+        !m11 && !b12 && !l15 &&
+        !o12 && !y15 &&
+        !aa12 && !ak15 &&
+        !am12 && !aw15 &&
+        !ay12 && !bi15
+      ) {
+        return '';
+      }
+
+      return '[' + m11 + '] ' +
+        b12 + '팀 ' + l15 + ' : ' +
+        o12 + '팀 ' + y15 + ' : ' +
+        aa12 + '팀 ' + ak15 + ' : ' +
+        am12 + '팀 ' + aw15 + ' : ' +
+        ay12 + '팀 ' + bi15;
+    }
+
+    function parseSummaryTeamEntries(summaryText) {
+      var entries = [];
+      var regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
+      var match;
+
+      while ((match = regex.exec(summaryText)) !== null) {
+        entries.push({
+          teamName: match[1].trim() + '팀',
+          baseName: match[1].trim(),
+          score: parseFloat(match[2])
+        });
+      }
+
+      return entries;
+    }
+
+    function parseTopTeamInfo(text) {
+      var entries = parseSummaryTeamEntries(text);
+      if (!entries.length) {
+        return {
+          teamName: '',
+          baseName: '',
+          score: null
+        };
+      }
+
+      var best = entries[0];
+      for (var i = 1; i < entries.length; i++) {
+        if (entries[i].score > best.score) {
+          best = entries[i];
+        }
+      }
+
+      return best;
+    }
+
+    function parseTopTeamWinner(text) {
+      return parseTopTeamInfo(text).teamName || '';
+    }
+
+    function extractPlayerInfoFromCell(cellText) {
+      var text = safeText(cellText);
+      if (!text) return null;
+      if (text.indexOf('정지') !== -1 || text.indexOf('치킨') !== -1) return null;
+      if (/^0\s*\(/.test(text)) return null;
+
+      var match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
+      if (!match) return null;
+
+      var name = match[1].trim();
+      var score = parseFloat(match[2]);
+
+      if (!name || Number.isNaN(score)) return null;
+
       return {
-        teamName: '',
-        baseName: '',
-        score: null
+        name: name,
+        score: score
       };
     }
 
-    var best = entries[0];
-    for (var i = 1; i < entries.length; i++) {
-      if (entries[i].score > best.score) {
-        best = entries[i];
-      }
+    function isMatchSummaryCell(text) {
+      var value = safeText(text);
+      return value.indexOf('[') !== -1 && value.indexOf(']') !== -1 && value.indexOf('팀') !== -1;
     }
 
-    return best;
-  }
+    function findRecentDetailedMatch(rows) {
+      for (var r = rows.length - 1; r >= 0; r--) {
+        for (var c = 0; c < rows[r].length; c++) {
+          var summary = safeText(rows[r][c]);
+          if (!isMatchSummaryCell(summary)) continue;
 
-  function parseTopTeamWinner(text) {
-    return parseTopTeamInfo(text).teamName || '';
-  }
+          var title = '';
+          var date = '';
 
-  function extractPlayerInfoFromCell(cellText) {
-  var text = safeText(cellText);
-  if (!text) return null;
+          for (var rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
+            var left = Math.max(0, c - 6);
+            var right = Math.min((rows[rr] || []).length - 1, c + 12);
 
-  if (text.indexOf('정지') !== -1 || text.indexOf('치킨') !== -1) return null;
-  if (/^0\s*\(/.test(text)) return null;
+            for (var cc = left; cc <= right; cc++) {
+              var cell = safeText(rows[rr][cc]);
+              if (!cell) continue;
 
-  // 이름 + 숫자 패턴 더 안정적으로 잡기
-  var match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
+              var normalizedDate = normalizeDateText(cell);
+              if (normalizedDate) {
+                date = normalizedDate;
+                continue;
+              }
 
-  if (!match) return null;
-
-  var name = match[1].trim();
-  var score = parseFloat(match[2]);
-
-  if (!name || Number.isNaN(score)) return null;
-
-  return {
-    name: name,
-    score: score
-  };
-}
-
-  function isMatchSummaryCell(text) {
-    var value = safeText(text);
-    return value.indexOf('[') !== -1 && value.indexOf(']') !== -1 && value.indexOf('팀') !== -1;
-  }
-
-  function findRecentDetailedMatch(rows) {
-    for (var r = rows.length - 1; r >= 0; r--) {
-      for (var c = 0; c < rows[r].length; c++) {
-        var summary = safeText(rows[r][c]);
-        if (!isMatchSummaryCell(summary)) continue;
-
-        var title = '';
-        var date = '';
-
-        for (var rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
-          var left = Math.max(0, c - 6);
-          var right = Math.min((rows[rr] || []).length - 1, c + 12);
-
-          for (var cc = left; cc <= right; cc++) {
-            var cell = safeText(rows[rr][cc]);
-            if (!cell) continue;
-
-            var normalizedDate = normalizeDateText(cell);
-            if (normalizedDate) {
-              date = normalizedDate;
-              continue;
-            }
-
-            if (
-              !title &&
-              !isMatchSummaryCell(cell) &&
-              !isDateCell(cell) &&
-              cell.length <= 12 &&
-              cell.indexOf('팀') === -1 &&
-              cell.indexOf('[') === -1 &&
-              cell.indexOf(']') === -1
-            ) {
-              title = cell;
+              if (
+                !title &&
+                !isMatchSummaryCell(cell) &&
+                !isDateCell(cell) &&
+                cell.length <= 12 &&
+                cell.indexOf('팀') === -1 &&
+                cell.indexOf('[') === -1 &&
+                cell.indexOf(']') === -1
+              ) {
+                title = cell;
+              }
             }
           }
+
+          var tableRows = [];
+
+          for (var rr = r + 1; rr <= r + 5; rr++) {
+            if (!rows[rr]) continue;
+
+            var startCol = Math.max(0, c - 6);
+            var endCol = Math.min((rows[rr] || []).length - 1, c + 12);
+            var filledCells = [];
+
+            for (var cc = startCol; cc <= endCol; cc++) {
+              var text = safeText(rows[rr][cc]);
+              if (text) {
+                filledCells.push(text);
+              }
+            }
+
+            if (filledCells.length) {
+              filledCells = filledCells.slice(0, 5);
+              while (filledCells.length < 5) {
+                filledCells.push('');
+              }
+              tableRows.push(filledCells);
+            }
+          }
+
+          if (!tableRows.length) continue;
+
+          return {
+            title: title || '최근 내전 결과',
+            date: date || '',
+            summary: summary,
+            rows: tableRows
+          };
         }
-
-        var tableRows = [];
-
-        for (var rr = r + 1; rr <= r + 5; rr++) {
-          if (!rows[rr]) continue;
-
-          var startCol = Math.max(0, c - 6);
-          var endCol = Math.min((rows[rr] || []).length - 1, c + 12);
-          var filledCells = [];
-
-          for (var cc = startCol; cc <= endCol; cc++) {
-            var text = safeText(rows[rr][cc]);
-            if (text) {
-              filledCells.push(text);
-            }
-          }
-
-          if (filledCells.length) {
-            filledCells = filledCells.slice(0, 5);
-            while (filledCells.length < 5) {
-              filledCells.push('');
-            }
-            tableRows.push(filledCells);
-          }
-        }
-
-        if (!tableRows.length) continue;
-
-        return {
-          title: title || '최근 내전 결과',
-          date: date || '',
-          summary: summary,
-          rows: tableRows
-        };
       }
-    }
 
-    return null;
-  }
-
-  function findWinningTeamMembers(rows, topTeamText) {
-    var topTeamInfo = parseTopTeamInfo(topTeamText);
-    if (!topTeamInfo.teamName) return [];
-
-    var winnerBaseName = topTeamInfo.baseName;
-    var recentMatch = findRecentDetailedMatch(rows);
-    if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return [];
-
-    var teams = parseSummaryTeamEntries(recentMatch.summary);
-    if (!teams.length) return [];
-
-    var winnerColIndex = teams.findIndex(function(team) {
-      return team.baseName === winnerBaseName;
-    });
-
-    if (winnerColIndex === -1) return [];
-
-    var members = [];
-
-    for (var r = 0; r < recentMatch.rows.length; r++) {
-      var row = recentMatch.rows[r] || [];
-      var cell = row[winnerColIndex] || '';
-      var playerInfo = extractPlayerInfoFromCell(cell);
-
-      if (!playerInfo) continue;
-      if (members.indexOf(playerInfo.name) !== -1) continue;
-
-      members.push(playerInfo.name);
-
-      if (members.length >= 4) {
-        break;
-      }
-    }
-
-    return members;
-  }
-
-  function findMVPPlayer(rows) {
-    var recentMatch = findRecentDetailedMatch(rows);
-    if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) {
       return null;
     }
 
-    var best = null;
+    function findWinningTeamMembers(rows, topTeamText) {
+      var topTeamInfo = parseTopTeamInfo(topTeamText);
+      if (!topTeamInfo.teamName) return [];
 
-    for (var r = 0; r < recentMatch.rows.length; r++) {
-      var row = recentMatch.rows[r] || [];
+      var winnerBaseName = topTeamInfo.baseName;
+      var recentMatch = findRecentDetailedMatch(rows);
+      if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return [];
 
-      for (var c = 0; c < row.length; c++) {
-        var playerInfo = extractPlayerInfoFromCell(row[c]);
-        if (!playerInfo) continue;
+      var teams = parseSummaryTeamEntries(recentMatch.summary);
+      if (!teams.length) return [];
 
-        if (!best || playerInfo.score > best.score) {
-          best = playerInfo;
-        }
-      }
-    }
-
-    return best;
-  }
-
-  function updateTopTeamLabel(text, rows) {
-    var labelEl = document.getElementById('topTeamLabel');
-    if (!labelEl) return;
-
-    var topTeamInfo = parseTopTeamInfo(text);
-
-    if (!topTeamInfo.teamName) {
-      labelEl.textContent = '🏆 1등팀';
-      return;
-    }
-
-    var members = findWinningTeamMembers(rows, text);
-    var scoreText = topTeamInfo.score !== null ? ' ' + topTeamInfo.score + '점' : '';
-
-    if (members.length) {
-      labelEl.textContent =
-        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText + ' (' + members.join(' / ') + ')';
-    } else {
-      labelEl.textContent =
-        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText;
-    }
-  }
-
-  function updateTopTeamLines(rows) {
-    var linesEl = document.getElementById('topTeamLines');
-    if (!linesEl) return;
-
-    var mvp = findMVPPlayer(rows);
-
-    if (!mvp) {
-      linesEl.textContent = 'MVP 집계 데이터가 없습니다.';
-      return;
-    }
-
-    linesEl.textContent = 'MVP ' + mvp.name + ' ' + mvp.score + '점';
-  }
-
-  function renderRecentDetailedMatch(rows) {
-    var card = document.getElementById('recentMatchCard');
-    if (!card) return;
-
-    var match = findRecentDetailedMatch(rows);
-
-    if (!match) {
-      card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
-      return;
-    }
-
-    var tableHtml = '';
-    for (var r = 0; r < match.rows.length; r++) {
-      tableHtml += '<tr>';
-      for (var c = 0; c < 5; c++) {
-        var cell = match.rows[r][c] || '';
-        tableHtml += '<td>' + escapeHtml(cell) + '</td>';
-      }
-      tableHtml += '</tr>';
-    }
-
-    card.innerHTML =
-      '<div class="recent-match-head">' + escapeHtml(match.title) + '</div>' +
-      '<div class="recent-match-summary">' + escapeHtml(match.summary) + '</div>' +
-      (match.date ? '<div class="recent-match-date">' + escapeHtml(match.date) + '</div>' : '') +
-      '<div class="recent-match-table-wrap">' +
-        '<table class="recent-match-table">' +
-          '<tbody>' + tableHtml + '</tbody>' +
-        '</table>' +
-      '</div>';
-  }
-
-  function findRankingHeaderRow(rows) {
-    for (var r = 0; r < rows.length; r++) {
-      var row = rows[r].map(normalizeCell);
-      var hasFirst = row.indexOf('1위') !== -1;
-      var hasSecond = row.indexOf('2위') !== -1;
-      var hasMvp = row.indexOf('MVP') !== -1;
-
-      if (hasFirst && hasSecond && hasMvp) {
-        return {
-          row: r,
-          cols: {
-            first: row.indexOf('1위'),
-            second: row.indexOf('2위'),
-            third: row.indexOf('3위'),
-            fourth: row.indexOf('4위'),
-            mvp: row.indexOf('MVP')
-          }
-        };
-      }
-    }
-    return null;
-  }
-
-  function extractNameCountFromColumn(rows, startRow, col) {
-    if (col < 0) return [];
-
-    var items = [];
-    for (var r = startRow; r < rows.length; r++) {
-      var text = normalizeCell((rows[r] && rows[r][col]) || '');
-      if (!text) continue;
-
-      if (/^(1위|2위|3위|4위|MVP|특별혜택)$/.test(text)) break;
-
-      var match = text.match(/^([가-힣A-Za-z0-9]+(?:팀)?)(\d+)$/);
-      if (!match) continue;
-
-      items.push({
-        name: match[1],
-        count: Number(match[2])
+      var winnerColIndex = teams.findIndex(function(team) {
+        return team.baseName === winnerBaseName;
       });
-    }
-    return items;
-  }
 
-  function extractRankingItemsFromTopRightTable(rows) {
-    var counts = {};
+      if (winnerColIndex === -1) return [];
 
-    for (var r = 0; r < rows.length; r++) {
-      var row = rows[r] || [];
-      var dateCol = -1;
+      var members = [];
 
-      for (var c = 0; c < row.length; c++) {
-        var cell = safeText(row[c]);
-        if (isDateCell(cell)) {
-          dateCol = c;
+      for (var r = 0; r < recentMatch.rows.length; r++) {
+        var row = recentMatch.rows[r] || [];
+        var cell = row[winnerColIndex] || '';
+        var playerInfo = extractPlayerInfoFromCell(cell);
+
+        if (!playerInfo) continue;
+        if (members.indexOf(playerInfo.name) !== -1) continue;
+
+        members.push(playerInfo.name);
+
+        if (members.length >= 4) {
           break;
         }
       }
 
-      if (dateCol === -1) continue;
+      return members;
+    }
 
-      for (var c = dateCol + 1; c < row.length; c++) {
-        var name = normalizeCell(row[c]);
-
-        if (!name) continue;
-        if (isDateCell(name)) continue;
-        if (/^\d+$/.test(name)) continue;
-        if (/순위|1위|2위|3위|4위|MVP|특별혜택/.test(name)) continue;
-
-        if (!counts[name]) {
-          counts[name] = 0;
-        }
-
-        counts[name] += 1;
+    function findMVPPlayer(rows) {
+      var recentMatch = findRecentDetailedMatch(rows);
+      if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) {
+        return null;
       }
-    }
 
-    var items = Object.keys(counts).map(function(name) {
-      return {
-        name: name,
-        count: counts[name]
-      };
-    });
+      var best = null;
 
-    items.sort(function(a, b) {
-      if (b.count !== a.count) return b.count - a.count;
-      return a.name.localeCompare(b.name, 'ko');
-    });
+      for (var r = 0; r < recentMatch.rows.length; r++) {
+        var row = recentMatch.rows[r] || [];
 
-    return items;
-  }
+        for (var c = 0; c < row.length; c++) {
+          var playerInfo = extractPlayerInfoFromCell(row[c]);
+          if (!playerInfo) continue;
 
-  function buildFixedRankingHtml(items, className) {
-    var maxRows = className === 'mvp' ? 5 : 10;
-    var html = '';
-
-    for (var i = 0; i < maxRows; i++) {
-      var item = items[i];
-      var noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
-      var nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
-      var countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
-      var leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
-      var itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
-
-      html +=
-        '<div class="' + itemClass + '">' +
-          '<div class="' + leftClass + '">' +
-            '<span class="' + noClass + '">' + (i + 1) + '</span>' +
-            '<span class="' + nameClass + '">' + (item ? item.name : '') + '</span>' +
-          '</div>' +
-          '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
-        '</div>';
-    }
-
-    return html;
-  }
-
-  function renderRankingFromSheet(rows) {
-    var list = document.getElementById('rankingList');
-    if (!list) return;
-
-    var items = extractRankingItemsFromTopRightTable(rows);
-    list.innerHTML = buildFixedRankingHtml(items, 'ranking');
-  }
-
-  function renderMVPFromSheet(rows) {
-    var list = document.getElementById('mvpList');
-    if (!list) return;
-
-    var header = findRankingHeaderRow(rows);
-    if (!header || header.cols.mvp < 0) {
-      list.innerHTML = buildFixedRankingHtml([], 'mvp');
-      return;
-    }
-
-    var items = extractNameCountFromColumn(rows, header.row + 1, header.cols.mvp);
-    items.sort(function(a, b) {
-      if (b.count !== a.count) return b.count - a.count;
-      return a.name.localeCompare(b.name, 'ko');
-    });
-
-    list.innerHTML = buildFixedRankingHtml(items, 'mvp');
-  }
-
-  function applySummaryTextFromSheet(rows) {
-    var benefitEl = document.getElementById('benefitText');
-    var scheduleEl = document.getElementById('scheduleText');
-
-    if (benefitEl) {
-      var benefitText = '';
-
-      for (var r = 0; r < rows.length; r++) {
-        for (var c = 0; c < rows[r].length; c++) {
-          var text = normalizeCell(rows[r][c]);
-          if (text === '특별혜택') {
-            var right1 = normalizeCell((rows[r] && rows[r][c + 1]) || '');
-            var right2 = normalizeCell((rows[r] && rows[r][c + 2]) || '');
-            benefitText = (right1 + ' ' + right2).trim();
+          if (!best || playerInfo.score > best.score) {
+            best = playerInfo;
           }
         }
       }
 
-      benefitEl.textContent = benefitText || '시트 데이터 대기중';
+      return best;
     }
 
-    if (scheduleEl) {
-      scheduleEl.textContent = '티어표 시트 기준 집계 반영';
-    }
-  }
+    function formatNextMatchSchedule() {
+      var now = new Date();
 
-  async function loadRankingSheetData() {
-    try {
-      var res = await fetch(RANKING_CSV_URL, { cache: 'no-store' });
-      if (!res.ok) {
-        throw new Error('랭킹 CSV 요청 실패: ' + res.status);
+      function makeCandidate(targetDay) {
+        var currentDay = now.getDay();
+        var diff = (targetDay - currentDay + 7) % 7;
+        var candidate = new Date(now);
+
+        candidate.setDate(now.getDate() + diff);
+        candidate.setHours(22, 0, 0, 0);
+
+        if (diff === 0 && now.getTime() >= candidate.getTime()) {
+          candidate.setDate(candidate.getDate() + 7);
+        }
+
+        return candidate;
       }
 
-      var text = await res.text();
-      var rows = parseCSV(text);
+      var thu = makeCandidate(4);
+      var sat = makeCandidate(6);
+      var next = thu.getTime() < sat.getTime() ? thu : sat;
 
-      updateTodayTitleFromRankingSheet(rows);
-      renderRankingFromSheet(rows);
-      renderMVPFromSheet(rows);
-      applySummaryTextFromSheet(rows);
-    } catch (error) {
-      console.error('랭킹 시트 로드 실패:', error);
+      var year = next.getFullYear();
+      var month = String(next.getMonth() + 1).padStart(2, '0');
+      var date = String(next.getDate()).padStart(2, '0');
+      var dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      var dayName = dayNames[next.getDay()];
+
+      var hour24 = next.getHours();
+      var minutes = String(next.getMinutes()).padStart(2, '0');
+      var period = hour24 >= 12 ? '오후' : '오전';
+      var hour12 = hour24 % 12;
+      if (hour12 === 0) hour12 = 12;
+
+      return year + '.' + month + '.' + date + ' (' + dayName + ') ' + period + ' ' + hour12 + ':' + minutes;
     }
-  }
 
-  async function loadSpreadsheetData() {
-    var topTeamEl = document.getElementById('topTeamLines');
-    var recentCard = document.getElementById('recentMatchCard');
+    function updateTopTeamLabel(text, rows) {
+      var labelEl = document.getElementById('topTeamLabel');
+      if (!labelEl) return;
 
-    try {
-      var res = await fetch(CSV_URL, { cache: 'no-store' });
-      if (!res.ok) {
-        throw new Error('CSV 요청 실패: ' + res.status);
+      var topTeamInfo = parseTopTeamInfo(text);
+
+      if (!topTeamInfo.teamName) {
+        labelEl.textContent = '🏆 1등팀';
+        return;
       }
 
-      var text = await res.text();
-      var rows = parseCSV(text);
-      var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+      var members = findWinningTeamMembers(rows, text);
+      var scoreText = topTeamInfo.score !== null ? ' ' + topTeamInfo.score + '점' : '';
 
-      updateTopTeamLabel(topTeamText, rows);
-      updateTopTeamLines(rows);
-      renderRecentDetailedMatch(rows);
-      await loadRankingSheetData();
-    } catch (error) {
-      console.error('시트 로드 실패:', error);
-      if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
-      if (recentCard) {
-        recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
+      if (members.length) {
+        labelEl.textContent =
+          '🏆 1등팀 ' + topTeamInfo.teamName + scoreText + ' (' + members.join(' / ') + ')';
+      } else {
+        labelEl.textContent =
+          '🏆 1등팀 ' + topTeamInfo.teamName + scoreText;
       }
     }
-  }
 
-  loadSpreadsheetData();
-</script>
+    function updateTopTeamLines(rows) {
+      var linesEl = document.getElementById('topTeamLines');
+      if (!linesEl) return;
+
+      var mvp = findMVPPlayer(rows);
+
+      if (!mvp) {
+        linesEl.textContent = 'MVP 집계 데이터가 없습니다.';
+        return;
+      }
+
+      linesEl.textContent = 'MVP ' + mvp.name + ' ' + mvp.score + '점';
+    }
+
+    function renderRecentDetailedMatch(rows) {
+      var card = document.getElementById('recentMatchCard');
+      if (!card) return;
+
+      var match = findRecentDetailedMatch(rows);
+
+      if (!match) {
+        card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
+        return;
+      }
+
+      var tableHtml = '';
+      for (var r = 0; r < match.rows.length; r++) {
+        tableHtml += '<tr>';
+        for (var c = 0; c < 5; c++) {
+          var cell = match.rows[r][c] || '';
+          tableHtml += '<td>' + escapeHtml(cell) + '</td>';
+        }
+        tableHtml += '</tr>';
+      }
+
+      card.innerHTML =
+        '<div class="recent-match-head">' + escapeHtml(match.title) + '</div>' +
+        '<div class="recent-match-summary">' + escapeHtml(match.summary) + '</div>' +
+        (match.date ? '<div class="recent-match-date">' + escapeHtml(match.date) + '</div>' : '') +
+        '<div class="recent-match-table-wrap">' +
+          '<table class="recent-match-table">' +
+            '<tbody>' + tableHtml + '</tbody>' +
+          '</table>' +
+        '</div>';
+    }
+
+    function findRankingHeaderRow(rows) {
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r].map(normalizeCell);
+        var hasFirst = row.indexOf('1위') !== -1;
+        var hasSecond = row.indexOf('2위') !== -1;
+        var hasMvp = row.indexOf('MVP') !== -1;
+
+        if (hasFirst && hasSecond && hasMvp) {
+          return {
+            row: r,
+            cols: {
+              first: row.indexOf('1위'),
+              second: row.indexOf('2위'),
+              third: row.indexOf('3위'),
+              fourth: row.indexOf('4위'),
+              mvp: row.indexOf('MVP')
+            }
+          };
+        }
+      }
+      return null;
+    }
+
+    function extractNameCountFromColumn(rows, startRow, col) {
+      if (col < 0) return [];
+
+      var items = [];
+      for (var r = startRow; r < rows.length; r++) {
+        var text = normalizeCell((rows[r] && rows[r][col]) || '');
+        if (!text) continue;
+
+        if (/^(1위|2위|3위|4위|MVP|특별혜택)$/.test(text)) break;
+
+        var match = text.match(/^([가-힣A-Za-z0-9]+(?:팀)?)(\d+)$/);
+        if (!match) continue;
+
+        items.push({
+          name: match[1],
+          count: Number(match[2])
+        });
+      }
+      return items;
+    }
+
+    function extractRankingItemsFromTopRightTable(rows) {
+      var counts = {};
+
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r] || [];
+        var dateCol = -1;
+
+        for (var c = 0; c < row.length; c++) {
+          var cell = safeText(row[c]);
+          if (isDateCell(cell)) {
+            dateCol = c;
+            break;
+          }
+        }
+
+        if (dateCol === -1) continue;
+
+        for (var c = dateCol + 1; c < row.length; c++) {
+          var name = normalizeCell(row[c]);
+
+          if (!name) continue;
+          if (isDateCell(name)) continue;
+          if (/^\d+$/.test(name)) continue;
+          if (/순위|1위|2위|3위|4위|MVP|특별혜택/.test(name)) continue;
+
+          if (!counts[name]) {
+            counts[name] = 0;
+          }
+
+          counts[name] += 1;
+        }
+      }
+
+      var items = Object.keys(counts).map(function(name) {
+        return {
+          name: name,
+          count: counts[name]
+        };
+      });
+
+      items.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      return items;
+    }
+
+    function buildFixedRankingHtml(items, className) {
+      var maxRows = className === 'mvp' ? 5 : 10;
+      var html = '';
+
+      for (var i = 0; i < maxRows; i++) {
+        var item = items[i];
+        var noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
+        var nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
+        var countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
+        var leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
+        var itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
+
+        html +=
+          '<div class="' + itemClass + '">' +
+            '<div class="' + leftClass + '">' +
+              '<span class="' + noClass + '">' + (i + 1) + '</span>' +
+              '<span class="' + nameClass + '">' + (item ? item.name : '') + '</span>' +
+            '</div>' +
+            '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
+          '</div>';
+      }
+
+      return html;
+    }
+
+    function renderRankingFromSheet(rows) {
+      var list = document.getElementById('rankingList');
+      if (!list) return;
+
+      var items = extractRankingItemsFromTopRightTable(rows);
+      list.innerHTML = buildFixedRankingHtml(items, 'ranking');
+    }
+
+    function renderMVPFromSheet(rows) {
+      var list = document.getElementById('mvpList');
+      if (!list) return;
+
+      var header = findRankingHeaderRow(rows);
+      if (!header || header.cols.mvp < 0) {
+        list.innerHTML = buildFixedRankingHtml([], 'mvp');
+        return;
+      }
+
+      var items = extractNameCountFromColumn(rows, header.row + 1, header.cols.mvp);
+      items.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      list.innerHTML = buildFixedRankingHtml(items, 'mvp');
+    }
+
+    function applySummaryTextFromSheet(rows) {
+      var benefitEl = document.getElementById('benefitText');
+      var scheduleEl = document.getElementById('scheduleText');
+
+      if (benefitEl) {
+        var benefitText = '';
+
+        for (var r = 0; r < rows.length; r++) {
+          for (var c = 0; c < rows[r].length; c++) {
+            var text = normalizeCell(rows[r][c]);
+            if (text === '특별혜택') {
+              var right1 = normalizeCell((rows[r] && rows[r][c + 1]) || '');
+              var right2 = normalizeCell((rows[r] && rows[r][c + 2]) || '');
+              benefitText = (right1 + ' ' + right2).trim();
+            }
+          }
+        }
+
+        benefitEl.textContent = benefitText || '시트 데이터 대기중';
+      }
+
+      if (scheduleEl) {
+        scheduleEl.textContent = formatNextMatchSchedule();
+      }
+    }
+
+    async function loadRankingSheetData() {
+      try {
+        var res = await fetch(RANKING_CSV_URL, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('랭킹 CSV 요청 실패: ' + res.status);
+        }
+
+        var text = await res.text();
+        var rows = parseCSV(text);
+
+        updateTodayTitleFromRankingSheet(rows);
+        renderRankingFromSheet(rows);
+        renderMVPFromSheet(rows);
+        applySummaryTextFromSheet(rows);
+      } catch (error) {
+        console.error('랭킹 시트 로드 실패:', error);
+      }
+    }
+
+    async function loadSpreadsheetData() {
+      var topTeamEl = document.getElementById('topTeamLines');
+      var recentCard = document.getElementById('recentMatchCard');
+
+      try {
+        var res = await fetch(CSV_URL, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error('CSV 요청 실패: ' + res.status);
+        }
+
+        var text = await res.text();
+        var rows = parseCSV(text);
+        var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+
+        updateTopTeamLabel(topTeamText, rows);
+        updateTopTeamLines(rows);
+        renderRecentDetailedMatch(rows);
+        await loadRankingSheetData();
+      } catch (error) {
+        console.error('시트 로드 실패:', error);
+        if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
+        if (recentCard) {
+          recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
+        }
+      }
+    }
+
+    loadSpreadsheetData();
+  </script>
 </body>
 </html>
