@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>내전 기록</title>
 
+<style>
+body {
+  font-family: Arial;
+  background: #f7f7f7;
+  margin: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 900;
+  margin-bottom: 20px;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.item {
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+}
+
+.item:hover {
+  background: #eee;
+}
+
+.detail {
+  margin-top: 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title">📚 내전 기록</div>
+
+<div id="list" class="history-list"></div>
+
+<div id="detail" class="detail">
+  <h3 id="detailTitle">기록 선택</h3>
+  <div id="detailInfo"></div>
+  <table>
+    <tbody id="table"></tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+async function loadList() {
+  const res = await fetch('/api/matches');
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+
+  if (!data.ok || !data.items.length) {
+    list.innerHTML = '기록 없음';
+    return;
+  }
+
+  list.innerHTML = data.items.map(item => `
+    <div class="item" onclick="loadDetail(${item.id})">
+      ${item.match_date_text} - ${item.winner_team}
+    </div>
+  `).join('');
+}
+
+async function loadDetail(id) {
+  const res = await fetch('/api/match-detail?id=' + id);
+  const data = await res.json();
+
+  const d = data.item;
+
+  document.getElementById('detailTitle').innerText = d.title;
+  document.getElementById('detailInfo').innerText =
+    d.match_date_text + ' | 1등팀 ' + d.winner_team +
+    ' | MVP ' + d.mvp_name;
+
+  const table = document.getElementById('table');
+
+  table.innerHTML = d.rows.map(r => `
+    <tr>
+      <td>${r.col1}</td>
+      <td>${r.col2}</td>
+      <td>${r.col3}</td>
+      <td>${r.col4}</td>
+      <td>${r.col5}</td>
+    </tr>
+  `).join('');
+}
+
+loadList();
+</script>
+
+</body>
+</html>
