@@ -1,129 +1,712 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>내전 기록</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA 내전 기록</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body {
+      margin: 0;
+      background: #f6f6f6;
+      color: #111;
+      font-family: Arial, sans-serif;
+    }
 
-<style>
-body {
-  font-family: Arial;
-  background: #f7f7f7;
-  margin: 0;
-}
+    .site-topbar {
+      background: #f3f3f3;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 30px;
-}
+    .site-topbar-inner {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
 
-.title {
-  font-size: 32px;
-  font-weight: 900;
-  margin-bottom: 20px;
-}
+    .site-brand {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #111;
+    }
 
-.history-list {
-  display: grid;
-  gap: 10px;
-}
+    .site-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: #ededed;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
 
-.item {
-  background: #fff;
-  padding: 15px;
-  border-radius: 12px;
-  cursor: pointer;
-  border: 1px solid #ddd;
-}
+    .site-tab {
+      height: 44px;
+      padding: 0 22px;
+      border-radius: 999px;
+      color: rgba(0, 0, 0, 0.38);
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      background: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
 
-.item:hover {
-  background: #eee;
-}
+    .site-tab.active {
+      background: #000;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
 
-.detail {
-  margin-top: 30px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-}
+    .history-top-actions {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 24px 20px 0;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: #000;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
 
-td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
-</style>
+    .back-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.92;
+    }
+
+    .history-shell {
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 20px 20px 52px;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 400px minmax(0, 1fr);
+      gap: 28px;
+    }
+
+    .history-panel {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 30px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.03);
+      padding: 28px;
+    }
+
+    .history-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.34em;
+      color: #8a94a7;
+    }
+
+    .history-title {
+      margin-top: 14px;
+      font-size: 46px;
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: #000;
+    }
+
+    .history-sub {
+      margin-top: 18px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #666f7c;
+    }
+
+    .search-wrap {
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 50px;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fff;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      outline: none;
+      box-sizing: border-box;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .search-input:focus {
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .list-title,
+    .detail-title-label {
+      margin-bottom: 14px;
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      color: #8a94a7;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+      max-height: 900px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .history-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.14);
+      border-radius: 999px;
+    }
+
+    .history-item {
+      width: 100%;
+      text-align: left;
+      padding: 18px 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .history-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(0, 0, 0, 0.14);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.06);
+    }
+
+    .history-item.active {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+    }
+
+    .history-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .history-item-date {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+    }
+
+    .history-item-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #f2f2f2;
+      color: #111;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+    }
+
+    .history-item.active .history-item-badge {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+    }
+
+    .history-item-title {
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .history-item-meta {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #697180;
+    }
+
+    .history-item.active .history-item-meta {
+      color: rgba(255, 255, 255, 0.76);
+    }
+
+    .empty-box {
+      padding: 24px 18px;
+      border-radius: 20px;
+      background: #fafafa;
+      border: 1px dashed rgba(0, 0, 0, 0.12);
+      color: #6f7785;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .detail-head {
+      border-radius: 28px;
+      background: #000;
+      color: #fff;
+      padding: 24px 24px;
+    }
+
+    .detail-head-mini {
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      opacity: 0.68;
+    }
+
+    .detail-head-title {
+      margin-top: 10px;
+      font-size: 36px;
+      line-height: 1.02;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .detail-head-meta {
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .detail-summary {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fafafa;
+      font-size: 14px;
+      line-height: 1.8;
+      font-weight: 800;
+      color: #111;
+      text-align: center;
+    }
+
+    .detail-stats {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      border-radius: 22px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fff;
+      padding: 18px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      color: #8a94a7;
+    }
+
+    .stat-value {
+      margin-top: 10px;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #111;
+      line-height: 1.35;
+      white-space: pre-line;
+      word-break: keep-all;
+    }
+
+    .detail-table-wrap {
+      margin-top: 20px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+    }
+
+    .detail-table-head {
+      background: #111;
+      color: #fff;
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .detail-table td {
+      border: 1px solid #e7e7e7;
+      text-align: center;
+      padding: 10px 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #111;
+      background: #fff;
+      word-break: keep-all;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 1280px) {
+      .history-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .history-title {
+        font-size: 40px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .site-topbar-inner,
+      .history-top-actions,
+      .history-shell {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .site-topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .site-tabs {
+        width: 100%;
+        display: flex;
+      }
+
+      .site-tab {
+        flex: 1;
+        padding: 0 10px;
+        font-size: 13px;
+      }
+
+      .history-title {
+        font-size: 32px;
+      }
+
+      .detail-head-title {
+        font-size: 28px;
+      }
+
+      .detail-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-table td {
+        font-size: 12px;
+        padding: 8px 4px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-
-<div class="container">
-
-<div class="title">📚 내전 기록</div>
-
-<div id="list" class="history-list"></div>
-
-<div id="detail" class="detail">
-  <h3 id="detailTitle">기록 선택</h3>
-  <div id="detailInfo"></div>
-  <table>
-    <tbody id="table"></tbody>
-  </table>
-</div>
-
-</div>
-
-<script>
-async function loadList() {
-  const res = await fetch('/api/matches');
-  const data = await res.json();
-
-  const list = document.getElementById('list');
-
-  if (!data.ok || !data.items.length) {
-    list.innerHTML = '기록 없음';
-    return;
-  }
-
-  list.innerHTML = data.items.map(item => `
-    <div class="item" onclick="loadDetail(${item.id})">
-      ${item.match_date_text} - ${item.winner_team}
+  <div class="site-topbar">
+    <div class="site-topbar-inner">
+      <div class="site-brand">ZARA CLAN</div>
+      <div class="site-tabs">
+        <button class="site-tab" type="button" onclick="location.href='/'">사용자 화면</button>
+        <button class="site-tab active" type="button" onclick="location.href='/history.html'">내전 기록</button>
+      </div>
     </div>
-  `).join('');
-}
+  </div>
 
-async function loadDetail(id) {
-  const res = await fetch('/api/match-detail?id=' + id);
-  const data = await res.json();
+  <div class="history-top-actions">
+    <a class="back-btn" href="/naejeon.html">← 내전 현황판</a>
+    <a class="back-btn" href="/">← 메인으로</a>
+  </div>
 
-  const d = data.item;
+  <div class="history-shell">
+    <div class="history-grid">
+      <section class="history-panel">
+        <div class="history-eyebrow">MATCH ARCHIVE</div>
+        <div class="history-title">내전 기록</div>
+        <div class="history-sub">
+          저장된 날짜별 내전 결과를 선택해서
+          1등팀, MVP, 팀원, 상세 결과표를 다시 볼 수 있습니다.
+        </div>
 
-  document.getElementById('detailTitle').innerText = d.title;
-  document.getElementById('detailInfo').innerText =
-    d.match_date_text + ' | 1등팀 ' + d.winner_team +
-    ' | MVP ' + d.mvp_name;
+        <div class="search-wrap">
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="날짜, 승리팀, MVP로 검색"
+          />
+        </div>
 
-  const table = document.getElementById('table');
+        <div class="history-list" id="historyList">
+          <div class="empty-box">기록 목록을 불러오는 중입니다.</div>
+        </div>
+      </section>
 
-  table.innerHTML = d.rows.map(r => `
-    <tr>
-      <td>${r.col1}</td>
-      <td>${r.col2}</td>
-      <td>${r.col3}</td>
-      <td>${r.col4}</td>
-      <td>${r.col5}</td>
-    </tr>
-  `).join('');
-}
+      <section class="history-panel">
+        <div class="detail-title-label">MATCH DETAIL</div>
 
-loadList();
-</script>
+        <div class="detail-head">
+          <div class="detail-head-mini">ZARA MATCH RECORD</div>
+          <div class="detail-head-title" id="detailHead">기록을 선택하세요</div>
+          <div class="detail-head-meta" id="detailMeta"></div>
+        </div>
 
+        <div class="detail-summary" id="detailSummary">
+          좌측 목록에서 날짜를 선택하면 상세 결과가 표시됩니다.
+        </div>
+
+        <div class="detail-stats">
+          <div class="stat-card">
+            <div class="stat-label">DATE</div>
+            <div class="stat-value" id="dateStat">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">WINNER</div>
+            <div class="stat-value" id="winnerStat">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">MVP</div>
+            <div class="stat-value" id="mvpStat">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">MEMBERS</div>
+            <div class="stat-value" id="membersStat">-</div>
+          </div>
+        </div>
+
+        <div class="detail-table-wrap">
+          <div class="detail-table-head">저장된 내전 결과표</div>
+          <table class="detail-table">
+            <tbody id="detailTableBody">
+              <tr>
+                <td colspan="5">기록을 선택하면 결과표가 표시됩니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    let allHistoryItems = [];
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderHistoryList(items) {
+      const listEl = document.getElementById('historyList');
+
+      if (!items.length) {
+        listEl.innerHTML = '<div class="empty-box">조건에 맞는 기록이 없습니다.</div>';
+        return;
+      }
+
+      listEl.innerHTML = items.map(function(item) {
+        return (
+          '<button class="history-item" data-id="' + item.id + '">' +
+            '<div class="history-item-top">' +
+              '<div class="history-item-date">' + escapeHtml(item.match_date_text || '-') + '</div>' +
+              '<div class="history-item-badge">ARCHIVE</div>' +
+            '</div>' +
+            '<div class="history-item-title">' + escapeHtml(item.title || '최근 내전 결과') + '</div>' +
+            '<div class="history-item-meta">' +
+              '1등팀 ' + escapeHtml(item.winner_team || '-') +
+              (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
+              (item.mvp_name ? '<br>MVP ' + escapeHtml(item.mvp_name) + (item.mvp_score !== null && item.mvp_score !== undefined ? ' · ' + escapeHtml(String(item.mvp_score)) + '점' : '') : '') +
+            '</div>' +
+          '</button>'
+        );
+      }).join('');
+
+      const buttons = listEl.querySelectorAll('.history-item');
+      buttons.forEach(function(btn, index) {
+        btn.addEventListener('click', function() {
+          loadHistoryDetail(btn.getAttribute('data-id'));
+          buttons.forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+        });
+
+        if (index === 0) {
+          btn.click();
+        }
+      });
+    }
+
+    async function loadHistoryList() {
+      const listEl = document.getElementById('historyList');
+
+      try {
+        const res = await fetch('/api/matches');
+        const data = await res.json();
+
+        if (!data.ok || !data.items || !data.items.length) {
+          listEl.innerHTML = '<div class="empty-box">저장된 내전 기록이 없습니다.</div>';
+          return;
+        }
+
+        allHistoryItems = data.items;
+        renderHistoryList(allHistoryItems);
+      } catch (error) {
+        listEl.innerHTML = '<div class="empty-box">기록 목록을 불러오지 못했습니다.</div>';
+      }
+    }
+
+    async function loadHistoryDetail(id) {
+      const detailHead = document.getElementById('detailHead');
+      const detailMeta = document.getElementById('detailMeta');
+      const detailSummary = document.getElementById('detailSummary');
+      const detailTableBody = document.getElementById('detailTableBody');
+      const dateStat = document.getElementById('dateStat');
+      const winnerStat = document.getElementById('winnerStat');
+      const mvpStat = document.getElementById('mvpStat');
+      const membersStat = document.getElementById('membersStat');
+
+      try {
+        const res = await fetch('/api/match-detail?id=' + encodeURIComponent(id));
+        const data = await res.json();
+
+        if (!data.ok || !data.item) {
+          detailHead.textContent = '기록을 불러오지 못했습니다.';
+          detailMeta.textContent = '';
+          detailSummary.textContent = '상세 데이터를 불러오는 데 실패했습니다.';
+          detailTableBody.innerHTML = '<tr><td colspan="5">데이터 없음</td></tr>';
+          dateStat.textContent = '-';
+          winnerStat.textContent = '-';
+          mvpStat.textContent = '-';
+          membersStat.textContent = '-';
+          return;
+        }
+
+        const item = data.item;
+        let members = [];
+
+        try {
+          members = JSON.parse(item.winner_members_json || '[]');
+        } catch (e) {
+          members = [];
+        }
+
+        detailHead.textContent = item.title || '최근 내전 결과';
+
+        let meta = item.match_date_text || '-';
+        if (item.created_at) {
+          meta += ' · 저장시간 ' + item.created_at;
+        }
+        detailMeta.textContent = meta;
+
+        detailSummary.textContent = item.summary_text || '-';
+
+        dateStat.textContent = item.match_date_text || '-';
+
+        winnerStat.textContent =
+          (item.winner_team || '-') +
+          ((item.winner_score !== null && item.winner_score !== undefined) ? '\n' + item.winner_score + '점' : '');
+
+        mvpStat.textContent =
+          (item.mvp_name || '-') +
+          ((item.mvp_score !== null && item.mvp_score !== undefined) ? '\n' + item.mvp_score + '점' : '');
+
+        membersStat.textContent = members.length ? members.join(' / ') : '-';
+
+        const rows = item.rows || [];
+        if (!rows.length) {
+          detailTableBody.innerHTML = '<tr><td colspan="5">저장된 표 데이터가 없습니다.</td></tr>';
+          return;
+        }
+
+        detailTableBody.innerHTML = rows.map(function(row) {
+          return (
+            '<tr>' +
+              '<td>' + escapeHtml(row.col1 || '') + '</td>' +
+              '<td>' + escapeHtml(row.col2 || '') + '</td>' +
+              '<td>' + escapeHtml(row.col3 || '') + '</td>' +
+              '<td>' + escapeHtml(row.col4 || '') + '</td>' +
+              '<td>' + escapeHtml(row.col5 || '') + '</td>' +
+            '</tr>'
+          );
+        }).join('');
+      } catch (error) {
+        detailHead.textContent = '기록을 불러오지 못했습니다.';
+        detailMeta.textContent = '';
+        detailSummary.textContent = '상세 데이터를 불러오는 데 실패했습니다.';
+        detailTableBody.innerHTML = '<tr><td colspan="5">데이터 없음</td></tr>';
+        dateStat.textContent = '-';
+        winnerStat.textContent = '-';
+        mvpStat.textContent = '-';
+        membersStat.textContent = '-';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const keyword = String(e.target.value || '').trim().toLowerCase();
+
+      if (!keyword) {
+        renderHistoryList(allHistoryItems);
+        return;
+      }
+
+      const filtered = allHistoryItems.filter(function(item) {
+        const haystack = [
+          item.match_date_text,
+          item.title,
+          item.winner_team,
+          item.mvp_name
+        ].join(' ').toLowerCase();
+
+        return haystack.includes(keyword);
+      });
+
+      renderHistoryList(filtered);
+    });
+
+    loadHistoryList();
+  </script>
 </body>
 </html>
