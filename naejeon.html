@@ -58,10 +58,41 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
+    .naejeon-top-actions {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 28px 0;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: #000;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      width: auto;
+      min-width: 126px;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.92;
+    }
+
     .naejeon-shell {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 40px 28px 52px;
+      padding: 20px 28px 52px;
     }
 
     .naejeon-grid {
@@ -390,6 +421,7 @@
 
     @media (max-width: 720px) {
       .site-topbar-inner,
+      .naejeon-top-actions,
       .naejeon-shell {
         padding-left: 16px;
         padding-right: 16px;
@@ -432,16 +464,17 @@
 </head>
 <body>
   <div class="site-topbar">
-    <div class="naejeon-top-btn">
-  <button class="back-btn" onclick="location.href='/'">← 메인으로</button>
-</div>
     <div class="site-topbar-inner">
       <div class="site-brand">ZARA CLAN</div>
       <div class="site-tabs">
-  <button class="site-tab active" onclick="location.href='/'">사용자 화면</button>
-  <button class="site-tab" onclick="location.href='/admin'">관리자 화면</button>
-</div>
+        <button class="site-tab active" type="button" onclick="location.href='/'">사용자 화면</button>
+        <button class="site-tab" type="button" onclick="location.href='/admin'">관리자 화면</button>
+      </div>
     </div>
+  </div>
+
+  <div class="naejeon-top-actions">
+    <button class="back-btn" type="button" onclick="location.href='/'">← 메인으로</button>
   </div>
 
   <div class="naejeon-shell">
@@ -775,7 +808,7 @@
         var rows = parseCSV(text);
 
         if (topTeamEl) {
-          topTeamEl.textContent = buildTopTeamText(rows[2]) || '="["&M11&"] "&B12&"팀 "&L15&" : "&O12&"팀 "&Y15&" : "&AA12&"팀 "&AK15&" : "&AM12&"팀 "&AW15&" : "&AY12&"팀 "&BI15&""';
+          topTeamEl.textContent = buildTopTeamText(rows[2]) || '시트 데이터가 비어 있습니다.';
         }
 
         renderRecentResults(rows);
