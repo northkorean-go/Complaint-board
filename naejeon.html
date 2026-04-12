@@ -261,6 +261,7 @@
       padding: 10px 0;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       font-size: 14px;
+      min-height: 46px;
     }
 
     .ranking-item:last-child,
@@ -295,6 +296,8 @@
       font-weight: 900;
       color: #333;
       flex-shrink: 0;
+      min-width: 36px;
+      text-align: right;
     }
 
     .summary-text {
@@ -666,9 +669,6 @@
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
         .split('\n')
-        .filter(function(line) {
-          return line.trim() !== '';
-        })
         .map(parseCSVLine);
     }
 
@@ -755,11 +755,6 @@
       var body = document.getElementById('recentResultBody');
       if (!body) return;
 
-      if (!rows || rows.length <= 4) {
-        body.innerHTML = '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
-        return;
-      }
-
       var html = '';
       for (var i = 4; i < Math.min(rows.length, 8); i++) {
         var row = rows[i];
@@ -782,21 +777,35 @@
       body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
     }
 
-    function findHeaderIndex(rows, headerText) {
+    function findRankingHeaderRow(rows) {
       for (var r = 0; r < rows.length; r++) {
-        for (var c = 0; c < rows[r].length; c++) {
-          if (normalizeCell(rows[r][c]) === headerText) {
-            return { row: r, col: c };
-          }
+        var row = rows[r].map(normalizeCell);
+        var hasFirst = row.indexOf('1위') !== -1;
+        var hasSecond = row.indexOf('2위') !== -1;
+        var hasMvp = row.indexOf('MVP') !== -1;
+
+        if (hasFirst && hasSecond && hasMvp) {
+          return {
+            row: r,
+            cols: {
+              first: row.indexOf('1위'),
+              second: row.indexOf('2위'),
+              third: row.indexOf('3위'),
+              fourth: row.indexOf('4위'),
+              mvp: row.indexOf('MVP')
+            }
+          };
         }
       }
       return null;
     }
 
     function extractNameCountFromColumn(rows, startRow, col) {
+      if (col < 0) return [];
+
       var items = [];
       for (var r = startRow; r < rows.length; r++) {
-        var text = normalizeCell(rows[r][col]);
+        var text = normalizeCell((rows[r] && rows[r][col]) || '');
         if (!text) continue;
 
         if (/^(1위|2위|3위|4위|MVP|특별혜택)$/.test(text)) break;
@@ -812,82 +821,72 @@
       return items;
     }
 
+    function buildFixedRankingHtml(items, className) {
+      var maxRows = className === 'mvp' ? 5 : 10;
+      var html = '';
+
+      for (var i = 0; i < maxRows; i++) {
+        var item = items[i];
+        var noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
+        var nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
+        var countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
+        var leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
+        var itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
+
+        html +=
+          '<div class="' + itemClass + '">' +
+            '<div class="' + leftClass + '">' +
+              '<span class="' + noClass + '">' + (i + 1) + '</span>' +
+              '<span class="' + nameClass + '">' + (item ? item.name : '') + '</span>' +
+            '</div>' +
+            '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
+          '</div>';
+      }
+
+      return html;
+    }
+
     function renderRankingFromSheet(rows) {
       var list = document.getElementById('rankingList');
       if (!list) return;
 
-      var allItems = [];
-      ['1위', '2위', '3위', '4위'].forEach(function(header) {
-        var pos = findHeaderIndex(rows, header);
-        if (!pos) return;
-        allItems = allItems.concat(extractNameCountFromColumn(rows, pos.row + 1, pos.col));
-      });
-
-      allItems.sort(function(a, b) {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.name.localeCompare(b.name, 'ko');
-      });
-
-      if (!allItems.length) {
-        list.innerHTML =
-          '<div class="ranking-item">' +
-            '<div class="ranking-left">' +
-              '<span class="ranking-no">1</span>' +
-              '<span class="ranking-name">데이터를 불러오지 못했습니다.</span>' +
-            '</div>' +
-            '<div class="ranking-count">-</div>' +
-          '</div>';
+      var header = findRankingHeaderRow(rows);
+      if (!header) {
+        list.innerHTML = buildFixedRankingHtml([], 'ranking');
         return;
       }
 
-      list.innerHTML = allItems.slice(0, 10).map(function(item, index) {
-        return (
-          '<div class="ranking-item">' +
-            '<div class="ranking-left">' +
-              '<span class="ranking-no">' + (index + 1) + '</span>' +
-              '<span class="ranking-name">' + item.name + '</span>' +
-            '</div>' +
-            '<div class="ranking-count">' + item.count + '회</div>' +
-          '</div>'
-        );
-      }).join('');
-    }
-
-    function renderMVPFromSheet(rows) {
-      var list = document.getElementById('mvpList');
-      if (!list) return;
-
-      var pos = findHeaderIndex(rows, 'MVP');
-      var items = pos ? extractNameCountFromColumn(rows, pos.row + 1, pos.col) : [];
+      var items = [];
+      items = items.concat(extractNameCountFromColumn(rows, header.row + 1, header.cols.first));
+      items = items.concat(extractNameCountFromColumn(rows, header.row + 1, header.cols.second));
+      items = items.concat(extractNameCountFromColumn(rows, header.row + 1, header.cols.third));
+      items = items.concat(extractNameCountFromColumn(rows, header.row + 1, header.cols.fourth));
 
       items.sort(function(a, b) {
         if (b.count !== a.count) return b.count - a.count;
         return a.name.localeCompare(b.name, 'ko');
       });
 
-      if (!items.length) {
-        list.innerHTML =
-          '<div class="mvp-item">' +
-            '<div class="mvp-left">' +
-              '<span class="mvp-no">1</span>' +
-              '<span class="mvp-name">데이터를 불러오지 못했습니다.</span>' +
-            '</div>' +
-            '<div class="mvp-count">-</div>' +
-          '</div>';
+      list.innerHTML = buildFixedRankingHtml(items, 'ranking');
+    }
+
+    function renderMVPFromSheet(rows) {
+      var list = document.getElementById('mvpList');
+      if (!list) return;
+
+      var header = findRankingHeaderRow(rows);
+      if (!header || header.cols.mvp < 0) {
+        list.innerHTML = buildFixedRankingHtml([], 'mvp');
         return;
       }
 
-      list.innerHTML = items.slice(0, 3).map(function(item, index) {
-        return (
-          '<div class="mvp-item">' +
-            '<div class="mvp-left">' +
-              '<span class="mvp-no">' + (index + 1) + '</span>' +
-              '<span class="mvp-name">' + item.name + '</span>' +
-            '</div>' +
-            '<div class="mvp-count">' + item.count + '회</div>' +
-          '</div>'
-        );
-      }).join('');
+      var items = extractNameCountFromColumn(rows, header.row + 1, header.cols.mvp);
+      items.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      list.innerHTML = buildFixedRankingHtml(items, 'mvp');
     }
 
     function applySummaryTextFromSheet(rows) {
@@ -896,12 +895,16 @@
 
       if (benefitEl) {
         var benefitText = '';
-        var pos = findHeaderIndex(rows, '특별혜택');
 
-        if (pos) {
-          var rightText = normalizeCell(rows[pos.row][pos.col + 1]);
-          var farRightText = normalizeCell(rows[pos.row][pos.col + 2]);
-          benefitText = (rightText + ' ' + farRightText).trim();
+        for (var r = 0; r < rows.length; r++) {
+          for (var c = 0; c < rows[r].length; c++) {
+            var text = normalizeCell(rows[r][c]);
+            if (text === '특별혜택') {
+              var right1 = normalizeCell((rows[r] && rows[r][c + 1]) || '');
+              var right2 = normalizeCell((rows[r] && rows[r][c + 2]) || '');
+              benefitText = (right1 + ' ' + right2).trim();
+            }
+          }
         }
 
         benefitEl.textContent = benefitText || '시트 데이터 대기중';
