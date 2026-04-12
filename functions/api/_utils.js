@@ -433,31 +433,3 @@ export async function getLatestRound(env) {
     LIMIT 1
   `).first();
 }
-
-export async function ensureOpenRound(env) {
-  const openRound = await getOpenRound(env);
-  if (openRound) return openRound;
-
-  const now = getKoreaNowString();
-  const name = `${now.slice(0, 10)} 회차`;
-
-  const result = await env.DB.prepare(`
-    INSERT INTO rounds (
-      name,
-      started_at,
-      is_open,
-      benefit_text,
-      next_schedule_text
-    ) VALUES (?, ?, 1, '', '미정')
-  `)
-    .bind(name, now)
-    .run();
-
-  return await env.DB.prepare(`
-    SELECT *
-    FROM rounds
-    WHERE id = ?
-  `)
-    .bind(result.meta.last_row_id)
-    .first();
-}
