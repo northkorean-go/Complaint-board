@@ -1208,33 +1208,32 @@
     }
 
     function renderRoundInfo(currentRound, summaryRound, nextScheduleText, roundRecords) {
-  const roundNameEl = document.getElementById('currentRoundName');
-  const roundMetaEl = document.getElementById('currentRoundMeta');
+      const roundNameEl = document.getElementById('currentRoundName');
+      const roundMetaEl = document.getElementById('currentRoundMeta');
 
-  if (!roundNameEl || !roundMetaEl) return;
+      if (!roundNameEl || !roundMetaEl) return;
 
-  if (!currentRound) {
-    roundNameEl.textContent = '회차 미오픈';
-    roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
-    return;
-  }
+      if (!currentRound) {
+        roundNameEl.textContent = '회차 미오픈';
+        roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
+        return;
+      }
 
-  if (currentRound.is_open) {
-    roundNameEl.textContent = currentRound.name || '현재 회차';
-    roundMetaEl.textContent =
-      '상태: 진행중\n' +
-      '시작일: ' + (currentRound.started_at || '-') + '\n' +
-      '다음 일정: ' + (currentRound.next_schedule_text || '미정');
-    return;
-  }
+      if (currentRound.is_open) {
+        roundNameEl.textContent = currentRound.name || '현재 회차';
+        roundMetaEl.textContent =
+          '상태: 진행중\n' +
+          '시작일: ' + (currentRound.started_at || '-') + '\n' +
+          '다음 일정: ' + (currentRound.next_schedule_text || '미정');
+        return;
+      }
 
-  const count = Array.isArray(roundRecords) ? roundRecords.length : 0;
-  roundNameEl.textContent = currentRound.name || '최근 회차';
-  roundMetaEl.textContent =
-    '상태: 최근 종료 회차\n' +
-    '저장 경기 수: ' + count + '개\n' +
-    '다음 일정: ' + (nextScheduleText || '미정');
-}
+      const count = Array.isArray(roundRecords) ? roundRecords.length : 0;
+      roundNameEl.textContent = currentRound.name || '최근 회차';
+      roundMetaEl.textContent =
+        '상태: 최근 종료 회차\n' +
+        '저장 경기 수: ' + count + '개\n' +
+        '다음 일정: ' + (nextScheduleText || '미정');
     }
 
     async function loadRoundSummary() {
@@ -1328,7 +1327,10 @@
       statusEl.textContent = '저장 중...';
 
       try {
-        const res = await fetch('/api/save-match', { method: 'POST' });
+        const res = await fetch('/api/save-match', {
+          method: 'POST',
+          credentials: 'include'
+        });
         const data = await res.json();
 
         if (!data.ok) {
@@ -1348,14 +1350,20 @@
 
         await loadRoundSummary();
       } catch (e) {
+        console.error('저장 실패:', e);
         statusEl.textContent = '❌ 서버 오류';
       }
     }
 
-    document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
+    document.addEventListener('DOMContentLoaded', function () {
+      const saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', saveCurrentMatch);
+      }
 
-    loadSpreadsheetData();
-    loadRoundSummary();
+      loadSpreadsheetData();
+      loadRoundSummary();
+    });
   </script>
 </body>
 </html>
