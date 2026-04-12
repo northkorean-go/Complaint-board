@@ -492,7 +492,7 @@
             <div class="result-hero-title" id="todayTitle">금일 내전 결과</div>
           </div>
           <div class="result-hero-right">
-            <div class="result-hero-rank">🏆 1등팀</div>
+            <div class="result-hero-rank" id="topTeamLabel">🏆 1등팀</div>
             <div class="result-hero-lines" id="topTeamLines">데이터를 불러오는 중입니다.</div>
           </div>
         </div>
@@ -715,6 +715,37 @@
         ay12 + '팀 ' + bi15;
     }
 
+    function parseTopTeamWinner(text) {
+      if (!text) return '';
+
+      var segments = text.split(' : ');
+      var bestTeamName = '';
+      var bestScore = -Infinity;
+
+      segments.forEach(function(segment) {
+        var match = segment.match(/([^\s\[]+팀)\s*(-?\d+(?:\.\d+)?)/);
+        if (!match) return;
+
+        var teamName = match[1];
+        var score = parseFloat(match[2]);
+
+        if (!Number.isNaN(score) && score > bestScore) {
+          bestScore = score;
+          bestTeamName = teamName;
+        }
+      });
+
+      return bestTeamName;
+    }
+
+    function updateTopTeamLabel(text) {
+      var labelEl = document.getElementById('topTeamLabel');
+      if (!labelEl) return;
+
+      var winner = parseTopTeamWinner(text);
+      labelEl.textContent = winner ? '🏆 1등팀 ' + winner : '🏆 1등팀';
+    }
+
     function renderRecentResults(rows) {
       var body = document.getElementById('recentResultBody');
       if (!body) return;
@@ -826,11 +857,13 @@
 
         var text = await res.text();
         var rows = parseCSV(text);
+        var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
 
         if (topTeamEl) {
-          topTeamEl.textContent = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+          topTeamEl.textContent = topTeamText;
         }
 
+        updateTopTeamLabel(topTeamText);
         renderRecentResults(rows);
         renderRanking(rows);
         renderMVP(rows);
