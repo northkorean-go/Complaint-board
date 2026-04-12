@@ -6,29 +6,12 @@
   <title>ZARA 내전 현황판</title>
   <link rel="stylesheet" href="/style.css" />
   <style>
-    .naejeon-back-wrap {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 16px 28px 0;
-    }
-
-    .naejeon-back-btn {
-      background: #000;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 20px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .naejeon-topbar {
+    .site-topbar {
       background: #f3f3f3;
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-      margin-top: 12px;
     }
 
-    .naejeon-topbar-inner {
+    .site-topbar-inner {
       max-width: 1280px;
       margin: 0 auto;
       padding: 14px 28px;
@@ -38,13 +21,14 @@
       gap: 20px;
     }
 
-    .naejeon-topbar-title {
+    .site-brand {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.02em;
+      color: #111;
     }
 
-    .naejeon-topbar-tabs {
+    .site-tabs {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -55,20 +39,20 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
-    .naejeon-topbar-tab {
-      height: 48px;
-      padding: 0 24px;
+    .site-tab {
+      height: 44px;
+      padding: 0 22px;
       border-radius: 999px;
-      color: rgba(0, 0, 0, 0.35);
-      font-size: 15px;
-      font-weight: 700;
-      transition: all 0.2s ease;
+      color: rgba(0, 0, 0, 0.38);
+      font-size: 14px;
+      font-weight: 800;
       border: none;
       background: none;
       cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .naejeon-topbar-tab.active {
+    .site-tab.active {
       background: #000;
       color: #fff;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
@@ -405,16 +389,26 @@
     }
 
     @media (max-width: 720px) {
-      .naejeon-back-wrap,
-      .naejeon-topbar-inner,
+      .site-topbar-inner,
       .naejeon-shell {
         padding-left: 16px;
         padding-right: 16px;
       }
 
-      .naejeon-topbar-inner {
+      .site-topbar-inner {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .site-tabs {
+        width: 100%;
+        display: flex;
+      }
+
+      .site-tab {
+        flex: 1;
+        padding: 0 10px;
+        font-size: 13px;
       }
 
       .naejeon-title {
@@ -437,17 +431,13 @@
   </style>
 </head>
 <body>
-
-  <div class="naejeon-back-wrap">
-    <button class="naejeon-back-btn" type="button" onclick="location.href='/index.html'">← 메인으로</button>
-  </div>
-
-  <div class="naejeon-topbar">
-    <div class="naejeon-topbar-inner">
-      <h1 class="naejeon-topbar-title">ZARA CLAN</h1>
-      <div class="naejeon-topbar-tabs">
-        <button class="naejeon-topbar-tab active" type="button" onclick="location.href='/naejeon.html'">사용자 화면</button>
-        <button class="naejeon-topbar-tab" type="button" onclick="location.href='/admin.html'">관리자 화면</button>
+  <div class="site-topbar">
+    <div class="site-topbar-inner">
+      <div class="site-brand">ZARA CLAN</div>
+      <div class="site-tabs">
+        <button class="site-tab" type="button" onclick="location.href='/'">메인</button>
+        <button class="site-tab" type="button" onclick="location.href='/suggestion'">건의&불만</button>
+        <button class="site-tab active" type="button" onclick="location.href='/naejeon'">내전</button>
       </div>
     </div>
   </div>
@@ -595,9 +585,7 @@
   </div>
 
   <script>
-    // 반드시 공개된 CSV 링크로 바꿔야 함
-    // 예: https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv
-    var CSV_URL = 'https://docs.google.com/spreadsheets/d/1BTLhtByx22xJ4-cRjR4IuagHu7JieoPUIa6dNgqMXzU/edit?gid=0#gid=0';
+    var CSV_URL = 'https://docs.google.com/spreadsheets/d/1BTLhtByx22xJ4-cRjR4IuagHu7JieoPUIa6dNgqMXzU/export?format=csv&gid=0';
 
     function updateTodayTitle() {
       var titleEl = document.getElementById('todayTitle');
@@ -775,11 +763,6 @@
     async function loadSpreadsheetData() {
       var topTeamEl = document.getElementById('topTeamLines');
 
-      if (!CSV_URL || CSV_URL.indexOf('여기에') !== -1) {
-        if (topTeamEl) topTeamEl.textContent = 'CSV 링크를 넣으면 자동 집계됩니다.';
-        return;
-      }
-
       try {
         var res = await fetch(CSV_URL, { cache: 'no-store' });
         if (!res.ok) {
@@ -790,7 +773,7 @@
         var rows = parseCSV(text);
 
         if (topTeamEl) {
-          topTeamEl.textContent = buildTopTeamText(rows[2]) || 'B3:P3 값이 비어 있습니다.';
+          topTeamEl.textContent = buildTopTeamText(rows[2]) || '="["&M11&"] "&B12&"팀 "&L15&" : "&O12&"팀 "&Y15&" : "&AA12&"팀 "&AK15&" : "&AM12&"팀 "&AW15&" : "&AY12&"팀 "&BI15&""';
         }
 
         renderRecentResults(rows);
