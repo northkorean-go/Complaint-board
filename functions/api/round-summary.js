@@ -177,7 +177,7 @@ function formatScheduleLine(date) {
 }
 
 function getUpcomingTargetDates(baseDate) {
-  const targets = [4, 6]; // 목, 토
+  const targets = [4, 6];
   const result = [];
 
   for (const targetDay of targets) {
@@ -200,19 +200,15 @@ function getUpcomingTargetDates(baseDate) {
   return result;
 }
 
-function buildAutoNextScheduleText(currentRound, fallbackText = "미정") {
+function buildAutoNextScheduleItems(currentRound) {
   if (!currentRound || !currentRound.is_open) {
-    return fallbackText || "미정";
+    return [];
   }
 
   const nowKorea = getKoreaNowDate();
   const upcoming = getUpcomingTargetDates(nowKorea);
 
-  if (!upcoming.length) {
-    return fallbackText || "미정";
-  }
-
-  return upcoming.map(formatScheduleLine).join(" / ");
+  return upcoming.map(formatScheduleLine);
 }
 
 export async function onRequestGet(context) {
@@ -275,6 +271,7 @@ export async function onRequestGet(context) {
         mvpRanking: [],
         benefitText: "미설정",
         nextScheduleText: "미정",
+        nextScheduleItems: [],
       });
     }
 
@@ -310,10 +307,10 @@ export async function onRequestGet(context) {
 
     const latestMatch = items.length ? items[0] : null;
     const autoBenefitText = await buildAutoBenefitText(env, latestMatch);
-    const autoNextScheduleText = buildAutoNextScheduleText(
-      currentRound,
-      summaryRound?.next_schedule_text || "미정"
-    );
+    const nextScheduleItems = buildAutoNextScheduleItems(currentRound);
+    const nextScheduleText = nextScheduleItems.length
+      ? nextScheduleItems.join(" / ")
+      : (summaryRound?.next_schedule_text || "미정");
 
     return json({
       ok: true,
@@ -324,7 +321,8 @@ export async function onRequestGet(context) {
       ranking,
       mvpRanking,
       benefitText: autoBenefitText,
-      nextScheduleText: autoNextScheduleText,
+      nextScheduleText,
+      nextScheduleItems,
     });
   } catch (error) {
     return json(
