@@ -831,6 +831,26 @@
       return '';
     }
 
+    function getMatchDisplayDate() {
+      const now = new Date();
+      const korea = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+      const hour = korea.getUTCHours();
+      const base = new Date(Date.UTC(
+        korea.getUTCFullYear(),
+        korea.getUTCMonth(),
+        korea.getUTCDate()
+      ));
+
+      if (hour < 6) {
+        base.setUTCDate(base.getUTCDate() - 1);
+      }
+
+      const month = String(base.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(base.getUTCDate()).padStart(2, '0');
+      return `${month}.${day}`;
+    }
+
     function buildTopTeamText(rows) {
       const m11 = getCell(rows, 10, 12);
       const b12 = getCell(rows, 11, 1);
@@ -1051,11 +1071,8 @@
       const titleEl = document.getElementById('todayTitle');
       if (!titleEl) return;
 
-      if (match && match.date) {
-        titleEl.textContent = match.date + ' 금일 내전 결과';
-      } else {
-        titleEl.textContent = '금일 내전 결과';
-      }
+      const displayDate = getMatchDisplayDate();
+      titleEl.textContent = displayDate + ' 금일 내전 결과';
     }
 
     function updateTopTeamLabel(text, rows) {
@@ -1224,7 +1241,7 @@
         roundMetaEl.textContent =
           '상태: 진행중\n' +
           '시작일: ' + (currentRound.started_at || '-') + '\n' +
-          '다음 일정: ' + (currentRound.next_schedule_text || '미정');
+          '다음 일정: ' + (nextScheduleText || '미정');
         return;
       }
 
