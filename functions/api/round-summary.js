@@ -1,9 +1,9 @@
-import { json, getOpenRound, getLatestRound } from "./_utils.js";
+import { json, getOpenRound, getLatestRound } from './_utils.js';
 
 function sortCountItems(items) {
   return items.sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
-    return String(a.name).localeCompare(String(b.name), "ko");
+    return String(a.name).localeCompare(String(b.name), 'ko');
   });
 }
 
@@ -23,8 +23,8 @@ export async function onRequestGet(context) {
         roundRecords: [],
         ranking: [],
         mvpRanking: [],
-        benefitText: "",
-        nextScheduleText: "미정",
+        benefitText: '',
+        nextScheduleText: '미정',
       });
     }
 
@@ -53,18 +53,18 @@ export async function onRequestGet(context) {
     for (const item of items) {
       let members = [];
       try {
-        members = JSON.parse(item.winner_members_json || "[]");
+        members = JSON.parse(item.winner_members_json || '[]');
       } catch {
         members = [];
       }
 
       for (const member of members) {
-        const name = String(member || "").trim();
+        const name = String(member || '').trim();
         if (!name) continue;
         winnerCounts[name] = (winnerCounts[name] || 0) + 1;
       }
 
-      const mvpName = String(item.mvp_name || "").trim();
+      const mvpName = String(item.mvp_name || '').trim();
       if (mvpName) {
         mvpCounts[mvpName] = (mvpCounts[mvpName] || 0) + 1;
       }
@@ -94,14 +94,14 @@ export async function onRequestGet(context) {
       roundRecords: items,
       ranking,
       mvpRanking,
-      benefitText: round.benefit_text || "",
-      nextScheduleText: round.next_schedule_text || "미정",
+      benefitText: round.benefit_text || '',
+      nextScheduleText: round.next_schedule_text || '미정',
     });
   } catch (error) {
     return json(
       {
         ok: false,
-        error: error.message || "회차 집계 조회 실패",
+        error: error.message || '회차 집계 조회 실패',
       },
       500
     );
