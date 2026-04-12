@@ -873,40 +873,52 @@
     }
 
     function extractRankingItemsFromTopRightTable(rows) {
-      var counts = {};
+  var counts = {};
 
-      for (var r = 0; r < rows.length; r++) {
-        var row = rows[r] || [];
-        var firstCell = safeText(row[0]);
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r] || [];
+    var dateCol = -1;
 
-        if (!isDateCell(firstCell)) continue;
+    for (var c = 0; c < row.length; c++) {
+      var cell = safeText(row[c]);
+      if (isDateCell(cell)) {
+        dateCol = c;
+        break;
+      }
+    }
 
-        for (var c = 1; c < row.length; c++) {
-          var name = normalizeCell(row[c]);
-          if (!name) continue;
+    if (dateCol === -1) continue;
 
-          if (!counts[name]) {
-            counts[name] = 0;
-          }
+    for (var c = dateCol + 1; c < row.length; c++) {
+      var name = normalizeCell(row[c]);
 
-          counts[name] += 1;
-        }
+      if (!name) continue;
+      if (isDateCell(name)) continue;
+      if (/^\d+$/.test(name)) continue;
+      if (/순위|1위|2위|3위|4위|MVP|특별혜택/.test(name)) continue;
+
+      if (!counts[name]) {
+        counts[name] = 0;
       }
 
-      var items = Object.keys(counts).map(function(name) {
-        return {
-          name: name,
-          count: counts[name]
-        };
-      });
-
-      items.sort(function(a, b) {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.name.localeCompare(b.name, 'ko');
-      });
-
-      return items;
+      counts[name] += 1;
     }
+  }
+
+  var items = Object.keys(counts).map(function(name) {
+    return {
+      name: name,
+      count: counts[name]
+    };
+  });
+
+  items.sort(function(a, b) {
+    if (b.count !== a.count) return b.count - a.count;
+    return a.name.localeCompare(b.name, 'ko');
+  });
+
+  return items;
+}
 
     function buildFixedRankingHtml(items, className) {
       var maxRows = className === 'mvp' ? 5 : 10;
