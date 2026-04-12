@@ -1,1 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZARA MAIN BOARD</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
+    body {
+      margin: 0;
+      background: #f3f3f3;
+      color: #111;
+      font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+
+    .site-topbar {
+      background: #f3f3f3;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .site-topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .site-brand {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .site-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: #ededed;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .site-tab {
+      height: 44px;
+      padding: 0 22px;
+      border-radius: 999px;
+      color: rgba(0, 0, 0, 0.38);
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      background: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .site-tab.active {
+      background: #000;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .main-shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 36px 28px 56px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.78fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    .main-panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 32px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.035);
+      padding: 26px 24px 28px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.34em;
+      color: #8a94a7;
+    }
+
+    .main-title {
+      margin: 18px 0 18px;
+      font-size: 76px;
+      line-height: 0.9;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      color: #000;
+    }
+
+    .main-desc {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.9;
+      color: #667084;
+    }
+
+    .category-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .category-card {
+      border-radius: 28px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 20px 18px;
+      min-height: 248px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .category-card.dark {
+      background: #000;
+      color: #fff;
+      border-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .category-card.light {
+      background: #f7f7f7;
+      color: #111;
+    }
+
+    .category-code {
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      opacity: 0.82;
+    }
+
+    .category-title {
+      margin-top: 12px;
+      font-size: 34px;
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      white-space: pre-line;
+    }
+
+    .category-desc {
+      margin-top: 12px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: inherit;
+      opacity: 0.9;
+    }
+
+    .enter-btn {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 122px;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: none;
+      background: #fff;
+      color: #000;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+    }
+
+    .light .enter-btn {
+      background: #000;
+      color: #fff;
+    }
+
+    .overview-title {
+      margin: 14px 0 16px;
+      font-size: 68px;
+      line-height: 0.88;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      white-space: pre-line;
+    }
+
+    .overview-desc {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #667084;
+      margin: 0 0 22px;
+    }
+
+    .overview-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .overview-card {
+      background: #f7f7f7;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 24px;
+      padding: 16px 16px 18px;
+    }
+
+    .overview-card-title {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .overview-card-text {
+      font-size: 14px;
+      line-height: 1.9;
+      color: #667084;
+      margin: 0;
+    }
+
+    @media (max-width: 980px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-title,
+      .overview-title {
+        font-size: 56px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .site-topbar-inner,
+      .main-shell {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .site-topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .category-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-title,
+      .overview-title {
+        font-size: 42px;
+      }
+
+      .site-tabs {
+        width: 100%;
+        display: flex;
+      }
+
+      .site-tab {
+        flex: 1;
+        padding: 0 10px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-topbar">
+    <div class="site-topbar-inner">
+      <div class="site-brand">ZARA CLAN</div>
+      <div class="site-tabs">
+        <button class="site-tab active" type="button" onclick="location.href='/'">사용자 화면</button>
+        <button class="site-tab" type="button" onclick="location.href='/admin'">관리자 화면</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-shell">
+    <div class="main-grid">
+      <section class="main-panel">
+        <div class="eyebrow">ZARA CLAN</div>
+        <h1 class="main-title">ZARA
+MAIN BOARD</h1>
+        <p class="main-desc">
+          ZARA 클랜 전용 메인 페이지입니다.
+        </p>
+
+        <div class="category-grid">
+          <div class="category-card dark">
+            <div>
+              <div class="category-code">CATEGORY 01</div>
+              <div class="category-title">건의&불만</div>
+              <div class="category-desc"></div>
+            </div>
+            <button class="enter-btn" type="button" onclick="location.href='/suggestion'">들어가기</button>
+          </div>
+
+          <div class="category-card light">
+            <div>
+              <div class="category-code">CATEGORY 02</div>
+              <div class="category-title">내전</div>
+              <div class="category-desc">
+                금일 내전 결과, 최근 내전 결과, 순위, MVP, 티어표를 확인하는 내전 전용 현황판 페이지로 이동합니다.
+              </div>
+            </div>
+            <button class="enter-btn" type="button" onclick="location.href='/naejeon'">들어가기</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="main-panel">
+        <div class="eyebrow">OVERVIEW</div>
+        <h2 class="overview-title">오늘의
+클랜 현황</h2>
+        <p class="overview-desc">
+          메인에서는 허브 역할만 담당하고, 실제 기능은 각각의 전용 페이지에서 처리하도록 분리했습니다.
+        </p>
+
+        <div class="overview-list">
+          <div class="overview-card">
+            <div class="overview-card-title">건의&불만 게시판</div>
+            <p class="overview-card-text">
+              현재 사용 중인 건의사항 UI와 API 구조를 그대로 유지합니다.
+            </p>
+          </div>
+
+          <div class="overview-card">
+            <div class="overview-card-title">내전 현황판</div>
+            <p class="overview-card-text">
+              스프레드시트 자동집계 결과를 읽어와서 금일 내전 결과, 최근 결과, 순위, MVP를 보여줍니다.
+            </p>
+          </div>
+
+          <div class="overview-card">
+            <div class="overview-card-title">관리자 페이지</div>
+            <p class="overview-card-text">
+              기존 관리자 페이지는 그대로 두고, 필요하면 내전 관리 메뉴만 추가 확장하면 됩니다.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>
