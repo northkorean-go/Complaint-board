@@ -563,7 +563,7 @@
   <div class="naejeon-top-actions">
     <a class="back-btn" href="/">← 메인으로</a>
     <a class="back-btn" href="/history.html">📚 내전 기록</a>
-    <button class="back-btn" id="saveBtn" type="button" style="display:none;">💾 결과 저장</button>
+    <button class="back-btn" id="saveBtn" type="button">💾 결과 저장</button>
     <div class="save-status" id="saveStatus"></div>
   </div>
 
@@ -690,12 +690,12 @@
 
           <div class="summary-card">
             <div class="summary-card-title">특별 혜택</div>
-            <div class="summary-text" id="benefitText">시트 데이터 대기중</div>
+            <div class="summary-text" id="benefitText">불러오는 중입니다.</div>
           </div>
 
           <div class="summary-card">
             <div class="summary-card-title">다음 내전 일정</div>
-            <div class="summary-text" id="scheduleText">시트 데이터 대기중</div>
+            <div class="summary-text" id="scheduleText">불러오는 중입니다.</div>
           </div>
         </div>
       </aside>
@@ -704,8 +704,6 @@
 
   <script>
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
-    const RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
-    const CURRENT_ROUND_MATCH_COUNT = 3;
 
     function parseCSVLine(line) {
       const result = [];
@@ -747,10 +745,6 @@
       return String(value || '').trim();
     }
 
-    function normalizeCell(value) {
-      return String(value || '').replace(/\s+/g, ' ').trim();
-    }
-
     function getCell(rows, r, c) {
       if (!rows[r]) return '';
       return safeText(rows[r][c]);
@@ -782,29 +776,6 @@
       if (match) return Number(match[2]) + '.' + Number(match[3]);
 
       return '';
-    }
-
-    function findLastDateInRows(rows) {
-      let lastDate = '';
-
-      for (let r = 0; r < rows.length; r++) {
-        for (let c = 0; c < rows[r].length; c++) {
-          const normalized = normalizeDateText(rows[r][c]);
-          if (normalized) {
-            lastDate = normalized;
-          }
-        }
-      }
-
-      return lastDate;
-    }
-
-    function updateTodayTitleFromRankingSheet(rows) {
-      const titleEl = document.getElementById('todayTitle');
-      if (!titleEl) return;
-
-      const lastDate = findLastDateInRows(rows);
-      titleEl.textContent = lastDate ? lastDate + ' 금일 내전 결과' : '금일 내전 결과';
     }
 
     function buildTopTeamText(rows) {
@@ -1023,41 +994,15 @@
       return best;
     }
 
-    function formatNextMatchSchedule() {
-      const now = new Date();
+    function updateTodayTitleFromMainMatch(match) {
+      const titleEl = document.getElementById('todayTitle');
+      if (!titleEl) return;
 
-      function makeCandidate(targetDay) {
-        const currentDay = now.getDay();
-        const diff = (targetDay - currentDay + 7) % 7;
-        const candidate = new Date(now);
-
-        candidate.setDate(now.getDate() + diff);
-        candidate.setHours(22, 0, 0, 0);
-
-        if (diff === 0 && now.getTime() >= candidate.getTime()) {
-          candidate.setDate(candidate.getDate() + 7);
-        }
-
-        return candidate;
+      if (match && match.date) {
+        titleEl.textContent = match.date + ' 금일 내전 결과';
+      } else {
+        titleEl.textContent = '금일 내전 결과';
       }
-
-      const thu = makeCandidate(4);
-      const sat = makeCandidate(6);
-      const next = thu.getTime() < sat.getTime() ? thu : sat;
-
-      const year = next.getFullYear();
-      const month = String(next.getMonth() + 1).padStart(2, '0');
-      const date = String(next.getDate()).padStart(2, '0');
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const dayName = dayNames[next.getDay()];
-
-      const hour24 = next.getHours();
-      const minutes = String(next.getMinutes()).padStart(2, '0');
-      const period = hour24 >= 12 ? '오후' : '오전';
-      let hour12 = hour24 % 12;
-      if (hour12 === 0) hour12 = 12;
-
-      return year + '.' + month + '.' + date + ' (' + dayName + ') ' + period + ' ' + hour12 + ':' + minutes;
     }
 
     function updateTopTeamLabel(text, rows) {
@@ -1099,13 +1044,13 @@
 
     function renderRecentDetailedMatch(rows) {
       const card = document.getElementById('recentMatchCard');
-      if (!card) return;
+      if (!card) return null;
 
       const match = findRecentDetailedMatch(rows);
 
       if (!match) {
         card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
-        return;
+        return null;
       }
 
       let tableHtml = '';
@@ -1127,36 +1072,8 @@
             '<tbody>' + tableHtml + '</tbody>' +
           '</table>' +
         '</div>';
-    }
 
-    function applySummaryTextFromSheet(rows) {
-      const benefitEl = document.getElementById('benefitText');
-      const scheduleEl = document.getElementById('scheduleText');
-
-      if (benefitEl) {
-        let benefitText = '';
-
-        for (let r = 0; r < rows.length; r++) {
-          for (let c = 0; c < rows[r].length; c++) {
-            const text = normalizeCell(rows[r][c]);
-            if (text === '특별혜택') {
-              const right1 = normalizeCell((rows[r] && rows[r][c + 1]) || '');
-              const right2 = normalizeCell((rows[r] && rows[r][c + 2]) || '');
-              benefitText = (right1 + ' ' + right2).trim();
-            }
-          }
-        }
-
-        benefitEl.textContent = benefitText || '시트 데이터 대기중';
-      }
-
-      if (scheduleEl) {
-        scheduleEl.textContent = formatNextMatchSchedule();
-      }
-    }
-
-    function getCurrentRoundItems(items) {
-      return (items || []).slice(0, CURRENT_ROUND_MATCH_COUNT);
+      return match;
     }
 
     function buildFixedRankingHtml(items, className) {
@@ -1188,7 +1105,7 @@
       const listEl = document.getElementById('roundRecordList');
       if (!listEl) return;
 
-      if (!items.length) {
+      if (!items || !items.length) {
         listEl.innerHTML = '<div class="summary-text">저장된 회차 기록이 없습니다.</div>';
         return;
       }
@@ -1197,16 +1114,18 @@
         let members = [];
 
         try {
-          members = JSON.parse(item.winner_members_json || '[]');
+          members = item.winner_members || JSON.parse(item.winner_members_json || '[]');
         } catch (e) {
           members = [];
         }
+
+        const membersText = members.length ? members.join(' / ') : '-';
 
         return (
           '<div class="round-record-item">' +
             '<div class="round-record-date">' + escapeHtml(item.match_date_text || '-') + '</div>' +
             '<div class="round-record-main">' +
-              '<div class="round-record-members">' + escapeHtml(members.join('   ') || '-') + '</div>' +
+              '<div class="round-record-members">' + escapeHtml(membersText) + '</div>' +
               '<div class="round-record-team">' +
                 '1등팀 ' + escapeHtml(item.winner_team || '-') +
                 (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
@@ -1217,97 +1136,55 @@
       }).join('');
     }
 
-    function renderDbRanking(items) {
-      const list = document.getElementById('rankingList');
-      if (!list) return;
-
-      const counts = {};
-
-      items.forEach(function(item) {
-        let members = [];
-        try {
-          members = JSON.parse(item.winner_members_json || '[]');
-        } catch (e) {
-          members = [];
-        }
-
-        members.forEach(function(name) {
-          const key = safeText(name);
-          if (!key) return;
-          if (!counts[key]) counts[key] = 0;
-          counts[key] += 1;
-        });
-      });
-
-      const result = Object.keys(counts).map(function(name) {
-        return { name: name, count: counts[name] };
-      }).sort(function(a, b) {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.name.localeCompare(b.name, 'ko');
-      });
-
-      list.innerHTML = buildFixedRankingHtml(result, 'ranking');
-    }
-
-    function renderDbMvpRanking(items) {
-      const list = document.getElementById('mvpList');
-      if (!list) return;
-
-      const counts = {};
-
-      items.forEach(function(item) {
-        const key = safeText(item.mvp_name || '');
-        if (!key) return;
-        if (!counts[key]) counts[key] = 0;
-        counts[key] += 1;
-      });
-
-      const result = Object.keys(counts).map(function(name) {
-        return { name: name, count: counts[name] };
-      }).sort(function(a, b) {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.name.localeCompare(b.name, 'ko');
-      });
-
-      list.innerHTML = buildFixedRankingHtml(result, 'mvp');
-    }
-
-    async function loadDbRoundSummary() {
+    async function loadRoundSummary() {
       try {
-        const res = await fetch('/api/matches');
+        const res = await fetch('/api/round-summary', { cache: 'no-store' });
         const data = await res.json();
 
-        if (!data.ok || !data.items) {
-          renderRoundRecordList([]);
-          renderDbRanking([]);
-          renderDbMvpRanking([]);
-          return;
+        renderRoundRecordList(data.roundRecords || []);
+
+        const rankingList = document.getElementById('rankingList');
+        if (rankingList) {
+          rankingList.innerHTML = buildFixedRankingHtml(data.ranking || [], 'ranking');
         }
 
-        const currentRoundItems = getCurrentRoundItems(data.items || []);
-        renderRoundRecordList(currentRoundItems);
-        renderDbRanking(currentRoundItems);
-        renderDbMvpRanking(currentRoundItems);
+        const mvpList = document.getElementById('mvpList');
+        if (mvpList) {
+          mvpList.innerHTML = buildFixedRankingHtml(data.mvpRanking || [], 'mvp');
+        }
+
+        const benefitText = document.getElementById('benefitText');
+        if (benefitText) {
+          benefitText.textContent = data.benefitText || '미설정';
+        }
+
+        const scheduleText = document.getElementById('scheduleText');
+        if (scheduleText) {
+          scheduleText.textContent = data.nextScheduleText || '미정';
+        }
       } catch (error) {
+        console.error('회차 요약 로드 실패:', error);
         renderRoundRecordList([]);
-        renderDbRanking([]);
-        renderDbMvpRanking([]);
-      }
-    }
 
-    async function loadRankingSheetData() {
-      try {
-        const res = await fetch(RANKING_CSV_URL, { cache: 'no-store' });
-        if (!res.ok) {
-          throw new Error('랭킹 CSV 요청 실패: ' + res.status);
+        const rankingList = document.getElementById('rankingList');
+        if (rankingList) {
+          rankingList.innerHTML = buildFixedRankingHtml([], 'ranking');
         }
 
-        const text = await res.text();
-        const rows = parseCSV(text);
+        const mvpList = document.getElementById('mvpList');
+        if (mvpList) {
+          mvpList.innerHTML = buildFixedRankingHtml([], 'mvp');
+        }
 
-        updateTodayTitleFromRankingSheet(rows);
-      } catch (error) {
-        console.error('랭킹 시트 로드 실패:', error);
+        const benefitText = document.getElementById('benefitText');
+        if (benefitText) {
+          benefitText.textContent = '불러오기 실패';
+        }
+
+        const scheduleText = document.getElementById('scheduleText');
+        if (scheduleText) {
+          scheduleText.textContent = '불러오기 실패';
+        }
       }
     }
 
@@ -1324,32 +1201,17 @@
         const text = await res.text();
         const rows = parseCSV(text);
         const topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+        const recentMatch = renderRecentDetailedMatch(rows);
 
+        updateTodayTitleFromMainMatch(recentMatch);
         updateTopTeamLabel(topTeamText, rows);
         updateTopTeamLines(rows);
-        renderRecentDetailedMatch(rows);
-        applySummaryTextFromSheet(rows);
-        await loadRankingSheetData();
       } catch (error) {
         console.error('시트 로드 실패:', error);
         if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
         if (recentCard) {
           recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
         }
-      }
-    }
-
-    async function checkAdmin() {
-      try {
-        const res = await fetch('/api/me');
-        const data = await res.json();
-
-        if (data && data.isAdmin) {
-          const btn = document.getElementById('saveBtn');
-          if (btn) btn.style.display = 'inline-flex';
-        }
-      } catch (e) {
-        console.error('관리자 확인 실패');
       }
     }
 
@@ -1362,7 +1224,7 @@
         const data = await res.json();
 
         if (!data.ok) {
-          statusEl.textContent = '❌ 저장 실패: ' + (data.error || '알 수 없는 오류');
+          statusEl.textContent = '❌ 저장 실패: ' + (data.error || data.message || '알 수 없는 오류');
           return;
         }
 
@@ -1372,7 +1234,7 @@
           statusEl.textContent = '⚠️ 이미 저장된 결과';
         }
 
-        await loadDbRoundSummary();
+        await loadRoundSummary();
       } catch (e) {
         statusEl.textContent = '❌ 서버 오류';
       }
@@ -1380,9 +1242,8 @@
 
     document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
 
-    checkAdmin();
     loadSpreadsheetData();
-    loadDbRoundSummary();
+    loadRoundSummary();
   </script>
 </body>
 </html>
