@@ -637,8 +637,7 @@
       </aside>
     </div>
   </div>
-
- <script>
+  <script>
   var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
   var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
@@ -781,57 +780,68 @@
       ay12 + '팀 ' + bi15;
   }
 
-  function parseTopTeamWinner(text) {
-    if (!text) return '';
-
-    var segments = text.split(' : ');
-    var bestTeamName = '';
-    var bestScore = -Infinity;
-
-    segments.forEach(function(segment) {
-      var match = segment.match(/([^\s\[]+팀)\s*(-?\d+(?:\.\d+)?)/);
-      if (!match) return;
-
-      var teamName = match[1];
-      var score = parseFloat(match[2]);
-
-      if (!Number.isNaN(score) && score > bestScore) {
-        bestScore = score;
-        bestTeamName = teamName;
-      }
-    });
-
-    return bestTeamName;
-  }
-
-  function parseSummaryTeams(summaryText) {
-    var teams = [];
-    var regex = /([^\s:\]]+?)팀\s*-?\d+(?:\.\d+)?/g;
+  function parseSummaryTeamEntries(summaryText) {
+    var entries = [];
+    var regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
     var match;
 
     while ((match = regex.exec(summaryText)) !== null) {
-      teams.push(match[1].trim());
+      entries.push({
+        teamName: match[1].trim() + '팀',
+        baseName: match[1].trim(),
+        score: parseFloat(match[2])
+      });
     }
 
-    return teams;
+    return entries;
   }
 
-  function extractPlayerNameFromCell(cellText) {
-    var text = safeText(cellText);
-    if (!text) return '';
-    if (text.indexOf('정지') !== -1 || text.indexOf('치킨') !== -1) return '';
-    if (/^0\s*\(/.test(text)) return '';
+  function parseTopTeamInfo(text) {
+    var entries = parseSummaryTeamEntries(text);
+    if (!entries.length) {
+      return {
+        teamName: '',
+        baseName: '',
+        score: null
+      };
+    }
 
-    var match = text.match(/^(.+?)\s+-?\d+(?:\.\d+)?\s*\(/);
-    if (match) {
-      var name = match[1].trim();
-      if (name && !/^\d+(?:\.\d+)?$/.test(name)) {
-        return name;
+    var best = entries[0];
+    for (var i = 1; i < entries.length; i++) {
+      if (entries[i].score > best.score) {
+        best = entries[i];
       }
     }
 
-    return '';
+    return best;
   }
+
+  function parseTopTeamWinner(text) {
+    return parseTopTeamInfo(text).teamName || '';
+  }
+
+  function extractPlayerInfoFromCell(cellText) {
+  var text = safeText(cellText);
+  if (!text) return null;
+
+  if (text.indexOf('정지') !== -1 || text.indexOf('치킨') !== -1) return null;
+  if (/^0\s*\(/.test(text)) return null;
+
+  // 이름 + 숫자 패턴 더 안정적으로 잡기
+  var match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
+
+  if (!match) return null;
+
+  var name = match[1].trim();
+  var score = parseFloat(match[2]);
+
+  if (!name || Number.isNaN(score)) return null;
+
+  return {
+    name: name,
+    score: score
+  };
+}
 
   function isMatchSummaryCell(text) {
     var value = safeText(text);
@@ -915,18 +925,18 @@
   }
 
   function findWinningTeamMembers(rows, topTeamText) {
-    var winnerTeam = parseTopTeamWinner(topTeamText);
-    if (!winnerTeam) return [];
+    var topTeamInfo = parseTopTeamInfo(topTeamText);
+    if (!topTeamInfo.teamName) return [];
 
-    var winnerBaseName = winnerTeam.replace(/팀$/, '').trim();
+    var winnerBaseName = topTeamInfo.baseName;
     var recentMatch = findRecentDetailedMatch(rows);
     if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return [];
 
-    var teams = parseSummaryTeams(recentMatch.summary);
+    var teams = parseSummaryTeamEntries(recentMatch.summary);
     if (!teams.length) return [];
 
-    var winnerColIndex = teams.findIndex(function(teamName) {
-      return teamName === winnerBaseName;
+    var winnerColIndex = teams.findIndex(function(team) {
+      return team.baseName === winnerBaseName;
     });
 
     if (winnerColIndex === -1) return [];
@@ -936,12 +946,12 @@
     for (var r = 0; r < recentMatch.rows.length; r++) {
       var row = recentMatch.rows[r] || [];
       var cell = row[winnerColIndex] || '';
-      var playerName = extractPlayerNameFromCell(cell);
+      var playerInfo = extractPlayerInfoFromCell(cell);
 
-      if (!playerName) continue;
-      if (members.indexOf(playerName) !== -1) continue;
+      if (!playerInfo) continue;
+      if (members.indexOf(playerInfo.name) !== -1) continue;
 
-      members.push(playerName);
+      members.push(playerInfo.name);
 
       if (members.length >= 4) {
         break;
@@ -951,24 +961,65 @@
     return members;
   }
 
+  function findMVPPlayer(rows) {
+    var recentMatch = findRecentDetailedMatch(rows);
+    if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) {
+      return null;
+    }
+
+    var best = null;
+
+    for (var r = 0; r < recentMatch.rows.length; r++) {
+      var row = recentMatch.rows[r] || [];
+
+      for (var c = 0; c < row.length; c++) {
+        var playerInfo = extractPlayerInfoFromCell(row[c]);
+        if (!playerInfo) continue;
+
+        if (!best || playerInfo.score > best.score) {
+          best = playerInfo;
+        }
+      }
+    }
+
+    return best;
+  }
+
   function updateTopTeamLabel(text, rows) {
     var labelEl = document.getElementById('topTeamLabel');
     if (!labelEl) return;
 
-    var winner = parseTopTeamWinner(text);
+    var topTeamInfo = parseTopTeamInfo(text);
 
-    if (!winner) {
+    if (!topTeamInfo.teamName) {
       labelEl.textContent = '🏆 1등팀';
       return;
     }
 
     var members = findWinningTeamMembers(rows, text);
+    var scoreText = topTeamInfo.score !== null ? ' ' + topTeamInfo.score + '점' : '';
 
     if (members.length) {
-      labelEl.textContent = '🏆 1등팀 ' + winner + ' (' + members.join(' / ') + ')';
+      labelEl.textContent =
+        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText + ' (' + members.join(' / ') + ')';
     } else {
-      labelEl.textContent = '🏆 1등팀 ' + winner;
+      labelEl.textContent =
+        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText;
     }
+  }
+
+  function updateTopTeamLines(rows) {
+    var linesEl = document.getElementById('topTeamLines');
+    if (!linesEl) return;
+
+    var mvp = findMVPPlayer(rows);
+
+    if (!mvp) {
+      linesEl.textContent = 'MVP 집계 데이터가 없습니다.';
+      return;
+    }
+
+    linesEl.textContent = 'MVP ' + mvp.name + ' ' + mvp.score + '점';
   }
 
   function renderRecentDetailedMatch(rows) {
@@ -1206,11 +1257,8 @@
       var rows = parseCSV(text);
       var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
 
-      if (topTeamEl) {
-        topTeamEl.textContent = topTeamText;
-      }
-
       updateTopTeamLabel(topTeamText, rows);
+      updateTopTeamLines(rows);
       renderRecentDetailedMatch(rows);
       await loadRankingSheetData();
     } catch (error) {
