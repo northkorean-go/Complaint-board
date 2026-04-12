@@ -99,6 +99,7 @@
       font-weight: 800;
       color: #333;
       padding-top: 4px;
+      white-space: pre-line;
     }
 
     .naejeon-shell {
@@ -141,6 +142,38 @@
       font-size: 15px;
       line-height: 1.9;
       color: #666f7c;
+    }
+
+    .round-badge-card {
+      margin-top: 22px;
+      border-radius: 24px;
+      background: #f8f8f8;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      padding: 18px 20px;
+    }
+
+    .round-badge-mini {
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      color: #8a94a7;
+      font-weight: 900;
+    }
+
+    .round-badge-title {
+      margin-top: 10px;
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 900;
+      color: #111;
+      letter-spacing: -0.03em;
+    }
+
+    .round-badge-sub {
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #666f7c;
+      white-space: pre-line;
     }
 
     .result-hero {
@@ -440,37 +473,37 @@
     }
 
     .round-record-table-wrap {
-  overflow-x: visible;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 18px;
-  background: #fff;
-}
+      overflow-x: visible;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 18px;
+      background: #fff;
+    }
 
-.round-record-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
+    .round-record-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
 
-.round-record-table th,
-.round-record-table td {
-  width: 20%;
-  box-sizing: border-box;
-  border: 1px solid #e7e7e7;
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px 0;
-  font-size: 13px;
-  font-weight: 800;
-  color: #111;
-  background: #fff;
-  white-space: nowrap;
-}
+    .round-record-table th,
+    .round-record-table td {
+      width: 20%;
+      box-sizing: border-box;
+      border: 1px solid #e7e7e7;
+      text-align: center;
+      vertical-align: middle;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: #111;
+      background: #fff;
+      white-space: nowrap;
+    }
 
-.round-record-table th {
-  background: #fafafa;
-  font-size: 12px;
-}
+    .round-record-table th {
+      background: #fafafa;
+      font-size: 12px;
+    }
 
     @media (max-width: 1100px) {
       .naejeon-grid {
@@ -524,6 +557,10 @@
         font-size: 24px;
       }
 
+      .round-badge-title {
+        font-size: 22px;
+      }
+
       .tier-note-row {
         grid-template-columns: 1fr;
       }
@@ -543,9 +580,7 @@
         font-size: 12px;
         padding: 9px 4px;
       }
-      /* 기존 CSS들 ... */
 
-       /* 👇 맨 마지막에 이거 추가 */
       .round-record-table th,
       .round-record-table td {
         height: 48px;
@@ -555,9 +590,9 @@
         vertical-align: middle;
       }
 
-  .round-record-table tr {
-    height: 48px;
-  }
+      .round-record-table tr {
+        height: 48px;
+      }
     }
   </style>
 </head>
@@ -587,6 +622,12 @@
         <p class="naejeon-sub">
           스프레드시트 자동집계 결과를 불러와서 금일 내전 결과와 최근 내전 결과를 보여주는 전용 페이지입니다.
         </p>
+
+        <div class="round-badge-card">
+          <div class="round-badge-mini">CURRENT ROUND</div>
+          <div class="round-badge-title" id="currentRoundName">회차 정보를 불러오는 중입니다.</div>
+          <div class="round-badge-sub" id="currentRoundMeta">잠시만 기다려주세요.</div>
+        </div>
 
         <div class="result-hero">
           <div>
@@ -1114,57 +1155,86 @@
     }
 
     function renderRoundRecordTable(items) {
-  const wrap = document.getElementById('roundRecordTableWrap');
-  if (!wrap) return;
+      const wrap = document.getElementById('roundRecordTableWrap');
+      if (!wrap) return;
 
-  const rows = Array.isArray(items) ? items.slice(0, 4) : [];
+      const rows = Array.isArray(items) ? items.slice(0, 4) : [];
 
-  while (rows.length < 4) {
-    rows.push({
-      match_date_text: '',
-      winner_members: ['', '', '', '']
-    });
-  }
+      while (rows.length < 4) {
+        rows.push({
+          match_date_text: '',
+          winner_members: ['', '', '', '']
+        });
+      }
 
-  let html = `
-  <table class="round-record-table">
-    <thead>
-      <tr>
-        <th>날짜</th>
-        <th>1등</th>
-        <th>2등</th>
-        <th>3등</th>
-        <th>4등</th>
-      </tr>
-    </thead>
-    <tbody>
-`;
+      let html = `
+        <table class="round-record-table">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>1등</th>
+              <th>2등</th>
+              <th>3등</th>
+              <th>4등</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
-  rows.forEach((item) => {
-    let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
+      rows.forEach((item) => {
+        let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
 
-    while (members.length < 4) {
-      members.push('');
+        while (members.length < 4) {
+          members.push('');
+        }
+
+        html += `
+          <tr>
+            <td>${escapeHtml(item.match_date_text || '')}</td>
+            <td>${escapeHtml(members[0] || '')}</td>
+            <td>${escapeHtml(members[1] || '')}</td>
+            <td>${escapeHtml(members[2] || '')}</td>
+            <td>${escapeHtml(members[3] || '')}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      wrap.innerHTML = html;
     }
 
-    html += `
-      <tr>
-        <td>${escapeHtml(item.match_date_text || '')}</td>
-        <td>${escapeHtml(members[0] || '')}</td>
-        <td>${escapeHtml(members[1] || '')}</td>
-        <td>${escapeHtml(members[2] || '')}</td>
-        <td>${escapeHtml(members[3] || '')}</td>
-      </tr>
-    `;
-  });
+    function renderRoundInfo(round, benefitText, nextScheduleText, roundRecords) {
+      const roundNameEl = document.getElementById('currentRoundName');
+      const roundMetaEl = document.getElementById('currentRoundMeta');
 
-  html += `
-      </tbody>
-    </table>
-  `;
+      if (!roundNameEl || !roundMetaEl) return;
 
-  wrap.innerHTML = html;
-}
+      if (!round) {
+        roundNameEl.textContent = '회차 미오픈';
+        roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
+        return;
+      }
+
+      const count = Array.isArray(roundRecords) ? roundRecords.length : 0;
+
+      if (round.is_open) {
+        roundNameEl.textContent = round.name || '현재 회차';
+        roundMetaEl.textContent =
+          '상태: 진행중\n' +
+          '저장 경기 수: ' + count + '개\n' +
+          '다음 일정: ' + (nextScheduleText || '미정');
+      } else {
+        roundNameEl.textContent = round.name || '최근 회차';
+        roundMetaEl.textContent =
+          '상태: 최근 종료 회차\n' +
+          '저장 경기 수: ' + count + '개\n' +
+          '다음 일정: ' + (nextScheduleText || '미정');
+      }
+    }
 
     async function loadRoundSummary() {
       try {
@@ -1172,6 +1242,7 @@
         const data = await res.json();
 
         renderRoundRecordTable(data.roundRecords || []);
+        renderRoundInfo(data.round || null, data.benefitText || '', data.nextScheduleText || '미정', data.roundRecords || []);
 
         const rankingList = document.getElementById('rankingList');
         if (rankingList) {
@@ -1195,6 +1266,7 @@
       } catch (error) {
         console.error('회차 요약 로드 실패:', error);
         renderRoundRecordTable([]);
+        renderRoundInfo(null, '', '미정', []);
 
         const rankingList = document.getElementById('rankingList');
         if (rankingList) {
@@ -1259,9 +1331,13 @@
         }
 
         if (data.saved) {
-          statusEl.textContent = '✅ 저장 완료 (' + (data.match_date || '-') + ')';
+          statusEl.textContent =
+            '✅ 저장 완료 (' + (data.match_date || '-') + ')' +
+            (data.round_name ? '\n회차: ' + data.round_name : '');
         } else {
-          statusEl.textContent = '⚠️ 이미 저장된 결과';
+          statusEl.textContent =
+            '⚠️ 이미 저장된 결과' +
+            (data.round_name ? '\n회차: ' + data.round_name : '');
         }
 
         await loadRoundSummary();
