@@ -30,6 +30,19 @@ function parseMembers(value) {
     .filter(Boolean);
 }
 
+function normalizeRound(round) {
+  if (!round) return null;
+  return {
+    id: round.id,
+    name: round.name,
+    is_open: Number(round.is_open) === 1,
+    started_at: round.started_at,
+    ended_at: round.ended_at,
+    benefit_text: round.benefit_text || "",
+    next_schedule_text: round.next_schedule_text || "미정",
+  };
+}
+
 async function getRoundRecords(env, roundId) {
   const result = await env.DB.prepare(`
     SELECT
@@ -66,17 +79,19 @@ export async function onRequestGet(context) {
   const { env } = context;
 
   try {
-    const openRound = await getOpenRound(env);
-    const latestRound = await getLatestRound(env);
+    const openRoundRaw = await getOpenRound(env);
+    const latestRoundRaw = await getLatestRound(env);
 
-    let targetRound = null;
+    const currentRound = normalizeRound(openRoundRaw || latestRoundRaw || null);
+
+    let summaryRoundRaw = null;
     let items = [];
 
-    if (openRound) {
-      const openItems = await getRoundRecords(env, openRound.id);
+    if (openRoundRaw) {
+      const openItems = await getRoundRecords(env, openRoundRaw.id);
 
       if (openItems.length > 0) {
-        targetRound = openRound;
+        summaryRoundRaw = openRoundRaw;
         items = openItems;
       } else {
         const latestClosedRound = await env.DB.prepare(`
@@ -90,26 +105,30 @@ export async function onRequestGet(context) {
         if (latestClosedRound) {
           const closedItems = await getRoundRecords(env, latestClosedRound.id);
           if (closedItems.length > 0) {
-            targetRound = latestClosedRound;
+            summaryRoundRaw = latestClosedRound;
             items = closedItems;
           } else {
-            targetRound = openRound;
+            summaryRoundRaw = openRoundRaw;
             items = openItems;
           }
         } else {
-          targetRound = openRound;
+          summaryRoundRaw = openRoundRaw;
           items = openItems;
         }
       }
-    } else if (latestRound) {
-      targetRound = latestRound;
-      items = await getRoundRecords(env, latestRound.id);
+    } else if (latestRoundRaw) {
+      summaryRoundRaw = latestRoundRaw;
+      items = await getRoundRecords(env, latestRoundRaw.id);
     }
 
-    if (!targetRound) {
+    const summaryRound = normalizeRound(summaryRoundRaw);
+
+    if (!summaryRound && !currentRound) {
       return json({
         ok: true,
         round: null,
+        currentRound: null,
+        summaryRound: null,
         roundRecords: [],
         ranking: [],
         mvpRanking: [],
@@ -150,18 +169,20 @@ export async function onRequestGet(context) {
 
     return json({
       ok: true,
-      round: {
-        id: targetRound.id,
-        name: targetRound.name,
-        is_open: Number(targetRound.is_open) === 1,
-        started_at: targetRound.started_at,
-        ended_at: targetRound.ended_at,
-      },
+
+      /* 하위 호환용 */
+      round: currentRound,
+
+      /* 새로 분리 */
+      currentRound,
+      summaryRound,
+
       roundRecords: items,
       ranking,
       mvpRanking,
-      benefitText: targetRound.benefit_text || "",
-      nextScheduleText: targetRound.next_schedule_text || "미정",
+
+      benefitText: summaryRound?.benefit_text || "",
+      nextScheduleText: summaryRound?.next_schedule_text || "미정",
     });
   } catch (error) {
     return json(
