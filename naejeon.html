@@ -1362,8 +1362,9 @@
     return;
   }
 
+  // "/", " / ", 줄바꿈 전부 대응
   const lines = raw
-    .split(' / ')
+    .split(/\s*\/\s*|\n+/)
     .map(v => v.trim())
     .filter(Boolean);
 
