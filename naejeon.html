@@ -782,44 +782,33 @@
       body.innerHTML = html || '<tr><td colspan="4">최근 내전 결과 데이터가 없습니다.</td></tr>';
     }
 
-    function extractNameCountPairs(rows) {
+    function findHeaderIndex(rows, headerText) {
+      for (var r = 0; r < rows.length; r++) {
+        for (var c = 0; c < rows[r].length; c++) {
+          if (normalizeCell(rows[r][c]) === headerText) {
+            return { row: r, col: c };
+          }
+        }
+      }
+      return null;
+    }
+
+    function extractNameCountFromColumn(rows, startRow, col) {
       var items = [];
-      var seen = new Set();
+      for (var r = startRow; r < rows.length; r++) {
+        var text = normalizeCell(rows[r][col]);
+        if (!text) continue;
 
-      rows.forEach(function(row) {
-        row.forEach(function(cell) {
-          var text = normalizeCell(cell);
-          if (!text) return;
+        if (/^(1위|2위|3위|4위|MVP|특별혜택)$/.test(text)) break;
 
-          var matches = text.match(/[가-힣A-Za-z0-9]+(?:팀)?\d+/g);
-          if (!matches) return;
+        var match = text.match(/^([가-힣A-Za-z0-9]+(?:팀)?)(\d+)$/);
+        if (!match) continue;
 
-          matches.forEach(function(token) {
-            var match = token.match(/^([가-힣A-Za-z0-9]+(?:팀)?)(\d+)$/);
-            if (!match) return;
-
-            var name = match[1];
-            var count = Number(match[2]);
-
-            if (!name || Number.isNaN(count)) return;
-
-            var key = name + '_' + count;
-            if (seen.has(key)) return;
-            seen.add(key);
-
-            items.push({
-              name: name,
-              count: count
-            });
-          });
+        items.push({
+          name: match[1],
+          count: Number(match[2])
         });
-      });
-
-      items.sort(function(a, b) {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.name.localeCompare(b.name, 'ko');
-      });
-
+      }
       return items;
     }
 
@@ -827,9 +816,19 @@
       var list = document.getElementById('rankingList');
       if (!list) return;
 
-      var items = extractNameCountPairs(rows);
+      var allItems = [];
+      ['1위', '2위', '3위', '4위'].forEach(function(header) {
+        var pos = findHeaderIndex(rows, header);
+        if (!pos) return;
+        allItems = allItems.concat(extractNameCountFromColumn(rows, pos.row + 1, pos.col));
+      });
 
-      if (!items.length) {
+      allItems.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
+
+      if (!allItems.length) {
         list.innerHTML =
           '<div class="ranking-item">' +
             '<div class="ranking-left">' +
@@ -841,7 +840,7 @@
         return;
       }
 
-      list.innerHTML = items.slice(0, 10).map(function(item, index) {
+      list.innerHTML = allItems.slice(0, 10).map(function(item, index) {
         return (
           '<div class="ranking-item">' +
             '<div class="ranking-left">' +
@@ -858,7 +857,13 @@
       var list = document.getElementById('mvpList');
       if (!list) return;
 
-      var items = extractNameCountPairs(rows);
+      var pos = findHeaderIndex(rows, 'MVP');
+      var items = pos ? extractNameCountFromColumn(rows, pos.row + 1, pos.col) : [];
+
+      items.sort(function(a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.name.localeCompare(b.name, 'ko');
+      });
 
       if (!items.length) {
         list.innerHTML =
@@ -891,15 +896,13 @@
 
       if (benefitEl) {
         var benefitText = '';
+        var pos = findHeaderIndex(rows, '특별혜택');
 
-        rows.forEach(function(row) {
-          row.forEach(function(cell) {
-            var text = normalizeCell(cell);
-            if (text.indexOf('특별혜택') !== -1) {
-              benefitText = text.replace(/^특별혜택\s*/, '').trim();
-            }
-          });
-        });
+        if (pos) {
+          var rightText = normalizeCell(rows[pos.row][pos.col + 1]);
+          var farRightText = normalizeCell(rows[pos.row][pos.col + 2]);
+          benefitText = (rightText + ' ' + farRightText).trim();
+        }
 
         benefitEl.textContent = benefitText || '시트 데이터 대기중';
       }
