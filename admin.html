@@ -112,6 +112,45 @@
               </div>
             </div>
           </div>
+
+          <div class="admin-panel round-panel">
+            <div class="admin-panel-head">
+              <div>
+                <p class="admin-panel-eyebrow">ROUND CONTROL</p>
+                <h2 class="admin-panel-title">내전 회차 관리</h2>
+              </div>
+            </div>
+
+            <div class="round-status-box">
+              <div class="round-status-title">현재 회차 상태</div>
+              <div class="round-status-value" id="roundStatusText">불러오는 중...</div>
+              <div class="round-status-sub" id="roundStatusSub"></div>
+            </div>
+
+            <div class="round-form-grid">
+              <div class="round-form-group">
+                <label for="roundNameInput">회차명</label>
+                <input id="roundNameInput" class="round-input" type="text" placeholder="예: 4월 2주차 회차" />
+              </div>
+
+              <div class="round-form-group">
+                <label for="nextScheduleInput">다음 내전 일정</label>
+                <input id="nextScheduleInput" class="round-input" type="text" placeholder="예: 목요일 22:00 / 토요일 22:00" />
+              </div>
+
+              <div class="round-form-group round-form-group-full">
+                <label for="benefitInput">특별 혜택</label>
+                <textarea id="benefitInput" class="round-textarea" placeholder="예: 이번 회차 1위팀 MVP MVP혜택 지급"></textarea>
+              </div>
+            </div>
+
+            <div class="round-action-row">
+              <button id="roundOpenBtn" class="primary-btn" type="button">회차 오픈</button>
+              <button id="roundCloseBtn" class="ghost-btn" type="button">회차 닫기</button>
+            </div>
+
+            <div class="round-message" id="roundMessage"></div>
+          </div>
         </section>
 
         <section class="admin-section" data-page="suggestions">
@@ -228,6 +267,10 @@
                 <span>데이터 로드 방식</span>
                 <strong>API 연결</strong>
               </div>
+              <div class="admin-setting-row">
+                <span>회차 관리 방식</span>
+                <strong>관리자 수동 오픈/닫기</strong>
+              </div>
             </div>
           </div>
         </section>
@@ -265,6 +308,7 @@
 
   let selectedPostId = null;
   let allPosts = [];
+  let currentRound = null;
 
   const pageMeta = {
     dashboard: {
@@ -500,6 +544,137 @@
     }
   }
 
+  async function loadRoundStatus() {
+    const statusText = document.getElementById("roundStatusText");
+    const statusSub = document.getElementById("roundStatusSub");
+    const roundMessage = document.getElementById("roundMessage");
+
+    try {
+      const res = await fetch("/api/round-summary", {
+        cache: "no-store",
+        credentials: "include"
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        statusText.textContent = "회차 정보를 불러오지 못했습니다.";
+        statusSub.textContent = "";
+        return;
+      }
+
+      currentRound = data.round || null;
+
+      const roundNameInput = document.getElementById("roundNameInput");
+      const nextScheduleInput = document.getElementById("nextScheduleInput");
+      const benefitInput = document.getElementById("benefitInput");
+      const openBtn = document.getElementById("roundOpenBtn");
+      const closeBtn = document.getElementById("roundCloseBtn");
+
+      if (currentRound && currentRound.is_open) {
+        statusText.textContent = `열린 회차: ${currentRound.name}`;
+        statusSub.textContent =
+          `시작 ${currentRound.started_at || "-"} · 현재 회차 경기 수 ${Array.isArray(data.roundRecords) ? data.roundRecords.length : 0}개`;
+
+        roundNameInput.value = currentRound.name || "";
+        nextScheduleInput.value = data.nextScheduleText || "";
+        benefitInput.value = data.benefitText || "";
+
+        openBtn.disabled = true;
+        closeBtn.disabled = false;
+      } else if (currentRound) {
+        statusText.textContent = `최근 종료 회차: ${currentRound.name}`;
+        statusSub.textContent =
+          `종료 ${currentRound.ended_at || "-"} · 저장 경기 수 ${Array.isArray(data.roundRecords) ? data.roundRecords.length : 0}개`;
+
+        roundNameInput.value = "";
+        nextScheduleInput.value = data.nextScheduleText || "";
+        benefitInput.value = data.benefitText || "";
+
+        openBtn.disabled = false;
+        closeBtn.disabled = true;
+      } else {
+        statusText.textContent = "열린 회차가 없습니다.";
+        statusSub.textContent = "새 회차를 오픈한 뒤 내전 결과를 저장하세요.";
+
+        roundNameInput.value = "";
+        nextScheduleInput.value = "";
+        benefitInput.value = "";
+
+        openBtn.disabled = false;
+        closeBtn.disabled = true;
+      }
+
+      roundMessage.textContent = "";
+    } catch (error) {
+      statusText.textContent = "회차 정보를 불러오지 못했습니다.";
+      statusSub.textContent = "";
+    }
+  }
+
+  async function openRound() {
+    const roundMessage = document.getElementById("roundMessage");
+    roundMessage.textContent = "회차 오픈 중...";
+
+    try {
+      const body = {
+        name: document.getElementById("roundNameInput").value.trim(),
+        next_schedule_text: document.getElementById("nextScheduleInput").value.trim(),
+        benefit_text: document.getElementById("benefitInput").value.trim()
+      };
+
+      const res = await fetch("/api/round-open", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        roundMessage.textContent = `❌ ${data.error || data.message || "회차 오픈 실패"}`;
+        return;
+      }
+
+      roundMessage.textContent = `✅ ${data.message || "회차가 오픈되었습니다."}`;
+      await loadRoundStatus();
+    } catch (error) {
+      roundMessage.textContent = "❌ 회차 오픈 중 오류가 발생했습니다.";
+    }
+  }
+
+  async function closeRound() {
+    const roundMessage = document.getElementById("roundMessage");
+    roundMessage.textContent = "회차 종료 중...";
+
+    try {
+      const body = {
+        name: document.getElementById("roundNameInput").value.trim(),
+        next_schedule_text: document.getElementById("nextScheduleInput").value.trim(),
+        benefit_text: document.getElementById("benefitInput").value.trim()
+      };
+
+      const res = await fetch("/api/round-close", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        roundMessage.textContent = `❌ ${data.error || data.message || "회차 종료 실패"}`;
+        return;
+      }
+
+      roundMessage.textContent = `✅ ${data.message || "회차가 종료되었습니다."}`;
+      await loadRoundStatus();
+    } catch (error) {
+      roundMessage.textContent = "❌ 회차 종료 중 오류가 발생했습니다.";
+    }
+  }
+
   async function selectPost(id) {
     selectedPostId = id;
     const post = allPosts.find((p) => p.id === id);
@@ -631,11 +806,14 @@
 
   document.getElementById("saveCommentBtn").addEventListener("click", saveComment);
   document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.getElementById("roundOpenBtn").addEventListener("click", openRound);
+  document.getElementById("roundCloseBtn").addEventListener("click", closeRound);
 
   (async () => {
     const ok = await checkAdmin();
     if (!ok) return;
     await loadPosts();
+    await loadRoundStatus();
   })();
 
   window.selectPost = selectPost;
