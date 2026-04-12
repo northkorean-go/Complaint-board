@@ -43,6 +43,38 @@ function normalizeRound(round) {
   };
 }
 
+function parseSummaryTeamEntries(summaryText) {
+  const entries = [];
+  const regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
+  let match;
+
+  while ((match = regex.exec(String(summaryText || ""))) !== null) {
+    entries.push({
+      teamName: match[1].trim() + "팀",
+      baseName: match[1].trim(),
+      score: parseFloat(match[2]),
+    });
+  }
+
+  return entries;
+}
+
+function extractPlayerInfoFromCell(cellText) {
+  const text = String(cellText || "").trim();
+  if (!text) return null;
+  if (text.includes("정지") || text.includes("치킨")) return null;
+  if (/^0\s*\(/.test(text)) return null;
+
+  const match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
+  if (!match) return null;
+
+  const name = match[1].trim();
+  const score = parseFloat(match[2]);
+
+  if (!name || Number.isNaN(score)) return null;
+  return { name, score };
+}
+
 async function getRoundRecords(env, roundId) {
   const result = await env.DB.prepare(`
     SELECT
@@ -73,6 +105,71 @@ async function getRoundRecords(env, roundId) {
       winner_members_json: JSON.stringify(members),
     };
   });
+}
+
+async function getMatchRows(env, resultId) {
+  const result = await env.DB.prepare(`
+    SELECT row_no, col1, col2, col3, col4, col5
+    FROM match_rows
+    WHERE result_id = ?
+    ORDER BY row_no ASC
+  `)
+    .bind(resultId)
+    .all();
+
+  return result.results || [];
+}
+
+async function buildAutoBenefitText(env, latestMatch) {
+  if (!latestMatch) return "미설정";
+
+  const teams = parseSummaryTeamEntries(latestMatch.summary_text || "");
+  if (!teams.length) return "미설정";
+
+  let lowestTeam = teams[0];
+  for (let i = 1; i < teams.length; i++) {
+    if (teams[i].score < lowestTeam.score) {
+      lowestTeam = teams[i];
+    }
+  }
+
+  const rows = await getMatchRows(env, latestMatch.id);
+  async function buildAutoBenefitText(env, latestMatch) {
+  if (!latestMatch) return "미설정";
+
+  const teams = parseSummaryTeamEntries(latestMatch.summary_text || "");
+  if (!teams.length) return latestMatch.match_date_text || "-";
+
+  let lowestTeam = teams[0];
+  for (let i = 1; i < teams.length; i++) {
+    if (teams[i].score < lowestTeam.score) {
+      lowestTeam = teams[i];
+    }
+  }
+
+  const rows = await getMatchRows(env, latestMatch.id);
+  if (!rows.length) return latestMatch.match_date_text || "-";
+
+  const teamIndex = teams.findIndex((team) => team.baseName === lowestTeam.baseName);
+  if (teamIndex === -1) return latestMatch.match_date_text || "-";
+
+  const colKey = ["col1", "col2", "col3", "col4", "col5"][teamIndex];
+  if (!colKey) return latestMatch.match_date_text || "-";
+
+  let lowestPlayer = null;
+
+  for (const row of rows) {
+    const player = extractPlayerInfoFromCell(row[colKey]);
+    if (!player) continue;
+
+    if (!lowestPlayer || player.score < lowestPlayer.score) {
+      lowestPlayer = player;
+    }
+  }
+
+  if (!lowestPlayer) return latestMatch.match_date_text || "-";
+
+  return `${latestMatch.match_date_text || "-"} ${lowestPlayer.name}`;
 }
 
 export async function onRequestGet(context) {
@@ -132,7 +229,7 @@ export async function onRequestGet(context) {
         roundRecords: [],
         ranking: [],
         mvpRanking: [],
-        benefitText: "",
+        benefitText: "미설정",
         nextScheduleText: "미정",
       });
     }
@@ -167,21 +264,18 @@ export async function onRequestGet(context) {
       }))
     );
 
+    const latestMatch = items.length ? items[0] : null;
+    const autoBenefitText = await buildAutoBenefitText(env, latestMatch);
+
     return json({
       ok: true,
-
-      /* 하위 호환용 */
       round: currentRound,
-
-      /* 새로 분리 */
       currentRound,
       summaryRound,
-
       roundRecords: items,
       ranking,
       mvpRanking,
-
-      benefitText: summaryRound?.benefit_text || "",
+      benefitText: autoBenefitText,
       nextScheduleText: summaryRound?.next_schedule_text || "미정",
     });
   } catch (error) {
