@@ -1336,6 +1336,29 @@ async function loadSpreadsheetData() {
 }
 
 loadSpreadsheetData();
+    document.getElementById('saveBtn').addEventListener('click', async function () {
+  const statusEl = document.getElementById('saveStatus');
+  statusEl.textContent = '저장 중...';
+
+  try {
+    const res = await fetch('/api/save-match', { method: 'POST' });
+    const data = await res.json();
+
+    if (!data.ok) {
+      statusEl.textContent = '❌ 저장 실패: ' + data.error;
+      return;
+    }
+
+    if (data.saved) {
+      statusEl.textContent = '✅ 저장 완료 (' + data.match_date + ')';
+    } else {
+      statusEl.textContent = '⚠️ 이미 저장된 결과';
+    }
+
+  } catch (e) {
+    statusEl.textContent = '❌ 서버 오류';
+  }
+});
   </script>
 </body>
 </html>
