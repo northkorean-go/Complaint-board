@@ -493,7 +493,7 @@
           </div>
           <div class="result-hero-right">
             <div class="result-hero-rank">🏆 1등팀</div>
-            <div class="result-hero-lines" id="topTeamLines">="["&M11&"] "&B12&"팀 "&L15&" : "&O12&"팀 "&Y15&" : "&AA12&"팀 "&AK15&" : "&AM12&"팀 "&AW15&" : "&AY12&"팀 "&BI15&""</div>
+            <div class="result-hero-lines" id="topTeamLines">데이터를 불러오는 중입니다.</div>
           </div>
         </div>
 
@@ -620,7 +620,7 @@
   </div>
 
   <script>
-    var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/edit?gid=0#gid=0';
+    var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
 
     function updateTodayTitle() {
       var titleEl = document.getElementById('todayTitle');
@@ -676,44 +676,44 @@
     }
 
     function getCell(rows, r, c) {
-  if (!rows[r]) return '';
-  return safeText(rows[r][c]);
-}
+      if (!rows[r]) return '';
+      return safeText(rows[r][c]);
+    }
 
-function buildTopTeamText(rows) {
-  var m11 = getCell(rows, 10, 12);
-  var b12 = getCell(rows, 11, 1);
-  var l15 = getCell(rows, 14, 11);
+    function buildTopTeamText(rows) {
+      var m11 = getCell(rows, 10, 12);
+      var b12 = getCell(rows, 11, 1);
+      var l15 = getCell(rows, 14, 11);
 
-  var o12 = getCell(rows, 11, 14);
-  var y15 = getCell(rows, 14, 24);
+      var o12 = getCell(rows, 11, 14);
+      var y15 = getCell(rows, 14, 24);
 
-  var aa12 = getCell(rows, 11, 26);
-  var ak15 = getCell(rows, 14, 36);
+      var aa12 = getCell(rows, 11, 26);
+      var ak15 = getCell(rows, 14, 36);
 
-  var am12 = getCell(rows, 11, 38);
-  var aw15 = getCell(rows, 14, 48);
+      var am12 = getCell(rows, 11, 38);
+      var aw15 = getCell(rows, 14, 48);
 
-  var ay12 = getCell(rows, 11, 50);
-  var bi15 = getCell(rows, 14, 60);
+      var ay12 = getCell(rows, 11, 50);
+      var bi15 = getCell(rows, 14, 60);
 
-  if (
-    !m11 && !b12 && !l15 &&
-    !o12 && !y15 &&
-    !aa12 && !ak15 &&
-    !am12 && !aw15 &&
-    !ay12 && !bi15
-  ) {
-    return '';
-  }
+      if (
+        !m11 && !b12 && !l15 &&
+        !o12 && !y15 &&
+        !aa12 && !ak15 &&
+        !am12 && !aw15 &&
+        !ay12 && !bi15
+      ) {
+        return '';
+      }
 
-  return '[' + m11 + '] ' +
-    b12 + '팀 ' + l15 + ' : ' +
-    o12 + '팀 ' + y15 + ' : ' +
-    aa12 + '팀 ' + ak15 + ' : ' +
-    am12 + '팀 ' + aw15 + ' : ' +
-    ay12 + '팀 ' + bi15;
-}
+      return '[' + m11 + '] ' +
+        b12 + '팀 ' + l15 + ' : ' +
+        o12 + '팀 ' + y15 + ' : ' +
+        aa12 + '팀 ' + ak15 + ' : ' +
+        am12 + '팀 ' + aw15 + ' : ' +
+        ay12 + '팀 ' + bi15;
+    }
 
     function renderRecentResults(rows) {
       var body = document.getElementById('recentResultBody');
