@@ -314,6 +314,58 @@
       white-space: pre-line;
     }
 
+    .schedule-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .schedule-line:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .schedule-main {
+      font-weight: 800;
+      color: #111;
+      line-height: 1.5;
+    }
+
+    .schedule-badge {
+      flex-shrink: 0;
+      min-width: 54px;
+      text-align: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      background: #f3f3f3;
+      color: #444;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .schedule-badge.today {
+      background: #000;
+      color: #fff;
+      border-color: #000;
+    }
+
+    .schedule-badge.tomorrow {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .schedule-badge.dday {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
     .recent-match-card {
       border-radius: 24px;
       overflow: hidden;
@@ -593,6 +645,12 @@
       .round-record-table tr {
         height: 48px;
       }
+
+      .schedule-line {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
     }
   </style>
 </head>
@@ -812,6 +870,15 @@
         .replace(/'/g, '&#39;');
     }
 
+    function escapeAttr(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
     function normalizeDateText(value) {
       const text = safeText(value);
       if (!text) return '';
@@ -831,23 +898,28 @@
       return '';
     }
 
-    function getMatchDisplayDate() {
+    function getKoreaNowDate() {
       const now = new Date();
-      const korea = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      const koreaText = now.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
+      return new Date(koreaText.replace(' ', 'T'));
+    }
 
-      const hour = korea.getUTCHours();
-      const base = new Date(Date.UTC(
-        korea.getUTCFullYear(),
-        korea.getUTCMonth(),
-        korea.getUTCDate()
-      ));
+    function getMatchDisplayDate() {
+      const korea = getKoreaNowDate();
+
+      const hour = korea.getHours();
+      const base = new Date(
+        korea.getFullYear(),
+        korea.getMonth(),
+        korea.getDate()
+      );
 
       if (hour < 6) {
-        base.setUTCDate(base.getUTCDate() - 1);
+        base.setDate(base.getDate() - 1);
       }
 
-      const month = String(base.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(base.getUTCDate()).padStart(2, '0');
+      const month = String(base.getMonth() + 1).padStart(2, '0');
+      const day = String(base.getDate()).padStart(2, '0');
       return `${month}.${day}`;
     }
 
@@ -1067,7 +1139,7 @@
       return best;
     }
 
-    function updateTodayTitleFromMainMatch(match) {
+    function updateTodayTitleFromMainMatch() {
       const titleEl = document.getElementById('todayTitle');
       if (!titleEl) return;
 
@@ -1253,6 +1325,60 @@
         '다음 일정: ' + (nextScheduleText || '미정');
     }
 
+    function getScheduleBadgeText(line) {
+      const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
+      if (!match) return '';
+
+      const month = Number(match[1]);
+      const day = Number(match[2]);
+
+      const now = getKoreaNowDate();
+      const target = new Date(now.getFullYear(), month - 1, day);
+
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffDays = Math.round((target - today) / 86400000);
+
+      if (diffDays === 0) return '오늘';
+      if (diffDays === 1) return '내일';
+      if (diffDays < 0) return '';
+      return `D-${diffDays}`;
+    }
+
+    function getScheduleBadgeClass(text) {
+      if (text === '오늘') return 'today';
+      if (text === '내일') return 'tomorrow';
+      if (text === 'D-day') return 'dday';
+      return '';
+    }
+
+    function renderScheduleText(rawText) {
+      const scheduleText = document.getElementById('scheduleText');
+      if (!scheduleText) return;
+
+      const raw = rawText || '미정';
+      const lines = String(raw)
+        .split('/')
+        .map(v => v.trim())
+        .filter(Boolean);
+
+      if (!lines.length || raw === '미정') {
+        scheduleText.textContent = '미정';
+        return;
+      }
+
+      scheduleText.innerHTML = lines.map(line => {
+        const badgeText = getScheduleBadgeText(line);
+        const badgeClass = getScheduleBadgeClass(badgeText);
+
+        return `
+          <div class="schedule-line">
+            <div class="schedule-main">${escapeHtml(line)}</div>
+            ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
     async function loadRoundSummary() {
       try {
         const res = await fetch('/api/round-summary', { cache: 'no-store' });
@@ -1281,10 +1407,7 @@
           benefitText.textContent = data.benefitText || '미설정';
         }
 
-        const scheduleText = document.getElementById('scheduleText');
-        if (scheduleText) {
-          scheduleText.textContent = data.nextScheduleText || '미정';
-        }
+        renderScheduleText(data.nextScheduleText || '미정');
       } catch (error) {
         console.error('회차 요약 로드 실패:', error);
         renderRoundRecordTable([]);
@@ -1305,10 +1428,7 @@
           benefitText.textContent = '불러오기 실패';
         }
 
-        const scheduleText = document.getElementById('scheduleText');
-        if (scheduleText) {
-          scheduleText.textContent = '불러오기 실패';
-        }
+        renderScheduleText('미정');
       }
     }
 
@@ -1325,9 +1445,9 @@
         const text = await res.text();
         const rows = parseCSV(text);
         const topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
-        const recentMatch = renderRecentDetailedMatch(rows);
+        renderRecentDetailedMatch(rows);
 
-        updateTodayTitleFromMainMatch(recentMatch);
+        updateTodayTitleFromMainMatch();
         updateTopTeamLabel(topTeamText, rows);
         updateTopTeamLines(rows);
       } catch (error) {
@@ -1336,6 +1456,7 @@
         if (recentCard) {
           recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
         }
+        updateTodayTitleFromMainMatch();
       }
     }
 
