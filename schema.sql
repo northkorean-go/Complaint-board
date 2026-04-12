@@ -8,9 +8,21 @@ CREATE TABLE IF NOT EXISTS posts (
   deleted INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
--- 내전 결과 스냅샷 저장
+
+CREATE TABLE IF NOT EXISTS rounds (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  ended_at TEXT,
+  is_open INTEGER NOT NULL DEFAULT 1,
+  benefit_text TEXT NOT NULL DEFAULT '',
+  next_schedule_text TEXT NOT NULL DEFAULT '미정',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS match_results (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  round_id INTEGER,
   snapshot_key TEXT NOT NULL UNIQUE,
   match_date TEXT NOT NULL,             -- YYYY-MM-DD
   match_date_text TEXT NOT NULL,        -- 04.11 같은 표시용
@@ -21,11 +33,15 @@ CREATE TABLE IF NOT EXISTS match_results (
   winner_members_json TEXT NOT NULL DEFAULT '[]',
   mvp_name TEXT,
   mvp_score REAL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (round_id) REFERENCES rounds(id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_match_results_match_date
 ON match_results(match_date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_match_results_round_id
+ON match_results(round_id);
 
 CREATE TABLE IF NOT EXISTS match_rows (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
