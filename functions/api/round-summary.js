@@ -30,13 +30,81 @@ function parseMembers(value) {
     .filter(Boolean);
 }
 
+async function getRoundRecords(env, roundId) {
+  const result = await env.DB.prepare(`
+    SELECT
+      id,
+      round_id,
+      match_date,
+      match_date_text,
+      title,
+      summary_text,
+      winner_team,
+      winner_score,
+      winner_members_json,
+      mvp_name,
+      mvp_score,
+      created_at
+    FROM match_results
+    WHERE round_id = ?
+    ORDER BY match_date DESC, id DESC
+  `)
+    .bind(roundId)
+    .all();
+
+  return (result.results || []).map((row) => {
+    const members = parseMembers(row.winner_members_json);
+    return {
+      ...row,
+      winner_members: members,
+      winner_members_json: JSON.stringify(members),
+    };
+  });
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
 
   try {
     const openRound = await getOpenRound(env);
     const latestRound = await getLatestRound(env);
-    const targetRound = openRound || latestRound || null;
+
+    let targetRound = null;
+    let items = [];
+
+    if (openRound) {
+      const openItems = await getRoundRecords(env, openRound.id);
+
+      if (openItems.length > 0) {
+        targetRound = openRound;
+        items = openItems;
+      } else {
+        const latestClosedRound = await env.DB.prepare(`
+          SELECT *
+          FROM rounds
+          WHERE is_open = 0
+          ORDER BY id DESC
+          LIMIT 1
+        `).first();
+
+        if (latestClosedRound) {
+          const closedItems = await getRoundRecords(env, latestClosedRound.id);
+          if (closedItems.length > 0) {
+            targetRound = latestClosedRound;
+            items = closedItems;
+          } else {
+            targetRound = openRound;
+            items = openItems;
+          }
+        } else {
+          targetRound = openRound;
+          items = openItems;
+        }
+      }
+    } else if (latestRound) {
+      targetRound = latestRound;
+      items = await getRoundRecords(env, latestRound.id);
+    }
 
     if (!targetRound) {
       return json({
@@ -49,36 +117,6 @@ export async function onRequestGet(context) {
         nextScheduleText: "미정",
       });
     }
-
-    const result = await env.DB.prepare(`
-      SELECT
-        id,
-        round_id,
-        match_date,
-        match_date_text,
-        title,
-        summary_text,
-        winner_team,
-        winner_score,
-        winner_members_json,
-        mvp_name,
-        mvp_score,
-        created_at
-      FROM match_results
-      WHERE round_id = ?
-      ORDER BY match_date DESC, id DESC
-    `)
-      .bind(targetRound.id)
-      .all();
-
-    const items = (result.results || []).map((row) => {
-      const members = parseMembers(row.winner_members_json);
-      return {
-        ...row,
-        winner_members: members,
-        winner_members_json: JSON.stringify(members),
-      };
-    });
 
     const winnerCounts = {};
     const mvpCounts = {};
