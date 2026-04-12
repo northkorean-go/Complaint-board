@@ -631,23 +631,25 @@
     var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
     function updateTodayTitleFromRankingSheet(rows) {
-      var titleEl = document.getElementById('todayTitle');
-      if (!titleEl) return;
+  var titleEl = document.getElementById('todayTitle');
+  if (!titleEl) return;
 
-      var lastDate = '';
+  var lastDate = '';
 
-      for (var i = 0; i < rows.length; i++) {
-        var cell = safeText(rows[i] && rows[i][0]);
+  for (var i = 0; i < rows.length; i++) {
+    for (var j = 0; j < rows[i].length; j++) {
+      var cell = safeText(rows[i][j]);
 
-        if (/^\d+\.\d+$/.test(cell)) {
-          lastDate = cell;
-        }
+      if (/^\d+\.\d+$/.test(cell)) {
+        lastDate = cell;
       }
-
-      titleEl.textContent = lastDate
-        ? lastDate + ' 금일 내전 결과'
-        : '금일 내전 결과';
     }
+  }
+
+  titleEl.textContent = lastDate
+    ? lastDate + ' 금일 내전 결과'
+    : '금일 내전 결과';
+}
 
     function parseCSVLine(line) {
       var result = [];
