@@ -32,6 +32,63 @@ function parseMembers(value) {
     .filter(Boolean);
 }
 
+function buildSummaryResponse(round, items) {
+  const normalizedItems = (items || []).map((row) => {
+    const members = parseMembers(row.winner_members_json);
+    return {
+      ...row,
+      winner_members: members,
+      winner_members_json: JSON.stringify(members),
+    };
+  });
+
+  const winnerCounts = {};
+  const mvpCounts = {};
+
+  for (const item of normalizedItems) {
+    for (const member of item.winner_members || []) {
+      const name = String(member || '').trim();
+      if (!name) continue;
+      winnerCounts[name] = (winnerCounts[name] || 0) + 1;
+    }
+
+    const mvpName = String(item.mvp_name || '').trim();
+    if (mvpName) {
+      mvpCounts[mvpName] = (mvpCounts[mvpName] || 0) + 1;
+    }
+  }
+
+  const ranking = sortCountItems(
+    Object.keys(winnerCounts).map((name) => ({
+      name,
+      count: winnerCounts[name],
+    }))
+  );
+
+  const mvpRanking = sortCountItems(
+    Object.keys(mvpCounts).map((name) => ({
+      name,
+      count: mvpCounts[name],
+    }))
+  );
+
+  return {
+    ok: true,
+    round: round
+      ? {
+          id: round.id,
+          name: round.name,
+          is_open: !!round.is_open,
+        }
+      : null,
+    roundRecords: normalizedItems,
+    ranking,
+    mvpRanking,
+    benefitText: round?.benefit_text || '',
+    nextScheduleText: round?.next_schedule_text || '미정',
+  };
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
 
@@ -41,19 +98,34 @@ export async function onRequestGet(context) {
       round = await getLatestRound(env);
     }
 
-    if (!round) {
-      return json({
-        ok: true,
-        round: null,
-        roundRecords: [],
-        ranking: [],
-        mvpRanking: [],
-        benefitText: '',
-        nextScheduleText: '미정',
-      });
+    if (round) {
+      const result = await env.DB.prepare(`
+        SELECT
+          id,
+          round_id,
+          match_date,
+          match_date_text,
+          title,
+          summary_text,
+          winner_team,
+          winner_score,
+          winner_members_json,
+          mvp_name,
+          mvp_score,
+          created_at
+        FROM match_results
+        WHERE round_id = ?
+        ORDER BY match_date DESC, id DESC
+      `)
+        .bind(round.id)
+        .all();
+
+      const items = result.results || [];
+      return json(buildSummaryResponse(round, items));
     }
 
-    const result = await env.DB.prepare(`
+    // 회차가 없어도 match_results 자체가 있으면 최근 저장 기록으로 표시
+    const fallback = await env.DB.prepare(`
       SELECT
         id,
         round_id,
@@ -68,68 +140,12 @@ export async function onRequestGet(context) {
         mvp_score,
         created_at
       FROM match_results
-      WHERE round_id = ?
       ORDER BY match_date DESC, id DESC
-    `)
-      .bind(round.id)
-      .all();
+    `).all();
 
-    const items = (result.results || []).map((row) => {
-      const members = parseMembers(row.winner_members_json);
-      return {
-        ...row,
-        winner_members_json: JSON.stringify(members),
-        winner_members: members,
-      };
-    });
+    const fallbackItems = fallback.results || [];
 
-    const winnerCounts = {};
-    const mvpCounts = {};
-
-    for (const item of items) {
-      const members = Array.isArray(item.winner_members)
-        ? item.winner_members
-        : parseMembers(item.winner_members_json);
-
-      for (const member of members) {
-        const name = String(member || '').trim();
-        if (!name) continue;
-        winnerCounts[name] = (winnerCounts[name] || 0) + 1;
-      }
-
-      const mvpName = String(item.mvp_name || '').trim();
-      if (mvpName) {
-        mvpCounts[mvpName] = (mvpCounts[mvpName] || 0) + 1;
-      }
-    }
-
-    const ranking = sortCountItems(
-      Object.keys(winnerCounts).map((name) => ({
-        name,
-        count: winnerCounts[name],
-      }))
-    );
-
-    const mvpRanking = sortCountItems(
-      Object.keys(mvpCounts).map((name) => ({
-        name,
-        count: mvpCounts[name],
-      }))
-    );
-
-    return json({
-      ok: true,
-      round: {
-        id: round.id,
-        name: round.name,
-        is_open: !!round.is_open,
-      },
-      roundRecords: items,
-      ranking,
-      mvpRanking,
-      benefitText: round.benefit_text || '',
-      nextScheduleText: round.next_schedule_text || '미정',
-    });
+    return json(buildSummaryResponse(null, fallbackItems));
   } catch (error) {
     return json(
       {
@@ -140,4 +156,3 @@ export async function onRequestGet(context) {
     );
   }
 }
-
