@@ -318,12 +318,13 @@
     .recent-match-table td {
       border: 1px solid #e7e7e7;
       text-align: center;
-      padding: 11px 8px;
-      font-size: 14px;
+      padding: 10px 6px;
+      font-size: 13px;
       font-weight: 800;
       color: #111;
       background: #fff;
       word-break: keep-all;
+      white-space: pre-line;
     }
 
     .recent-match-empty {
@@ -513,7 +514,7 @@
         <p class="naejeon-eyebrow">ZARA CLAN MATCH</p>
         <h2 class="naejeon-title">내전 현황판</h2>
         <p class="naejeon-sub">
-          스프레드시트 자동집계 결과를 불러온 내전 결과와 최근 내전 결과입니다.
+          스프레드시트 자동집계 결과를 불러와서 금일 내전 결과와 최근 내전 결과를 보여주는 전용 페이지입니다.
         </p>
 
         <div class="result-hero">
@@ -688,6 +689,15 @@
       return safeText(rows[r][c]);
     }
 
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function normalizeDateText(value) {
       var text = safeText(value);
       if (!text) return '';
@@ -814,55 +824,56 @@
           var title = '';
           var date = '';
 
-          for (var rr = r - 3; rr <= r + 1; rr++) {
-            if (!rows[rr]) continue;
+          for (var rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
+            var left = Math.max(0, c - 2);
+            var right = Math.min((rows[rr] || []).length - 1, c + 2);
 
-            for (var cc = 0; cc < rows[rr].length; cc++) {
+            for (var cc = left; cc <= right; cc++) {
               var cell = safeText(rows[rr][cc]);
-
-              if (!title && cell && !isDateCell(cell) && !isMatchSummaryCell(cell) && cell.length <= 12 && cell.indexOf('팀') === -1) {
-                title = cell;
-              }
+              if (!cell) continue;
 
               var normalizedDate = normalizeDateText(cell);
               if (normalizedDate) {
                 date = normalizedDate;
+                continue;
+              }
+
+              if (
+                !title &&
+                !isMatchSummaryCell(cell) &&
+                !isDateCell(cell) &&
+                cell.length <= 12 &&
+                cell.indexOf('팀') === -1 &&
+                cell.indexOf('[') === -1 &&
+                cell.indexOf(']') === -1
+              ) {
+                title = cell;
               }
             }
           }
 
           var tableRows = [];
-          var maxWidth = 0;
-
           for (var rr = r + 1; rr <= r + 5; rr++) {
             if (!rows[rr]) continue;
 
             var rowItems = [];
-            for (var cc = 0; cc < rows[rr].length; cc++) {
-              var text = safeText(rows[rr][cc]);
-              if (text) {
-                rowItems.push(text);
-              }
+            for (var cc = c; cc < c + 5; cc++) {
+              rowItems.push(safeText(rows[rr][cc]));
             }
 
-            if (rowItems.length >= 2) {
+            var hasAny = rowItems.some(function(item) {
+              return !!item;
+            });
+
+            if (hasAny) {
               tableRows.push(rowItems);
-              if (rowItems.length > maxWidth) {
-                maxWidth = rowItems.length;
-              }
             }
           }
 
           if (!tableRows.length) continue;
 
-          for (var i = 0; i < tableRows.length; i++) {
-            while (tableRows[i].length < maxWidth) {
-              tableRows[i].push('');
-            }
-          }
-
           return {
-            title: title || '최근 내전 상세 결과',
+            title: title || '최근 내전 결과',
             date: date || '',
             summary: summary,
             rows: tableRows
@@ -871,15 +882,6 @@
       }
 
       return null;
-    }
-
-    function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
     }
 
     function renderRecentDetailedMatch(rows) {
@@ -896,8 +898,9 @@
       var tableHtml = '';
       for (var r = 0; r < match.rows.length; r++) {
         tableHtml += '<tr>';
-        for (var c = 0; c < match.rows[r].length; c++) {
-          tableHtml += '<td>' + escapeHtml(match.rows[r][c]) + '</td>';
+        for (var c = 0; c < 5; c++) {
+          var cell = match.rows[r][c] || '';
+          tableHtml += '<td>' + escapeHtml(cell) + '</td>';
         }
         tableHtml += '</tr>';
       }
@@ -1126,7 +1129,9 @@
       } catch (error) {
         console.error('시트 로드 실패:', error);
         if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
-        if (recentCard) recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
+        if (recentCard) {
+          recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
+        }
       }
     }
 
