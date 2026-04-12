@@ -124,7 +124,6 @@ export async function onRequestGet(context) {
       return json(buildSummaryResponse(round, items));
     }
 
-    // 회차가 없어도 match_results 자체가 있으면 최근 저장 기록으로 표시
     const fallback = await env.DB.prepare(`
       SELECT
         id,
@@ -144,7 +143,6 @@ export async function onRequestGet(context) {
     `).all();
 
     const fallbackItems = fallback.results || [];
-
     return json(buildSummaryResponse(null, fallbackItems));
   } catch (error) {
     return json(
