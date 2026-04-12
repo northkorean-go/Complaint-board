@@ -9,7 +9,7 @@ import {
   normalizeDisplayDate,
   normalizeStorageDate,
   getKoreaNowString,
-  ensureOpenRound,
+  getOpenRound,
   requireAdmin,
 } from "./_utils.js";
 
@@ -50,6 +50,20 @@ export async function onRequest(context) {
   }
 
   try {
+    const round = await getOpenRound(env);
+
+    if (!round) {
+      return withCors(
+        json(
+          {
+            ok: false,
+            error: "열린 회차가 없습니다. 관리자 페이지에서 먼저 회차를 오픈해주세요.",
+          },
+          400
+        )
+      );
+    }
+
     const CSV_URL =
       "https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0";
 
@@ -83,9 +97,8 @@ export async function onRequest(context) {
 
     const displayDate = normalizeDisplayDate(recentMatch.date);
     const storageDate = normalizeStorageDate(recentMatch.date);
-    const snapshotKey = `${storageDate}|${recentMatch.summary}`;
+    const snapshotKey = `${round.id}|${storageDate}|${recentMatch.summary}`;
     const createdAtKST = getKoreaNowString();
-    const round = await ensureOpenRound(env);
 
     const exists = await env.DB.prepare(
       `SELECT id FROM match_results WHERE snapshot_key = ? LIMIT 1`
@@ -101,6 +114,7 @@ export async function onRequest(context) {
           message: "이미 저장된 내전 결과입니다.",
           id: exists.id,
           round_id: round.id,
+          round_name: round.name,
         })
       );
     }
@@ -196,4 +210,3 @@ export async function onRequest(context) {
     );
   }
 }
-
