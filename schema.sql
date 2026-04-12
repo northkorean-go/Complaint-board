@@ -8,4 +8,37 @@ CREATE TABLE IF NOT EXISTS posts (
   deleted INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+-- 내전 결과 스냅샷 저장
+CREATE TABLE IF NOT EXISTS match_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  snapshot_key TEXT NOT NULL UNIQUE,
+  match_date TEXT NOT NULL,             -- YYYY-MM-DD
+  match_date_text TEXT NOT NULL,        -- 04.11 같은 표시용
+  title TEXT NOT NULL DEFAULT '최근 내전 결과',
+  summary_text TEXT NOT NULL,
+  winner_team TEXT,
+  winner_score REAL,
+  winner_members_json TEXT NOT NULL DEFAULT '[]',
+  mvp_name TEXT,
+  mvp_score REAL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE INDEX IF NOT EXISTS idx_match_results_match_date
+ON match_results(match_date DESC);
+
+CREATE TABLE IF NOT EXISTS match_rows (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  result_id INTEGER NOT NULL,
+  row_no INTEGER NOT NULL,
+  col1 TEXT DEFAULT '',
+  col2 TEXT DEFAULT '',
+  col3 TEXT DEFAULT '',
+  col4 TEXT DEFAULT '',
+  col5 TEXT DEFAULT '',
+  FOREIGN KEY (result_id) REFERENCES match_results(id) ON DELETE CASCADE,
+  UNIQUE(result_id, row_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_match_rows_result_id
+ON match_rows(result_id);
