@@ -630,15 +630,24 @@
     var CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
     var RANKING_CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=681731975';
 
-    function updateTodayTitle() {
-      var titleEl = document.getElementById('todayTitle');
-      if (!titleEl) return;
+    function updateTodayTitle(rows) {
+  var titleEl = document.getElementById('todayTitle');
+  if (!titleEl) return;
 
-      var now = new Date();
-      var month = String(now.getMonth() + 1).padStart(2, '0');
-      var day = String(now.getDate()).padStart(2, '0');
-      titleEl.textContent = month + '.' + day + ' 금일 내전 결과';
+  var lastDate = '';
+
+  for (var i = 0; i < rows.length; i++) {
+    var cell = safeText(rows[i] && rows[i][0]);
+
+    if (/^\d+\.\d+$/.test(cell)) {
+      lastDate = cell;
     }
+  }
+
+  titleEl.textContent = lastDate
+    ? lastDate + ' 금일 내전 결과'
+    : '금일 내전 결과';
+}
 
     function parseCSVLine(line) {
       var result = [];
@@ -946,13 +955,15 @@
           throw new Error('CSV 요청 실패: ' + res.status);
         }
 
-        var text = await res.text();
-        var rows = parseCSV(text);
-        var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+       var text = await res.text();
+var rows = parseCSV(text);
+var topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
 
-        if (topTeamEl) {
-          topTeamEl.textContent = topTeamText;
-        }
+updateTodayTitle(rows);
+
+if (topTeamEl) {
+  topTeamEl.textContent = topTeamText;
+}
 
         updateTopTeamLabel(topTeamText);
         renderRecentResults(rows);
@@ -963,7 +974,6 @@
       }
     }
 
-    updateTodayTitle();
     loadSpreadsheetData();
   </script>
 </body>
