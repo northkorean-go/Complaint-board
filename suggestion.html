@@ -84,6 +84,11 @@
       cursor: pointer;
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
       transition: all 0.2s ease;
+      width: auto;
+      min-width: 126px;
+      max-width: max-content;
+      flex: none;
+      white-space: nowrap;
     }
 
     .back-btn:hover {
@@ -113,6 +118,10 @@
       .suggestion-shell {
         padding-left: 16px;
         padding-right: 16px;
+      }
+
+      .back-btn {
+        min-width: 118px;
       }
     }
   </style>
