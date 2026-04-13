@@ -1477,15 +1477,6 @@
     '시작일: ' + (currentRound.started_at || '-') + '\n' +
     '다음 일정: ' + (nextScheduleText || '미정');
 }
-
-      const count = Array.isArray(roundRecords) ? roundRecords.length : 0;
-      roundNameEl.textContent = currentRound.name || '최근 회차';
-      roundMetaEl.textContent =
-        '상태: 최근 종료 회차\n' +
-        '저장 경기 수: ' + count + '개\n' +
-        '다음 일정: ' + (nextScheduleText || '미정');
-    }
-
     function getScheduleBadgeText(line) {
       const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
       if (!match) return '';
