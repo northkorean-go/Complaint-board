@@ -652,6 +652,169 @@
         gap: 6px;
       }
     }
+        .roulette-section {
+      max-width: 1680px;
+      margin: 42px auto 0;
+      padding: 0 20px;
+    }
+
+    .roulette-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .roulette-header h2 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #111;
+    }
+
+    .roulette-line {
+      flex: 1;
+      max-width: 120px;
+      height: 1px;
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    .roulette-card {
+      border-radius: 28px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.05);
+      padding: 18px;
+    }
+
+    .roulette-frame {
+      width: 100%;
+      height: 900px;
+      border: 0;
+      border-radius: 18px;
+      display: block;
+    }
+
+    .team-rule-wrap {
+      max-width: 1680px;
+      margin: 40px auto 0;
+      padding: 0 20px 52px;
+    }
+
+    .team-rule-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 30px;
+      background: linear-gradient(180deg, #050505 0%, #111 100%);
+      color: #fff;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 22px 55px rgba(0,0,0,0.22);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .team-rule-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 70px rgba(0,0,0,0.30);
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    .team-rule-card::before {
+      content: "";
+      position: absolute;
+      top: -120px;
+      right: -80px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0) 70%);
+      pointer-events: none;
+    }
+
+    .team-rule-eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.34em;
+      color: rgba(255,255,255,0.48);
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+
+    .team-rule-title {
+      font-size: 30px;
+      line-height: 1.2;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 22px;
+    }
+
+    .team-rule-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .team-rule-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: teamRuleFadeUp 0.55s ease forwards;
+    }
+
+    .team-rule-item:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.14);
+    }
+
+    .team-rule-item:nth-child(1) { animation-delay: 0.05s; }
+    .team-rule-item:nth-child(2) { animation-delay: 0.12s; }
+    .team-rule-item:nth-child(3) { animation-delay: 0.19s; }
+    .team-rule-item:nth-child(4) { animation-delay: 0.26s; }
+    .team-rule-item:nth-child(5) { animation-delay: 0.33s; }
+
+    .team-rule-no {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      color: #000;
+      font-size: 15px;
+      font-weight: 900;
+      box-shadow: 0 10px 20px rgba(255,255,255,0.10);
+    }
+
+    .team-rule-text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.8;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .team-rule-text strong {
+      color: #fff;
+      font-weight: 900;
+    }
+
+    @keyframes teamRuleFadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
