@@ -201,13 +201,8 @@ function getUpcomingTargetDates(baseDate) {
 }
 
 function buildAutoNextScheduleItems(currentRound) {
-  if (!currentRound || !currentRound.is_open) {
-    return [];
-  }
-
   const nowKorea = getKoreaNowDate();
   const upcoming = getUpcomingTargetDates(nowKorea);
-
   return upcoming.map(formatScheduleLine);
 }
 
