@@ -557,102 +557,7 @@
       font-size: 12px;
     }
 
-    @media (max-width: 1100px) {
-      .naejeon-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .naejeon-title {
-        font-size: 40px;
-      }
-
-      .result-hero {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .result-hero-right {
-        min-width: 0;
-        text-align: left;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .site-topbar-inner,
-      .naejeon-top-actions,
-      .naejeon-shell {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-
-      .site-topbar-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .site-tabs {
-        width: 100%;
-        display: flex;
-      }
-
-      .site-tab {
-        flex: 1;
-        padding: 0 10px;
-        font-size: 13px;
-      }
-
-      .naejeon-title {
-        font-size: 34px;
-      }
-
-      .result-hero-title {
-        font-size: 24px;
-      }
-
-      .round-badge-title {
-        font-size: 22px;
-      }
-
-      .tier-note-row {
-        grid-template-columns: 1fr;
-      }
-
-      .tier-note-label {
-        border-right: none;
-        border-bottom: 1px solid #ececec;
-      }
-
-      .recent-match-table td {
-        font-size: 12px;
-        padding: 9px 4px;
-      }
-
-      .round-record-table th,
-      .round-record-table td {
-        font-size: 12px;
-        padding: 9px 4px;
-      }
-
-      .round-record-table th,
-      .round-record-table td {
-        height: 48px;
-        line-height: 48px;
-        padding: 0;
-        text-align: center;
-        vertical-align: middle;
-      }
-
-      .round-record-table tr {
-        height: 48px;
-      }
-
-      .schedule-line {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 6px;
-      }
-    }
-        .roulette-section {
+    .roulette-section {
       max-width: 1680px;
       margin: 42px auto 0;
       padding: 0 20px;
@@ -813,6 +718,126 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .naejeon-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .naejeon-title {
+        font-size: 40px;
+      }
+
+      .result-hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .result-hero-right {
+        min-width: 0;
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .site-topbar-inner,
+      .naejeon-top-actions,
+      .naejeon-shell,
+      .roulette-section,
+      .team-rule-wrap {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .site-topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .site-tabs {
+        width: 100%;
+        display: flex;
+      }
+
+      .site-tab {
+        flex: 1;
+        padding: 0 10px;
+        font-size: 13px;
+      }
+
+      .naejeon-title {
+        font-size: 34px;
+      }
+
+      .result-hero-title {
+        font-size: 24px;
+      }
+
+      .round-badge-title {
+        font-size: 22px;
+      }
+
+      .tier-note-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tier-note-label {
+        border-right: none;
+        border-bottom: 1px solid #ececec;
+      }
+
+      .recent-match-table td {
+        font-size: 12px;
+        padding: 9px 4px;
+      }
+
+      .round-record-table th,
+      .round-record-table td {
+        font-size: 12px;
+        padding: 9px 4px;
+      }
+
+      .round-record-table th,
+      .round-record-table td {
+        height: 48px;
+        line-height: 48px;
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .round-record-table tr {
+        height: 48px;
+      }
+
+      .schedule-line {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .team-rule-card {
+        padding: 22px 18px;
+      }
+
+      .team-rule-title {
+        font-size: 24px;
+      }
+
+      .team-rule-item {
+        padding: 14px;
+      }
+
+      .team-rule-no {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
+
+      .team-rule-text {
+        font-size: 14px;
       }
     }
   </style>
@@ -1460,23 +1485,24 @@
     }
 
     function renderRoundInfo(currentRound, summaryRound, nextScheduleText, roundRecords) {
-  const roundNameEl = document.getElementById('currentRoundName');
-  const roundMetaEl = document.getElementById('currentRoundMeta');
+      const roundNameEl = document.getElementById('currentRoundName');
+      const roundMetaEl = document.getElementById('currentRoundMeta');
 
-  if (!roundNameEl || !roundMetaEl) return;
+      if (!roundNameEl || !roundMetaEl) return;
 
-  if (!currentRound || !currentRound.is_open) {
-    roundNameEl.textContent = '회차 미오픈';
-    roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
-    return;
-  }
+      if (!currentRound || !currentRound.is_open) {
+        roundNameEl.textContent = '회차 미오픈';
+        roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
+        return;
+      }
 
-  roundNameEl.textContent = currentRound.name || '현재 회차';
-  roundMetaEl.textContent =
-    '상태: 진행중\n' +
-    '시작일: ' + (currentRound.started_at || '-') + '\n' +
-    '다음 일정: ' + (nextScheduleText || '미정');
-}
+      roundNameEl.textContent = currentRound.name || '현재 회차';
+      roundMetaEl.textContent =
+        '상태: 진행중\n' +
+        '시작일: ' + (currentRound.started_at || '-') + '\n' +
+        '다음 일정: ' + (nextScheduleText || '미정');
+    }
+
     function getScheduleBadgeText(line) {
       const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
       if (!match) return '';
@@ -1504,44 +1530,44 @@
     }
 
     function renderScheduleText(rawValue) {
-  const scheduleText = document.getElementById('scheduleText');
-  if (!scheduleText) return;
+      const scheduleText = document.getElementById('scheduleText');
+      if (!scheduleText) return;
 
-  let lines = [];
+      let lines = [];
 
-  if (Array.isArray(rawValue)) {
-    lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
-  } else {
-    const raw = String(rawValue || '미정').trim();
+      if (Array.isArray(rawValue)) {
+        lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
+      } else {
+        const raw = String(rawValue || '미정').trim();
 
-    if (!raw || raw === '미정') {
-      scheduleText.textContent = '미정';
-      return;
+        if (!raw || raw === '미정') {
+          scheduleText.textContent = '미정';
+          return;
+        }
+
+        lines = raw
+          .split(/\s*\/\s*|\n+/)
+          .map(v => v.trim())
+          .filter(Boolean);
+      }
+
+      if (!lines.length) {
+        scheduleText.textContent = '미정';
+        return;
+      }
+
+      scheduleText.innerHTML = lines.map(line => {
+        const badgeText = getScheduleBadgeText(line);
+        const badgeClass = getScheduleBadgeClass(badgeText);
+
+        return `
+          <div class="schedule-line">
+            <div class="schedule-main">${escapeHtml(line)}</div>
+            ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
+          </div>
+        `;
+      }).join('');
     }
-
-    lines = raw
-      .split(/\s*\/\s*|\n+/)
-      .map(v => v.trim())
-      .filter(Boolean);
-  }
-
-  if (!lines.length) {
-    scheduleText.textContent = '미정';
-    return;
-  }
-
-  scheduleText.innerHTML = lines.map(line => {
-    const badgeText = getScheduleBadgeText(line);
-    const badgeClass = getScheduleBadgeClass(badgeText);
-
-    return `
-      <div class="schedule-line">
-        <div class="schedule-main">${escapeHtml(line)}</div>
-        ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
-      </div>
-    `;
-  }).join('');
-}
 
     async function loadRoundSummary() {
       try {
@@ -1666,81 +1692,55 @@
       loadSpreadsheetData();
       loadRoundSummary();
     });
- </script>
+  </script>
 
-<div class="roulette-section">
-  <div class="roulette-header">
-    <div class="roulette-line"></div>
-    <h2>TEAM ROULETTE</h2>
-    <div class="roulette-line"></div>
-  </div>
-
-  <div class="roulette-card">
-    <iframe
-      src="https://lazygyu.github.io/roulette/"
-      class="roulette-frame"
-    ></iframe>
-  </div>
-</div>
-  <div style="
-  margin-top:40px;
-  border-radius:28px;
-  background:#000;
-  color:#fff;
-  padding:28px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.25);
-  border:1px solid rgba(255,255,255,0.06);
-">
-
-  <div style="
-    font-size:12px;
-    letter-spacing:0.35em;
-    color:rgba(255,255,255,0.5);
-    font-weight:900;
-    margin-bottom:12px;
-  ">
-    ZARA SYSTEM
-  </div>
-
-  <div style="
-    font-size:28px;
-    font-weight:900;
-    margin-bottom:22px;
-    letter-spacing:-0.03em;
-  ">
-    <<< 내전 팀 짜는 방식 >>>
-  </div>
-
-  <div style="
-    display:grid;
-    gap:14px;
-    font-size:15px;
-    line-height:1.8;
-    font-weight:700;
-  ">
-
-    <div style="padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:12px;">
-      1. 1티어 고정 랜덤 &lt;기존&gt; &lt;핀볼 or 매크로&gt;
+  <div class="roulette-section">
+    <div class="roulette-header">
+      <div class="roulette-line"></div>
+      <h2>TEAM ROULETTE</h2>
+      <div class="roulette-line"></div>
     </div>
 
-    <div style="padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:12px;">
-      2. 올랜덤 마이너스 그대로 &lt;핀볼&gt;
+    <div class="roulette-card">
+      <iframe
+        src="https://lazygyu.github.io/roulette/"
+        class="roulette-frame"
+      ></iframe>
     </div>
-
-    <div style="padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:12px;">
-      3. 2/3/4티어 팀 다 짜고 1티어가 들어가고 싶은 팀 고르기 &lt;핀볼 순서&gt;
-    </div>
-
-    <div style="padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:12px;">
-      4. 1티어가 티어 상관없이 뽑고 남은 사람들이 순서대로 들어가기
-    </div>
-
-    <div style="padding:12px 14px; background:rgba(255,255,255,0.05); border-radius:12px;">
-      5. 1티어 고정 후 2/3/4티어가 핀볼 순서대로 팀 선택
-    </div>
-
   </div>
-</div>
 
+  <div class="team-rule-wrap">
+    <div class="team-rule-card">
+      <div class="team-rule-eyebrow">ZARA SYSTEM</div>
+      <div class="team-rule-title">&lt;&lt;&lt; 내전 팀 짜는 방식 &gt;&gt;&gt;</div>
+
+      <div class="team-rule-list">
+        <div class="team-rule-item">
+          <div class="team-rule-no">1</div>
+          <div class="team-rule-text">1티어 고정 랜덤 <strong>&lt;기존&gt;</strong> <strong>&lt;핀볼 or 매크로&gt;</strong></div>
+        </div>
+
+        <div class="team-rule-item">
+          <div class="team-rule-no">2</div>
+          <div class="team-rule-text">올랜덤 마이너스 그대로 <strong>&lt;핀볼&gt;</strong></div>
+        </div>
+
+        <div class="team-rule-item">
+          <div class="team-rule-no">3</div>
+          <div class="team-rule-text">2/3/4티어 팀 다 짜고 1티어가 들어가고 싶은 팀 고르기 <strong>&lt;핀볼 순서&gt;</strong></div>
+        </div>
+
+        <div class="team-rule-item">
+          <div class="team-rule-no">4</div>
+          <div class="team-rule-text">1티어가 티어 상관없이 뽑고 남은 사람들이 순서대로 들어가기</div>
+        </div>
+
+        <div class="team-rule-item">
+          <div class="team-rule-no">5</div>
+          <div class="team-rule-text">1티어 고정 후 2/3/4티어가 핀볼 순서대로 팀 선택</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
