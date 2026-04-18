@@ -1764,3 +1764,260 @@ button:disabled {
     border-bottom: none;
   }
 }
+/* =========================
+   INPUT SHEET UI UPGRADE
+========================= */
+
+.sheet-wrap {
+  margin-top: 26px;
+}
+
+.sheet-head {
+  padding: 0 4px;
+}
+
+.sheet-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.sheet-desc {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.sheet-table-wrap {
+  border-radius: 26px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.sheet-table {
+  min-width: 1480px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+
+.sheet-table th,
+.sheet-table td {
+  border-right: 1px solid #d9d9d9;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.sheet-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sheet-table th:last-child,
+.sheet-table td:last-child {
+  border-right: none;
+}
+
+/* 상단 그룹 헤더 */
+.advanced-sheet .team-group-head {
+  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  height: 38px;
+}
+
+/* 2행 선수 이름 헤더 */
+.advanced-sheet .player-head-cell {
+  background: #f7f3f7;
+  padding: 4px !important;
+  height: 38px;
+}
+
+/* 3행 KILL/TOP10 헤더 */
+.advanced-sheet .kill-head,
+.advanced-sheet .top10-head,
+.advanced-sheet .sum-head {
+  background: #fafafa;
+  color: #111;
+  font-size: 11px;
+  font-weight: 900;
+  height: 34px;
+}
+
+.advanced-sheet .sum-head {
+  background: #f3f4f6;
+}
+
+/* 좌측 고정 느낌 강화 */
+.advanced-sheet .round-cell {
+  width: 36px;
+  background: linear-gradient(180deg, #ffe600 0%, #ffd900 100%);
+  color: #111;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.advanced-sheet .map-cell {
+  width: 54px;
+  background: #fff8cf;
+}
+
+/* 본문 기본 */
+.advanced-sheet td {
+  height: 34px;
+  background: #fff;
+  transition: background 0.15s ease;
+}
+
+/* 팀별 미세한 구분색 */
+.advanced-sheet .kill-cell {
+  background: #fcf6ee;
+}
+
+.advanced-sheet .top10-cell {
+  background: #faf4d8;
+}
+
+.advanced-sheet .sum-cell {
+  width: 36px;
+  background: #fbfbfb;
+  font-size: 11px;
+  font-weight: 900;
+  color: #111;
+}
+
+/* 행 hover */
+#sheetBody tr:hover td {
+  background: #f8fbff !important;
+}
+
+#sheetBody tr:hover .round-cell {
+  background: linear-gradient(180deg, #ffe600 0%, #ffd900 100%) !important;
+}
+
+#sheetBody tr:hover .map-cell {
+  background: #fff4b8 !important;
+}
+
+/* 입력칸 */
+.player-name-input {
+  width: 100%;
+  height: 24px;
+  border: 1px solid #d7d7d7;
+  border-radius: 7px;
+  background: #fff;
+  padding: 0 6px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.map-input,
+.kill-input {
+  width: calc(100% - 6px);
+  height: 22px;
+  border: 1px solid #d5d5d5;
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
+  padding: 0 4px;
+  transition: all 0.15s ease;
+}
+
+.player-name-input:focus,
+.map-input:focus,
+.kill-input:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+/* 빈 입력칸 hover */
+.map-input:hover,
+.kill-input:hover,
+.player-name-input:hover {
+  border-color: #bcbcbc;
+}
+
+/* 체크박스 */
+.top10-check {
+  transform: scale(0.9);
+  cursor: pointer;
+  accent-color: #111;
+}
+
+/* 팀 구분선 더 진하게 */
+#sheetHead th:nth-child(11),
+#sheetBody td:nth-child(11),
+#sheetHead th:nth-child(20),
+#sheetBody td:nth-child(20),
+#sheetHead th:nth-child(29),
+#sheetBody td:nth-child(29),
+#sheetHead th:nth-child(38),
+#sheetBody td:nth-child(38),
+#sheetHead th:nth-child(47),
+#sheetBody td:nth-child(47) {
+  border-right: 2px solid #111 !important;
+}
+
+/* 순수킬 카드도 살짝 정리 */
+.sheet-summary-card {
+  border-radius: 26px;
+}
+
+.sheet-summary-title {
+  font-size: 20px;
+  padding: 18px 12px;
+}
+
+.sheet-summary-total {
+  font-size: 15px;
+  padding: 16px 12px;
+}
+
+.sheet-summary-player {
+  font-size: 13px;
+  min-height: 40px;
+}
+
+.sheet-summary-footer {
+  font-size: 12px;
+  padding: 10px 6px;
+}
+
+/* 스크롤바 보기 좋게 */
+.sheet-table-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+
+.sheet-table-wrap::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 999px;
+}
+
+.sheet-table-wrap::-webkit-scrollbar-track {
+  background: #f3f3f3;
+}
+
+/* 모바일/작은 화면 */
+@media (max-width: 1100px) {
+  .sheet-title {
+    font-size: 24px;
+  }
+
+  .sheet-table {
+    min-width: 1400px;
+  }
+}
