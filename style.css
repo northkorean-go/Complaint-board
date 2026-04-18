@@ -1958,20 +1958,6 @@ button:disabled {
   accent-color: #111;
 }
 
-/* 팀 구분선 더 진하게 */
-#sheetHead th:nth-child(11),
-#sheetBody td:nth-child(11),
-#sheetHead th:nth-child(20),
-#sheetBody td:nth-child(20),
-#sheetHead th:nth-child(29),
-#sheetBody td:nth-child(29),
-#sheetHead th:nth-child(38),
-#sheetBody td:nth-child(38),
-#sheetHead th:nth-child(47),
-#sheetBody td:nth-child(47) {
-  border-right: 2px solid #111 !important;
-}
-
 /* 순수킬 카드도 살짝 정리 */
 .sheet-summary-card {
   border-radius: 26px;
@@ -2124,5 +2110,15 @@ button:disabled {
 #sheetHead th:nth-child(47),
 #sheetBody td:nth-child(47) {
   border-right: 2px solid #111 !important;
+}
+/* 팀 경계선 자연스럽게 */
+.advanced-sheet .sum-cell,
+.advanced-sheet .sum-head {
+  border-right: 2px solid #cfcfcf !important;
+}
+
+.advanced-sheet td:last-child,
+.advanced-sheet th:last-child {
+  border-right: none !important;
 }
 
