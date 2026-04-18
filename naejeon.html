@@ -1983,14 +1983,14 @@
     html += `</tr>`;
 
     html += `<tr><th class="label-head">순수킬</th>`;
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const totals = getPlayerTotals(teamIndex, playerIndex);
-        html += `<th class="kill-head">${formatCellValue(totals.pure)}</th>`;
-      }
-      html += `<th class="sum-head"></th>`;
-    }
-    html += `</tr>`;
+for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+  for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+    const totals = getPlayerTotals(teamIndex, playerIndex);
+    html += `<th class="kill-head">${formatCellValue(totals.pure + totals.minusOnly)}</th>`;
+  }
+  html += `<th class="sum-head"></th>`;
+}
+html += `</tr>`;
 
     html += `<tr><th class="label-head">점수</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
