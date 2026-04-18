@@ -2308,6 +2308,23 @@
     await loadSheetFromServer();
     startFastSync();
   });
+
+  // 마우스 휠 막기
+  document.addEventListener('wheel', function (e) {
+    if (document.activeElement && document.activeElement.type === 'number') {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // ↑ ↓ 키 막기
+  document.addEventListener('keydown', function (e) {
+    if (document.activeElement && document.activeElement.type === 'number') {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+      }
+    }
+  });
+
 </script>
   
   <div class="roulette-section">
