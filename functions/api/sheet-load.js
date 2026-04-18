@@ -7,10 +7,7 @@ export async function onRequestGet(context) {
     `).first();
 
     if (!row) {
-      return new Response(JSON.stringify({
-        ok: true,
-        data: null
-      }), {
+      return new Response(JSON.stringify({ ok: true, data: null }), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -21,12 +18,8 @@ export async function onRequestGet(context) {
     }), {
       headers: { 'Content-Type': 'application/json' }
     });
-
   } catch (e) {
-    return new Response(JSON.stringify({
-      ok: false,
-      error: e.message
-    }), {
+    return new Response(JSON.stringify({ ok: false, error: e.message }), {
       headers: { 'Content-Type': 'application/json' }
     });
   }
