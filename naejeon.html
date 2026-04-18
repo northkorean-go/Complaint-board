@@ -2236,7 +2236,11 @@
 
   sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
 
-  updateAllRoundSums(true);
+  renderSheetHead();
+  attachSheetEvents();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  queueSaveSheet();
   return;
 }
       };
