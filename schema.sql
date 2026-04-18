@@ -59,3 +59,8 @@ CREATE TABLE IF NOT EXISTS match_rows (
 CREATE INDEX IF NOT EXISTS idx_match_rows_result_id
 ON match_rows(result_id);
 
+CREATE TABLE IF NOT EXISTS sheet_state (
+  id INTEGER PRIMARY KEY,
+  data TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
