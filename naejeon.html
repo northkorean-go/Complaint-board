@@ -1293,998 +1293,965 @@
   </div>
 
   <script>
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
+  const CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
 
-    function parseCSVLine(line) {
-      const result = [];
-      let current = '';
-      let inQuotes = false;
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
 
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const next = line[i + 1];
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const next = line[i + 1];
 
-        if (char === '"') {
-          if (inQuotes && next === '"') {
-            current += '"';
-            i += 1;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"';
+          i += 1;
         } else {
-          current += char;
+          inQuotes = !inQuotes;
         }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
       }
-
-      result.push(current.trim());
-      return result;
     }
 
-    function parseCSV(text) {
-      return text
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .split('\n')
-        .map(parseCSVLine);
+    result.push(current.trim());
+    return result;
+  }
+
+  function parseCSV(text) {
+    return text
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(parseCSVLine);
+  }
+
+  function safeText(value) {
+    return String(value || '').trim();
+  }
+
+  function getCell(rows, r, c) {
+    if (!rows[r]) return '';
+    return safeText(rows[r][c]);
+  }
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normalizeDateText(value) {
+    const text = safeText(value);
+    if (!text) return '';
+
+    let match = text.match(/^(\d{1,2})\.(\d{1,2})$/);
+    if (match) return Number(match[1]) + '.' + Number(match[2]);
+
+    match = text.match(/^(\d{1,2})\/(\d{1,2})$/);
+    if (match) return Number(match[1]) + '.' + Number(match[2]);
+
+    match = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
+    if (match) return Number(match[2]) + '.' + Number(match[3]);
+
+    match = text.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+    if (match) return Number(match[2]) + '.' + Number(match[3]);
+
+    return '';
+  }
+
+  function getKoreaNowDate() {
+    const now = new Date();
+    const koreaText = now.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
+    return new Date(koreaText.replace(' ', 'T'));
+  }
+
+  function getMatchDisplayDate() {
+    const korea = getKoreaNowDate();
+    const hour = korea.getHours();
+    const base = new Date(korea.getFullYear(), korea.getMonth(), korea.getDate());
+
+    if (hour < 6) {
+      base.setDate(base.getDate() - 1);
     }
 
-    function safeText(value) {
-      return String(value || '').trim();
-    }
+    const month = String(base.getMonth() + 1).padStart(2, '0');
+    const day = String(base.getDate()).padStart(2, '0');
+    return `${month}.${day}`;
+  }
 
-    function getCell(rows, r, c) {
-      if (!rows[r]) return '';
-      return safeText(rows[r][c]);
-    }
+  function buildTopTeamText(rows) {
+    const m11 = getCell(rows, 10, 12);
+    const b12 = getCell(rows, 11, 1);
+    const l15 = getCell(rows, 14, 11);
 
-    function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+    const o12 = getCell(rows, 11, 14);
+    const y15 = getCell(rows, 14, 24);
 
-    function normalizeDateText(value) {
-      const text = safeText(value);
-      if (!text) return '';
+    const aa12 = getCell(rows, 11, 26);
+    const ak15 = getCell(rows, 14, 36);
 
-      let match = text.match(/^(\d{1,2})\.(\d{1,2})$/);
-      if (match) return Number(match[1]) + '.' + Number(match[2]);
+    const am12 = getCell(rows, 11, 38);
+    const aw15 = getCell(rows, 14, 48);
 
-      match = text.match(/^(\d{1,2})\/(\d{1,2})$/);
-      if (match) return Number(match[1]) + '.' + Number(match[2]);
+    const ay12 = getCell(rows, 11, 50);
+    const bi15 = getCell(rows, 14, 60);
 
-      match = text.match(/^(\d{4})\.(\d{1,2})\.(\d{1,2})$/);
-      if (match) return Number(match[2]) + '.' + Number(match[3]);
-
-      match = text.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-      if (match) return Number(match[2]) + '.' + Number(match[3]);
-
+    if (
+      !m11 && !b12 && !l15 &&
+      !o12 && !y15 &&
+      !aa12 && !ak15 &&
+      !am12 && !aw15 &&
+      !ay12 && !bi15
+    ) {
       return '';
     }
 
-    function getKoreaNowDate() {
-      const now = new Date();
-      const koreaText = now.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
-      return new Date(koreaText.replace(' ', 'T'));
+    return '[' + m11 + '] ' +
+      b12 + '팀 ' + l15 + ' : ' +
+      o12 + '팀 ' + y15 + ' : ' +
+      aa12 + '팀 ' + ak15 + ' : ' +
+      am12 + '팀 ' + aw15 + ' : ' +
+      ay12 + '팀 ' + bi15;
+  }
+
+  function parseSummaryTeamEntries(summaryText) {
+    const entries = [];
+    const regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
+    let match;
+
+    while ((match = regex.exec(summaryText)) !== null) {
+      entries.push({
+        teamName: match[1].trim() + '팀',
+        baseName: match[1].trim(),
+        score: parseFloat(match[2])
+      });
     }
 
-    function getMatchDisplayDate() {
-      const korea = getKoreaNowDate();
-      const hour = korea.getHours();
-      const base = new Date(korea.getFullYear(), korea.getMonth(), korea.getDate());
+    return entries;
+  }
 
-      if (hour < 6) {
-        base.setDate(base.getDate() - 1);
+  function parseTopTeamInfo(text) {
+    const entries = parseSummaryTeamEntries(text);
+    if (!entries.length) {
+      return {
+        teamName: '',
+        baseName: '',
+        score: null
+      };
+    }
+
+    let best = entries[0];
+    for (let i = 1; i < entries.length; i++) {
+      if (entries[i].score > best.score) {
+        best = entries[i];
       }
-
-      const month = String(base.getMonth() + 1).padStart(2, '0');
-      const day = String(base.getDate()).padStart(2, '0');
-      return `${month}.${day}`;
     }
 
-    function buildTopTeamText(rows) {
-      const m11 = getCell(rows, 10, 12);
-      const b12 = getCell(rows, 11, 1);
-      const l15 = getCell(rows, 14, 11);
+    return best;
+  }
 
-      const o12 = getCell(rows, 11, 14);
-      const y15 = getCell(rows, 14, 24);
+  function extractPlayerInfoFromCell(cellText) {
+    const text = safeText(cellText);
+    if (!text) return null;
+    if (text.includes('정지') || text.includes('치킨')) return null;
+    if (/^0\s*\(/.test(text)) return null;
 
-      const aa12 = getCell(rows, 11, 26);
-      const ak15 = getCell(rows, 14, 36);
+    const match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
+    if (!match) return null;
 
-      const am12 = getCell(rows, 11, 38);
-      const aw15 = getCell(rows, 14, 48);
+    const name = match[1].trim();
+    const score = parseFloat(match[2]);
 
-      const ay12 = getCell(rows, 11, 50);
-      const bi15 = getCell(rows, 14, 60);
+    if (!name || Number.isNaN(score)) return null;
+    return { name, score };
+  }
 
-      if (
-        !m11 && !b12 && !l15 &&
-        !o12 && !y15 &&
-        !aa12 && !ak15 &&
-        !am12 && !aw15 &&
-        !ay12 && !bi15
-      ) {
-        return '';
-      }
+  function isMatchSummaryCell(text) {
+    const value = safeText(text);
+    return value.includes('[') && value.includes(']') && value.includes('팀');
+  }
 
-      return '[' + m11 + '] ' +
-        b12 + '팀 ' + l15 + ' : ' +
-        o12 + '팀 ' + y15 + ' : ' +
-        aa12 + '팀 ' + ak15 + ' : ' +
-        am12 + '팀 ' + aw15 + ' : ' +
-        ay12 + '팀 ' + bi15;
-    }
+  function findRecentDetailedMatch(rows) {
+    for (let r = rows.length - 1; r >= 0; r--) {
+      for (let c = 0; c < rows[r].length; c++) {
+        const summary = safeText(rows[r][c]);
+        if (!isMatchSummaryCell(summary)) continue;
 
-    function parseSummaryTeamEntries(summaryText) {
-      const entries = [];
-      const regex = /([^\s:\]]+?)팀\s*(-?\d+(?:\.\d+)?)/g;
-      let match;
+        let title = '';
+        let date = '';
 
-      while ((match = regex.exec(summaryText)) !== null) {
-        entries.push({
-          teamName: match[1].trim() + '팀',
-          baseName: match[1].trim(),
-          score: parseFloat(match[2])
-        });
-      }
+        for (let rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
+          const left = Math.max(0, c - 6);
+          const right = Math.min((rows[rr] || []).length - 1, c + 12);
 
-      return entries;
-    }
+          for (let cc = left; cc <= right; cc++) {
+            const cell = safeText(rows[rr][cc]);
+            if (!cell) continue;
 
-    function parseTopTeamInfo(text) {
-      const entries = parseSummaryTeamEntries(text);
-      if (!entries.length) {
+            const normalizedDate = normalizeDateText(cell);
+            if (normalizedDate) {
+              date = normalizedDate;
+              continue;
+            }
+
+            if (
+              !title &&
+              !isMatchSummaryCell(cell) &&
+              !normalizeDateText(cell) &&
+              cell.length <= 12 &&
+              !cell.includes('팀') &&
+              !cell.includes('[') &&
+              !cell.includes(']')
+            ) {
+              title = cell;
+            }
+          }
+        }
+
+        const tableRows = [];
+
+        for (let rr = r + 1; rr <= r + 5; rr++) {
+          if (!rows[rr]) continue;
+
+          const startCol = Math.max(0, c - 6);
+          const endCol = Math.min((rows[rr] || []).length - 1, c + 12);
+          const filledCells = [];
+
+          for (let cc = startCol; cc <= endCol; cc++) {
+            const text = safeText(rows[rr][cc]);
+            if (text) filledCells.push(text);
+          }
+
+          if (filledCells.length) {
+            while (filledCells.length < 5) {
+              filledCells.push('');
+            }
+            tableRows.push(filledCells.slice(0, 5));
+          }
+        }
+
+        if (!tableRows.length) continue;
+
         return {
-          teamName: '',
-          baseName: '',
-          score: null
+          title: title || '최근 내전 결과',
+          date: date || '',
+          summary: summary,
+          rows: tableRows
         };
       }
+    }
 
-      let best = entries[0];
-      for (let i = 1; i < entries.length; i++) {
-        if (entries[i].score > best.score) {
-          best = entries[i];
+    return null;
+  }
+
+  function findWinningTeamMembers(rows, topTeamText) {
+    const topTeamInfo = parseTopTeamInfo(topTeamText);
+    if (!topTeamInfo.teamName) return [];
+
+    const winnerBaseName = topTeamInfo.baseName;
+    const recentMatch = findRecentDetailedMatch(rows);
+    if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return [];
+
+    const teams = parseSummaryTeamEntries(recentMatch.summary);
+    if (!teams.length) return [];
+
+    const winnerColIndex = teams.findIndex(team => team.baseName === winnerBaseName);
+    if (winnerColIndex === -1) return [];
+
+    const members = [];
+
+    for (let r = 0; r < recentMatch.rows.length; r++) {
+      const row = recentMatch.rows[r] || [];
+      const playerInfo = extractPlayerInfoFromCell(row[winnerColIndex] || '');
+
+      if (!playerInfo) continue;
+      if (members.includes(playerInfo.name)) continue;
+
+      members.push(playerInfo.name);
+      if (members.length >= 4) break;
+    }
+
+    return members;
+  }
+
+  function findMVPPlayer(rows) {
+    const recentMatch = findRecentDetailedMatch(rows);
+    if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return null;
+
+    let best = null;
+
+    for (let r = 0; r < recentMatch.rows.length; r++) {
+      const row = recentMatch.rows[r] || [];
+      for (let c = 0; c < row.length; c++) {
+        const playerInfo = extractPlayerInfoFromCell(row[c]);
+        if (!playerInfo) continue;
+
+        if (!best || playerInfo.score > best.score) {
+          best = playerInfo;
         }
       }
-
-      return best;
     }
 
-    function extractPlayerInfoFromCell(cellText) {
-      const text = safeText(cellText);
-      if (!text) return null;
-      if (text.includes('정지') || text.includes('치킨')) return null;
-      if (/^0\s*\(/.test(text)) return null;
+    return best;
+  }
 
-      const match = text.match(/^([^\d]+?)\s*(-?\d+(?:\.\d+)?)/);
-      if (!match) return null;
+  function updateTodayTitleFromMainMatch() {
+    const titleEl = document.getElementById('todayTitle');
+    if (!titleEl) return;
+    const displayDate = getMatchDisplayDate();
+    titleEl.textContent = displayDate + ' 금일 내전 결과';
+  }
 
-      const name = match[1].trim();
-      const score = parseFloat(match[2]);
+  function updateTopTeamLabel(text, rows) {
+    const labelEl = document.getElementById('topTeamLabel');
+    if (!labelEl) return;
 
-      if (!name || Number.isNaN(score)) return null;
-      return { name, score };
+    const topTeamInfo = parseTopTeamInfo(text);
+
+    if (!topTeamInfo.teamName) {
+      labelEl.textContent = '🏆 1등팀';
+      return;
     }
 
-    function isMatchSummaryCell(text) {
-      const value = safeText(text);
-      return value.includes('[') && value.includes(']') && value.includes('팀');
+    const members = findWinningTeamMembers(rows, text);
+    const scoreText = topTeamInfo.score !== null ? ' ' + topTeamInfo.score + '점' : '';
+
+    if (members.length) {
+      labelEl.textContent =
+        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText + ' (' + members.join(' / ') + ')';
+    } else {
+      labelEl.textContent =
+        '🏆 1등팀 ' + topTeamInfo.teamName + scoreText;
+    }
+  }
+
+  function updateTopTeamLines(rows) {
+    const linesEl = document.getElementById('topTeamLines');
+    if (!linesEl) return;
+
+    const mvp = findMVPPlayer(rows);
+
+    if (!mvp) {
+      linesEl.textContent = 'MVP 집계 데이터가 없습니다.';
+      return;
     }
 
-    function findRecentDetailedMatch(rows) {
-      for (let r = rows.length - 1; r >= 0; r--) {
-        for (let c = 0; c < rows[r].length; c++) {
-          const summary = safeText(rows[r][c]);
-          if (!isMatchSummaryCell(summary)) continue;
+    linesEl.textContent = 'MVP ' + mvp.name + ' ' + mvp.score + '점';
+  }
 
-          let title = '';
-          let date = '';
+  function renderRecentDetailedMatch(rows) {
+    const card = document.getElementById('recentMatchCard');
+    if (!card) return null;
 
-          for (let rr = Math.max(0, r - 3); rr <= Math.min(rows.length - 1, r + 1); rr++) {
-            const left = Math.max(0, c - 6);
-            const right = Math.min((rows[rr] || []).length - 1, c + 12);
+    const match = findRecentDetailedMatch(rows);
 
-            for (let cc = left; cc <= right; cc++) {
-              const cell = safeText(rows[rr][cc]);
-              if (!cell) continue;
-
-              const normalizedDate = normalizeDateText(cell);
-              if (normalizedDate) {
-                date = normalizedDate;
-                continue;
-              }
-
-              if (
-                !title &&
-                !isMatchSummaryCell(cell) &&
-                !normalizeDateText(cell) &&
-                cell.length <= 12 &&
-                !cell.includes('팀') &&
-                !cell.includes('[') &&
-                !cell.includes(']')
-              ) {
-                title = cell;
-              }
-            }
-          }
-
-          const tableRows = [];
-
-          for (let rr = r + 1; rr <= r + 5; rr++) {
-            if (!rows[rr]) continue;
-
-            const startCol = Math.max(0, c - 6);
-            const endCol = Math.min((rows[rr] || []).length - 1, c + 12);
-            const filledCells = [];
-
-            for (let cc = startCol; cc <= endCol; cc++) {
-              const text = safeText(rows[rr][cc]);
-              if (text) filledCells.push(text);
-            }
-
-            if (filledCells.length) {
-              while (filledCells.length < 5) {
-                filledCells.push('');
-              }
-              tableRows.push(filledCells.slice(0, 5));
-            }
-          }
-
-          if (!tableRows.length) continue;
-
-          return {
-            title: title || '최근 내전 결과',
-            date: date || '',
-            summary: summary,
-            rows: tableRows
-          };
-        }
-      }
-
+    if (!match) {
+      card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
       return null;
     }
 
-    function findWinningTeamMembers(rows, topTeamText) {
-      const topTeamInfo = parseTopTeamInfo(topTeamText);
-      if (!topTeamInfo.teamName) return [];
-
-      const winnerBaseName = topTeamInfo.baseName;
-      const recentMatch = findRecentDetailedMatch(rows);
-      if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return [];
-
-      const teams = parseSummaryTeamEntries(recentMatch.summary);
-      if (!teams.length) return [];
-
-      const winnerColIndex = teams.findIndex(team => team.baseName === winnerBaseName);
-      if (winnerColIndex === -1) return [];
-
-      const members = [];
-
-      for (let r = 0; r < recentMatch.rows.length; r++) {
-        const row = recentMatch.rows[r] || [];
-        const playerInfo = extractPlayerInfoFromCell(row[winnerColIndex] || '');
-
-        if (!playerInfo) continue;
-        if (members.includes(playerInfo.name)) continue;
-
-        members.push(playerInfo.name);
-        if (members.length >= 4) break;
+    let tableHtml = '';
+    for (let r = 0; r < match.rows.length; r++) {
+      tableHtml += '<tr>';
+      for (let c = 0; c < 5; c++) {
+        const cell = match.rows[r][c] || '';
+        tableHtml += '<td>' + escapeHtml(cell) + '</td>';
       }
-
-      return members;
+      tableHtml += '</tr>';
     }
 
-    function findMVPPlayer(rows) {
-      const recentMatch = findRecentDetailedMatch(rows);
-      if (!recentMatch || !recentMatch.rows || !recentMatch.rows.length) return null;
+    card.innerHTML =
+      '<div class="recent-match-head">' + escapeHtml(match.title) + '</div>' +
+      '<div class="recent-match-summary">' + escapeHtml(match.summary) + '</div>' +
+      (match.date ? '<div class="recent-match-date">' + escapeHtml(match.date) + '</div>' : '') +
+      '<div class="recent-match-table-wrap">' +
+        '<table class="recent-match-table">' +
+          '<tbody>' + tableHtml + '</tbody>' +
+        '</table>' +
+      '</div>';
 
-      let best = null;
+    return match;
+  }
 
-      for (let r = 0; r < recentMatch.rows.length; r++) {
-        const row = recentMatch.rows[r] || [];
-        for (let c = 0; c < row.length; c++) {
-          const playerInfo = extractPlayerInfoFromCell(row[c]);
-          if (!playerInfo) continue;
+  function buildFixedRankingHtml(items, className) {
+    const maxRows = className === 'mvp' ? 5 : 10;
+    let html = '';
 
-          if (!best || playerInfo.score > best.score) {
-            best = playerInfo;
-          }
-        }
-      }
+    for (let i = 0; i < maxRows; i++) {
+      const item = items[i];
+      const noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
+      const nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
+      const countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
+      const leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
+      const itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
 
-      return best;
-    }
-
-    function updateTodayTitleFromMainMatch() {
-      const titleEl = document.getElementById('todayTitle');
-      if (!titleEl) return;
-      const displayDate = getMatchDisplayDate();
-      titleEl.textContent = displayDate + ' 금일 내전 결과';
-    }
-
-    function updateTopTeamLabel(text, rows) {
-      const labelEl = document.getElementById('topTeamLabel');
-      if (!labelEl) return;
-
-      const topTeamInfo = parseTopTeamInfo(text);
-
-      if (!topTeamInfo.teamName) {
-        labelEl.textContent = '🏆 1등팀';
-        return;
-      }
-
-      const members = findWinningTeamMembers(rows, text);
-      const scoreText = topTeamInfo.score !== null ? ' ' + topTeamInfo.score + '점' : '';
-
-      if (members.length) {
-        labelEl.textContent =
-          '🏆 1등팀 ' + topTeamInfo.teamName + scoreText + ' (' + members.join(' / ') + ')';
-      } else {
-        labelEl.textContent =
-          '🏆 1등팀 ' + topTeamInfo.teamName + scoreText;
-      }
-    }
-
-    function updateTopTeamLines(rows) {
-      const linesEl = document.getElementById('topTeamLines');
-      if (!linesEl) return;
-
-      const mvp = findMVPPlayer(rows);
-
-      if (!mvp) {
-        linesEl.textContent = 'MVP 집계 데이터가 없습니다.';
-        return;
-      }
-
-      linesEl.textContent = 'MVP ' + mvp.name + ' ' + mvp.score + '점';
-    }
-
-    function renderRecentDetailedMatch(rows) {
-      const card = document.getElementById('recentMatchCard');
-      if (!card) return null;
-
-      const match = findRecentDetailedMatch(rows);
-
-      if (!match) {
-        card.innerHTML = '<div class="recent-match-empty">최근 내전 결과 데이터가 없습니다.</div>';
-        return null;
-      }
-
-      let tableHtml = '';
-      for (let r = 0; r < match.rows.length; r++) {
-        tableHtml += '<tr>';
-        for (let c = 0; c < 5; c++) {
-          const cell = match.rows[r][c] || '';
-          tableHtml += '<td>' + escapeHtml(cell) + '</td>';
-        }
-        tableHtml += '</tr>';
-      }
-
-      card.innerHTML =
-        '<div class="recent-match-head">' + escapeHtml(match.title) + '</div>' +
-        '<div class="recent-match-summary">' + escapeHtml(match.summary) + '</div>' +
-        (match.date ? '<div class="recent-match-date">' + escapeHtml(match.date) + '</div>' : '') +
-        '<div class="recent-match-table-wrap">' +
-          '<table class="recent-match-table">' +
-            '<tbody>' + tableHtml + '</tbody>' +
-          '</table>' +
+      html +=
+        '<div class="' + itemClass + '">' +
+          '<div class="' + leftClass + '">' +
+            '<span class="' + noClass + '">' + (i + 1) + '</span>' +
+            '<span class="' + nameClass + '">' + (item ? escapeHtml(item.name) : '') + '</span>' +
+          '</div>' +
+          '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
         '</div>';
-
-      return match;
     }
 
-    function buildFixedRankingHtml(items, className) {
-      const maxRows = className === 'mvp' ? 5 : 10;
-      let html = '';
+    return html;
+  }
 
-      for (let i = 0; i < maxRows; i++) {
-        const item = items[i];
-        const noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
-        const nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
-        const countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
-        const leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
-        const itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
+  function renderRoundRecordTable(items) {
+    const wrap = document.getElementById('roundRecordTableWrap');
+    if (!wrap) return;
 
-        html +=
-          '<div class="' + itemClass + '">' +
-            '<div class="' + leftClass + '">' +
-              '<span class="' + noClass + '">' + (i + 1) + '</span>' +
-              '<span class="' + nameClass + '">' + (item ? escapeHtml(item.name) : '') + '</span>' +
-            '</div>' +
-            '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
-          '</div>';
-      }
+    const rows = Array.isArray(items) ? items.slice(0, 4) : [];
 
-      return html;
-    }
-
-    function renderRoundRecordTable(items) {
-      const wrap = document.getElementById('roundRecordTableWrap');
-      if (!wrap) return;
-
-      const rows = Array.isArray(items) ? items.slice(0, 4) : [];
-
-      while (rows.length < 4) {
-        rows.push({
-          match_date_text: '',
-          winner_members: ['', '', '', '']
-        });
-      }
-
-      let html = `
-        <table class="round-record-table">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>1등</th>
-              <th>2등</th>
-              <th>3등</th>
-              <th>4등</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      rows.forEach((item) => {
-        let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
-
-        while (members.length < 4) {
-          members.push('');
-        }
-
-        html += `
-          <tr>
-            <td>${escapeHtml(item.match_date_text || '')}</td>
-            <td>${escapeHtml(members[0] || '')}</td>
-            <td>${escapeHtml(members[1] || '')}</td>
-            <td>${escapeHtml(members[2] || '')}</td>
-            <td>${escapeHtml(members[3] || '')}</td>
-          </tr>
-        `;
+    while (rows.length < 4) {
+      rows.push({
+        match_date_text: '',
+        winner_members: ['', '', '', '']
       });
+    }
+
+    let html = `
+      <table class="round-record-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>1등</th>
+            <th>2등</th>
+            <th>3등</th>
+            <th>4등</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    rows.forEach((item) => {
+      let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
+
+      while (members.length < 4) {
+        members.push('');
+      }
 
       html += `
-          </tbody>
-        </table>
+        <tr>
+          <td>${escapeHtml(item.match_date_text || '')}</td>
+          <td>${escapeHtml(members[0] || '')}</td>
+          <td>${escapeHtml(members[1] || '')}</td>
+          <td>${escapeHtml(members[2] || '')}</td>
+          <td>${escapeHtml(members[3] || '')}</td>
+        </tr>
       `;
+    });
 
-      wrap.innerHTML = html;
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    wrap.innerHTML = html;
+  }
+
+  function renderRoundInfo(currentRound, summaryRound, nextScheduleText, roundRecords) {
+    const roundNameEl = document.getElementById('currentRoundName');
+    const roundMetaEl = document.getElementById('currentRoundMeta');
+
+    if (!roundNameEl || !roundMetaEl) return;
+
+    if (!currentRound || !currentRound.is_open) {
+      roundNameEl.textContent = '회차 미오픈';
+      roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
+      return;
     }
 
-    function renderRoundInfo(currentRound, summaryRound, nextScheduleText, roundRecords) {
-      const roundNameEl = document.getElementById('currentRoundName');
-      const roundMetaEl = document.getElementById('currentRoundMeta');
+    roundNameEl.textContent = currentRound.name || '현재 회차';
+    roundMetaEl.textContent =
+      '상태: 진행중\n' +
+      '시작일: ' + (currentRound.started_at || '-') + '\n' +
+      '다음 일정: ' + (nextScheduleText || '미정');
+  }
 
-      if (!roundNameEl || !roundMetaEl) return;
+  function getScheduleBadgeText(line) {
+    const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
+    if (!match) return '';
 
-      if (!currentRound || !currentRound.is_open) {
-        roundNameEl.textContent = '회차 미오픈';
-        roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
-        return;
-      }
+    const month = Number(match[1]);
+    const day = Number(match[2]);
 
-      roundNameEl.textContent = currentRound.name || '현재 회차';
-      roundMetaEl.textContent =
-        '상태: 진행중\n' +
-        '시작일: ' + (currentRound.started_at || '-') + '\n' +
-        '다음 일정: ' + (nextScheduleText || '미정');
-    }
+    const now = getKoreaNowDate();
+    const target = new Date(now.getFullYear(), month - 1, day);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((target - today) / 86400000);
 
-    function getScheduleBadgeText(line) {
-      const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
-      if (!match) return '';
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '내일';
+    if (diffDays < 0) return '';
+    return `D-${diffDays}`;
+  }
 
-      const month = Number(match[1]);
-      const day = Number(match[2]);
+  function getScheduleBadgeClass(text) {
+    if (text === '오늘') return 'today';
+    if (text === '내일') return 'tomorrow';
+    if (text === 'D-day') return 'dday';
+    return '';
+  }
 
-      const now = getKoreaNowDate();
-      const target = new Date(now.getFullYear(), month - 1, day);
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const diffDays = Math.round((target - today) / 86400000);
+  function renderScheduleText(rawValue) {
+    const scheduleText = document.getElementById('scheduleText');
+    if (!scheduleText) return;
 
-      if (diffDays === 0) return '오늘';
-      if (diffDays === 1) return '내일';
-      if (diffDays < 0) return '';
-      return `D-${diffDays}`;
-    }
+    let lines = [];
 
-    function getScheduleBadgeClass(text) {
-      if (text === '오늘') return 'today';
-      if (text === '내일') return 'tomorrow';
-      if (text === 'D-day') return 'dday';
-      return '';
-    }
+    if (Array.isArray(rawValue)) {
+      lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
+    } else {
+      const raw = String(rawValue || '미정').trim();
 
-    function renderScheduleText(rawValue) {
-      const scheduleText = document.getElementById('scheduleText');
-      if (!scheduleText) return;
-
-      let lines = [];
-
-      if (Array.isArray(rawValue)) {
-        lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
-      } else {
-        const raw = String(rawValue || '미정').trim();
-
-        if (!raw || raw === '미정') {
-          scheduleText.textContent = '미정';
-          return;
-        }
-
-        lines = raw
-          .split(/\s*\/\s*|\n+/)
-          .map(v => v.trim())
-          .filter(Boolean);
-      }
-
-      if (!lines.length) {
+      if (!raw || raw === '미정') {
         scheduleText.textContent = '미정';
         return;
       }
 
-      scheduleText.innerHTML = lines.map(line => {
-        const badgeText = getScheduleBadgeText(line);
-        const badgeClass = getScheduleBadgeClass(badgeText);
-
-        return `
-          <div class="schedule-line">
-            <div class="schedule-main">${escapeHtml(line)}</div>
-            ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
-          </div>
-        `;
-      }).join('');
+      lines = raw
+        .split(/\s*\/\s*|\n+/)
+        .map(v => v.trim())
+        .filter(Boolean);
     }
 
-    async function loadRoundSummary() {
-      try {
-        const res = await fetch('/api/round-summary', { cache: 'no-store' });
-        const data = await res.json();
+    if (!lines.length) {
+      scheduleText.textContent = '미정';
+      return;
+    }
 
-        renderRoundRecordTable(data.roundRecords || []);
-        renderRoundInfo(
-          data.currentRound || data.round || null,
-          data.summaryRound || null,
-          data.nextScheduleText || '미정',
-          data.roundRecords || []
-        );
+    scheduleText.innerHTML = lines.map(line => {
+      const badgeText = getScheduleBadgeText(line);
+      const badgeClass = getScheduleBadgeClass(badgeText);
 
-        const rankingList = document.getElementById('rankingList');
-        if (rankingList) {
-          rankingList.innerHTML = buildFixedRankingHtml(data.ranking || [], 'ranking');
-        }
+      return `
+        <div class="schedule-line">
+          <div class="schedule-main">${escapeHtml(line)}</div>
+          ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
 
-        const mvpList = document.getElementById('mvpList');
-        if (mvpList) {
-          mvpList.innerHTML = buildFixedRankingHtml(data.mvpRanking || [], 'mvp');
-        }
+  async function loadRoundSummary() {
+    try {
+      const res = await fetch('/api/round-summary', { cache: 'no-store' });
+      const data = await res.json();
 
-        const benefitText = document.getElementById('benefitText');
-        if (benefitText) {
-          benefitText.textContent = data.benefitText || '미설정';
-        }
+      renderRoundRecordTable(data.roundRecords || []);
+      renderRoundInfo(
+        data.currentRound || data.round || null,
+        data.summaryRound || null,
+        data.nextScheduleText || '미정',
+        data.roundRecords || []
+      );
 
-        renderScheduleText(data.nextScheduleItems || data.nextScheduleText || '미정');
-      } catch (error) {
-        console.error('회차 요약 로드 실패:', error);
-        renderRoundRecordTable([]);
-        renderRoundInfo(null, null, '미정', []);
-
-        const rankingList = document.getElementById('rankingList');
-        if (rankingList) {
-          rankingList.innerHTML = buildFixedRankingHtml([], 'ranking');
-        }
-
-        const mvpList = document.getElementById('mvpList');
-        if (mvpList) {
-          mvpList.innerHTML = buildFixedRankingHtml([], 'mvp');
-        }
-
-        const benefitText = document.getElementById('benefitText');
-        if (benefitText) {
-          benefitText.textContent = '불러오기 실패';
-        }
-
-        renderScheduleText('미정');
+      const rankingList = document.getElementById('rankingList');
+      if (rankingList) {
+        rankingList.innerHTML = buildFixedRankingHtml(data.ranking || [], 'ranking');
       }
-    }
 
-    async function loadSpreadsheetData() {
-      const topTeamEl = document.getElementById('topTeamLines');
-      const recentCard = document.getElementById('recentMatchCard');
-
-      try {
-        const res = await fetch(CSV_URL, { cache: 'no-store' });
-        if (!res.ok) {
-          throw new Error('CSV 요청 실패: ' + res.status);
-        }
-
-        const text = await res.text();
-        const rows = parseCSV(text);
-        const topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
-        renderRecentDetailedMatch(rows);
-
-        updateTodayTitleFromMainMatch();
-        updateTopTeamLabel(topTeamText, rows);
-        updateTopTeamLines(rows);
-      } catch (error) {
-        console.error('시트 로드 실패:', error);
-        if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
-        if (recentCard) {
-          recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
-        }
-        updateTodayTitleFromMainMatch();
+      const mvpList = document.getElementById('mvpList');
+      if (mvpList) {
+        mvpList.innerHTML = buildFixedRankingHtml(data.mvpRanking || [], 'mvp');
       }
-    }
 
-    async function saveCurrentMatch() {
-      const statusEl = document.getElementById('saveStatus');
-      statusEl.textContent = '저장 중...';
-
-      try {
-        const res = await fetch('/api/save-match', {
-          method: 'POST',
-          credentials: 'include'
-        });
-        const data = await res.json();
-
-        if (!data.ok) {
-          statusEl.textContent = '❌ 저장 실패: ' + (data.error || data.message || '알 수 없는 오류');
-          return;
-        }
-
-        if (data.saved) {
-          statusEl.textContent =
-            '✅ 저장 완료 (' + (data.match_date || '-') + ')' +
-            (data.round_name ? '\n회차: ' + data.round_name : '');
-        } else {
-          statusEl.textContent =
-            '⚠️ 이미 저장된 결과' +
-            (data.round_name ? '\n회차: ' + data.round_name : '');
-        }
-
-        await loadRoundSummary();
-      } catch (e) {
-        console.error('저장 실패:', e);
-        statusEl.textContent = '❌ 서버 오류';
+      const benefitText = document.getElementById('benefitText');
+      if (benefitText) {
+        benefitText.textContent = data.benefitText || '미설정';
       }
+
+      renderScheduleText(data.nextScheduleItems || data.nextScheduleText || '미정');
+    } catch (error) {
+      console.error('회차 요약 로드 실패:', error);
+      renderRoundRecordTable([]);
+      renderRoundInfo(null, null, '미정', []);
+
+      const rankingList = document.getElementById('rankingList');
+      if (rankingList) {
+        rankingList.innerHTML = buildFixedRankingHtml([], 'ranking');
+      }
+
+      const mvpList = document.getElementById('mvpList');
+      if (mvpList) {
+        mvpList.innerHTML = buildFixedRankingHtml([], 'mvp');
+      }
+
+      const benefitText = document.getElementById('benefitText');
+      if (benefitText) {
+        benefitText.textContent = '불러오기 실패';
+      }
+
+      renderScheduleText('미정');
     }
+  }
 
-    /* ===== 입력표 ===== */
+  async function loadSpreadsheetData() {
+    const topTeamEl = document.getElementById('topTeamLines');
+    const recentCard = document.getElementById('recentMatchCard');
 
-    const TEAM_COUNT = 5;
-    const PLAYERS_PER_TEAM = 4;
-    const ROUND_COUNT = 40;
+    try {
+      const res = await fetch(CSV_URL, { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error('CSV 요청 실패: ' + res.status);
+      }
 
-    const sheetState = {
-      teams: [
-        { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
-      ],
-      rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
-        round: index + 1,
-        map: '사녹',
-        teams: Array.from({ length: TEAM_COUNT }, () => ({
-          players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
-            kill: '',
-            top10: false
-          }))
+      const text = await res.text();
+      const rows = parseCSV(text);
+      const topTeamText = buildTopTeamText(rows) || '시트 데이터가 비어 있습니다.';
+
+      renderRecentDetailedMatch(rows);
+      updateTodayTitleFromMainMatch();
+      updateTopTeamLabel(topTeamText, rows);
+      updateTopTeamLines(rows);
+    } catch (error) {
+      console.error('시트 로드 실패:', error);
+      if (topTeamEl) topTeamEl.textContent = '시트 로드 실패';
+      if (recentCard) {
+        recentCard.innerHTML = '<div class="recent-match-empty">시트 로드 실패</div>';
+      }
+      updateTodayTitleFromMainMatch();
+    }
+  }
+
+  async function saveCurrentMatch() {
+    const statusEl = document.getElementById('saveStatus');
+    statusEl.textContent = '저장 중...';
+
+    try {
+      const res = await fetch('/api/save-match', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        statusEl.textContent = '❌ 저장 실패: ' + (data.error || data.message || '알 수 없는 오류');
+        return;
+      }
+
+      if (data.saved) {
+        statusEl.textContent =
+          '✅ 저장 완료 (' + (data.match_date || '-') + ')' +
+          (data.round_name ? '\n회차: ' + data.round_name : '');
+      } else {
+        statusEl.textContent =
+          '⚠️ 이미 저장된 결과' +
+          (data.round_name ? '\n회차: ' + data.round_name : '');
+      }
+
+      await loadRoundSummary();
+    } catch (e) {
+      console.error('저장 실패:', e);
+      statusEl.textContent = '❌ 서버 오류';
+    }
+  }
+
+  /* ===== 입력표 ===== */
+
+  const TEAM_COUNT = 5;
+  const PLAYERS_PER_TEAM = 4;
+  const ROUND_COUNT = 40;
+
+  const sheetState = {
+    teams: [
+      { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
+    ],
+    rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
+      round: index + 1,
+      map: '사녹',
+      teams: Array.from({ length: TEAM_COUNT }, () => ({
+        players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
+          kill: '',
+          top10: false
         }))
       }))
-    };
+    }))
+  };
 
-    function renderSheetHead() {
-      const head = document.getElementById('sheetHead');
-      if (!head) return;
+  function renderSheetHead() {
+    const head = document.getElementById('sheetHead');
+    if (!head) return;
 
-      let teamRow = `
-        <tr>
-          <th rowspan="3" class="sticky-round-header">라운드</th>
-          <th rowspan="3" class="sticky-map-header">맵</th>
+    let teamRow = `
+      <tr>
+        <th rowspan="3" class="sticky-round-header">라운드</th>
+        <th rowspan="3" class="sticky-map-header">맵</th>
+    `;
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+    }
+    teamRow += `</tr>`;
+
+    let playerRow = `<tr>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        playerRow += `
+          <th colspan="2" class="player-head-cell">
+            <input
+              class="player-name-input"
+              type="text"
+              value="${escapeHtml(team.players[playerIndex])}"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+            />
+          </th>
+        `;
+      }
+      playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
+    }
+    playerRow += `</tr>`;
+
+    let statRow = `<tr>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        statRow += `
+          <th class="kill-head">KILL</th>
+          <th class="top10-head">TOP10</th>
+        `;
+      }
+    }
+    statRow += `</tr>`;
+
+    head.innerHTML = teamRow + playerRow + statRow;
+  }
+
+  function getTeamRoundTotal(roundData, teamIndex) {
+    const team = roundData.teams[teamIndex];
+    if (!team) return 0;
+
+    return team.players.reduce((sum, player) => {
+      const kill = Number(player.kill || 0);
+      const top10 = player.top10 ? 1 : 0;
+      return sum + kill + top10;
+    }, 0);
+  }
+
+  function renderSheetBody() {
+    const body = document.getElementById('sheetBody');
+    if (!body) return;
+
+    let html = '';
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const roundData = sheetState.rounds[roundIndex];
+
+      html += `<tr>`;
+      html += `<td class="round-cell">${roundData.round}</td>`;
+      html += `
+        <td class="map-cell">
+          <input
+            class="map-input"
+            type="text"
+            value="${escapeHtml(roundData.map)}"
+            data-round-index="${roundIndex}"
+          />
+        </td>
       `;
 
       for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const team = sheetState.teams[teamIndex];
-        teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
-      }
-      teamRow += `</tr>`;
-
-      let playerRow = `<tr>`;
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const team = sheetState.teams[teamIndex];
         for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          playerRow += `
-            <th colspan="2" class="player-head-cell">
-              <input
-                class="player-name-input"
-                type="text"
-                value="${escapeHtml(team.players[playerIndex])}"
-                data-team-index="${teamIndex}"
-                data-player-index="${playerIndex}"
-              />
-            </th>
-          `;
-        }
-        playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
-      }
-      playerRow += `</tr>`;
-
-      let statRow = `<tr>`;
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          statRow += `
-            <th class="kill-head">KILL</th>
-            <th class="top10-head">TOP10</th>
-          `;
-        }
-      }
-      statRow += `</tr>`;
-
-      head.innerHTML = teamRow + playerRow + statRow;
-    }
-
-    function getTeamRoundTotal(roundData, teamIndex) {
-      const team = roundData.teams[teamIndex];
-      if (!team) return 0;
-
-      return team.players.reduce((sum, player) => {
-        const kill = Number(player.kill || 0);
-        const top10 = player.top10 ? 1 : 0;
-        return sum + kill + top10;
-      }, 0);
-    }
-
-    function renderSheetBody() {
-      const body = document.getElementById('sheetBody');
-      if (!body) return;
-
-      let html = '';
-
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        const roundData = sheetState.rounds[roundIndex];
-
-        html += `<tr>`;
-        html += `<td class="round-cell">${roundData.round}</td>`;
-        html += `
-          <td class="map-cell">
-            <input
-              class="map-input"
-              type="text"
-              value="${escapeHtml(roundData.map)}"
-              data-round-index="${roundIndex}"
-            />
-          </td>
-        `;
-
-        for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-          for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-            const player = roundData.teams[teamIndex].players[playerIndex];
-
-            html += `
-              <td class="kill-cell">
-                <input
-                  type="number"
-                  class="kill-input"
-                  value="${escapeHtml(player.kill)}"
-                  data-round-index="${roundIndex}"
-                  data-team-index="${teamIndex}"
-                  data-player-index="${playerIndex}"
-                  min="0"
-                />
-              </td>
-              <td class="top10-cell">
-                <input
-                  type="checkbox"
-                  class="top10-check"
-                  data-round-index="${roundIndex}"
-                  data-team-index="${teamIndex}"
-                  data-player-index="${playerIndex}"
-                  ${player.top10 ? 'checked' : ''}
-                />
-              </td>
-            `;
-          }
+          const player = roundData.teams[teamIndex].players[playerIndex];
 
           html += `
-            <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
-              ${getTeamRoundTotal(roundData, teamIndex)}
+            <td class="kill-cell">
+              <input
+                type="number"
+                class="kill-input"
+                value="${escapeHtml(player.kill)}"
+                data-round-index="${roundIndex}"
+                data-team-index="${teamIndex}"
+                data-player-index="${playerIndex}"
+                min="0"
+              />
+            </td>
+            <td class="top10-cell">
+              <input
+                type="checkbox"
+                class="top10-check"
+                data-round-index="${roundIndex}"
+                data-team-index="${teamIndex}"
+                data-player-index="${playerIndex}"
+                ${player.top10 ? 'checked' : ''}
+              />
             </td>
           `;
         }
 
-        html += `</tr>`;
+        html += `
+          <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
+            ${getTeamRoundTotal(roundData, teamIndex)}
+          </td>
+        `;
       }
 
-      body.innerHTML = html;
+      html += `</tr>`;
     }
 
-    function getPlayerRoundStats(teamIndex, playerIndex) {
-      let killTotal = 0;
-      let top10Total = 0;
+    body.innerHTML = html;
+  }
 
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-        killTotal += Number(player.kill || 0);
-        top10Total += player.top10 ? 1 : 0;
-      }
+  function renderSheetSummary() {
+    const totalNodes = document.querySelectorAll('.sheet-summary-total');
+    const gridNodes = document.querySelectorAll('.sheet-summary-grid');
 
-      return {
-        kill: killTotal,
-        top10: top10Total,
-        pure: killTotal - top10Total
-      };
-    }
+    if (!totalNodes.length || !gridNodes.length) return;
 
-    function getTeamSummary(teamIndex) {
-      let pureTotal = 0;
-      const players = [];
+    const teamColumns = [];
+    const totalTexts = [];
+    let grandTotal = 0;
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      const playerLines = [];
+      let teamPureTotal = 0;
 
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const stats = getPlayerRoundStats(teamIndex, playerIndex);
-        const playerName = sheetState.teams[teamIndex].players[playerIndex] || `선수${playerIndex + 1}`;
+        const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
 
-        players.push({
-          name: playerName,
-          kill: stats.kill,
-          top10: stats.top10,
-          pure: stats.pure
-        });
+        let killTotal = 0;
+        let top10Total = 0;
 
-        pureTotal += stats.pure;
+        for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+          const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+          killTotal += Number(player.kill || 0);
+          if (player.top10) top10Total += 1;
+        }
+
+        const pure = killTotal - top10Total;
+        teamPureTotal += pure;
+
+        playerLines.push(`
+          <div class="sheet-summary-player">
+            ${escapeHtml(playerName)} ${pure} (${killTotal} - ${top10Total})
+          </div>
+        `);
       }
 
-      return {
-        teamName: sheetState.teams[teamIndex].teamName,
-        pureTotal,
-        players
-      };
-    }
+      grandTotal += teamPureTotal;
+      totalTexts.push(`${team.teamName} ${teamPureTotal}`);
 
-    function renderSheetSummary() {
-  const total = document.getElementById('sheetSummaryTotal');
-  const grid = document.getElementById('sheetSummaryGrid');
-  if (!total || !grid) return;
-
-  const teamColumns = [];
-  const totalTexts = [];
-  let grandTotal = 0;
-
-  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-    const team = sheetState.teams[teamIndex];
-    const playerLines = [];
-    let teamPureTotal = 0;
-
-    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-      const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
-
-      let killTotal = 0;
-      let top10Total = 0;
-
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-        killTotal += Number(player.kill || 0);
-        if (player.top10) top10Total += 1;
-      }
-
-      const pure = killTotal - top10Total;
-      teamPureTotal += pure;
-
-      playerLines.push(`
-        <div class="sheet-summary-player">
-          ${escapeHtml(playerName)} ${pure} (${killTotal} - ${top10Total})
+      teamColumns.push(`
+        <div class="sheet-summary-team">
+          ${playerLines.join('')}
+          <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
         </div>
       `);
     }
 
-    grandTotal += teamPureTotal;
-    totalTexts.push(`${team.teamName} ${teamPureTotal}`);
+    const totalText = `[${grandTotal}] ` + totalTexts.join(' : ');
+    const gridHtml = teamColumns.join('');
 
-    teamColumns.push(`
-      <div class="sheet-summary-team">
-        ${playerLines.join('')}
-        <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
-      </div>
-    `);
+    totalNodes.forEach((node) => {
+      node.textContent = totalText;
+    });
+
+    gridNodes.forEach((node) => {
+      node.innerHTML = gridHtml;
+    });
   }
 
-  total.textContent = `[${grandTotal}] ` + totalTexts.join(' : ');
-  grid.innerHTML = teamColumns.join('');
-}
-
-    function updateAllRoundSums() {
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-          const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-          if (!sumCell) continue;
-          sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
-        }
+  function updateAllRoundSums() {
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+        const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+        if (!sumCell) continue;
+        sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
       }
-
-      renderSheetSummary();
     }
 
-    function attachSheetEvents() {
-      const head = document.getElementById('sheetHead');
-      const body = document.getElementById('sheetBody');
+    renderSheetSummary();
+  }
 
-      if (head) {
-        head.addEventListener('input', (event) => {
-          const target = event.target;
-          if (!target.classList.contains('player-name-input')) return;
+  function attachSheetEvents() {
+    const head = document.getElementById('sheetHead');
+    const body = document.getElementById('sheetBody');
 
+    if (head) {
+      head.addEventListener('input', (event) => {
+        const target = event.target;
+        if (!target.classList.contains('player-name-input')) return;
+
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.teams[teamIndex].players[playerIndex] = target.value;
+        renderSheetSummary();
+      });
+    }
+
+    if (body) {
+      body.addEventListener('input', (event) => {
+        const target = event.target;
+
+        if (target.classList.contains('map-input')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          sheetState.rounds[roundIndex].map = target.value;
+          return;
+        }
+
+        if (target.classList.contains('kill-input')) {
+          const roundIndex = Number(target.dataset.roundIndex);
           const teamIndex = Number(target.dataset.teamIndex);
           const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.teams[teamIndex].players[playerIndex] = target.value;
-          renderSheetSummary();
-        });
-      }
+          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+          updateAllRoundSums();
+        }
+      });
 
-      if (body) {
-        body.addEventListener('input', (event) => {
-          const target = event.target;
+      body.addEventListener('change', (event) => {
+        const target = event.target;
 
-          if (target.classList.contains('map-input')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            sheetState.rounds[roundIndex].map = target.value;
-            return;
-          }
+        if (target.classList.contains('top10-check')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          const teamIndex = Number(target.dataset.teamIndex);
+          const playerIndex = Number(target.dataset.playerIndex);
 
-          if (target.classList.contains('kill-input')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            const teamIndex = Number(target.dataset.teamIndex);
-            const playerIndex = Number(target.dataset.playerIndex);
+          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
+          updateAllRoundSums();
+        }
+      });
+    }
+  }
 
-            sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-            updateAllRoundSums();
-          }
-        });
+  function initAdvancedSheet() {
+    renderSheetHead();
+    renderSheetBody();
+    attachSheetEvents();
+    updateAllRoundSums();
+    renderSheetSummary();
+  }
 
-        body.addEventListener('change', (event) => {
-          const target = event.target;
-
-          if (target.classList.contains('top10-check')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            const teamIndex = Number(target.dataset.teamIndex);
-            const playerIndex = Number(target.dataset.playerIndex);
-
-            sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
-            updateAllRoundSums();
-          }
-        });
-      }
+  document.addEventListener('DOMContentLoaded', function () {
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', saveCurrentMatch);
     }
 
-    function initAdvancedSheet() {
-      renderSheetHead();
-      renderSheetBody();
-      attachSheetEvents();
-      updateAllRoundSums();
-      renderSheetSummary();
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const saveBtn = document.getElementById('saveBtn');
-      if (saveBtn) {
-        saveBtn.addEventListener('click', saveCurrentMatch);
-      }
-
-      loadSpreadsheetData();
-      loadRoundSummary();
-      initAdvancedSheet();
-    });
-  </script>
+    loadSpreadsheetData();
+    loadRoundSummary();
+    initAdvancedSheet();
+  });
+</script>
 
   <div class="roulette-section">
     <div class="roulette-header">
