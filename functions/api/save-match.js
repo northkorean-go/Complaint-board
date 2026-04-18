@@ -1,212 +1,189 @@
-import {
-  json,
-  parseCSV,
-  buildTopTeamText,
-  findRecentDetailedMatch,
-  parseTopTeamInfo,
-  findWinningTeamMembers,
-  findMVPPlayer,
-  normalizeDisplayDate,
-  normalizeStorageDate,
-  getKoreaNowString,
-  getOpenRound,
-  requireAdmin,
-} from "./_utils.js";
-
-function corsHeaders() {
-  return {
-    "Content-Type": "application/json; charset=utf-8",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-}
-
-function withCors(response) {
-  const headers = new Headers(response.headers);
-  const cors = corsHeaders();
-  Object.keys(cors).forEach((key) => headers.set(key, cors[key]));
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-}
-
-export async function onRequest(context) {
-  const { request, env } = context;
-
-  if (request.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders() });
-  }
-
-  if (request.method !== "POST" && request.method !== "GET") {
-    return withCors(json({ ok: false, error: "Method not allowed" }, 405));
-  }
-
-  const adminDenied = requireAdmin(request);
-  if (adminDenied) {
-    return withCors(adminDenied);
-  }
+export async function onRequestPost(context) {
+  const { env } = context;
 
   try {
-    const round = await getOpenRound(env);
+    // 1. 현재 입력표 가져오기
+    const sheetRow = await env.DB.prepare(`
+      SELECT data FROM sheet_state WHERE id = 1
+    `).first();
 
-    if (!round) {
-      return withCors(
-        json(
-          {
-            ok: false,
-            error: "열린 회차가 없습니다. 관리자 페이지에서 먼저 회차를 오픈해주세요.",
-          },
-          400
-        )
-      );
+    if (!sheetRow) {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: '입력표 데이터 없음'
+      }), { headers: { 'Content-Type': 'application/json' } });
     }
 
-    const CSV_URL =
-      "https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0";
+    const sheetState = JSON.parse(sheetRow.data);
 
-    const mainRes = await fetch(CSV_URL, {
-      cf: { cacheTtl: 0, cacheEverything: false },
+    const TEAM_COUNT = 5;
+    const PLAYERS_PER_TEAM = 4;
+    const ROUND_COUNT = sheetState.rounds.length;
+
+    // 2. 유틸 함수
+    function getPlayerTotals(teamIndex, playerIndex) {
+      let kill = 0;
+      let top10 = 0;
+
+      for (let r = 0; r < ROUND_COUNT; r++) {
+        const p = sheetState.rounds[r].teams[teamIndex].players[playerIndex];
+        kill += Number(p.kill || 0);
+        if (p.top10) top10 += 1;
+      }
+
+      return {
+        kill,
+        top10,
+        pure: kill - top10,
+        score: kill + top10
+      };
+    }
+
+    function getTeamTotals(teamIndex) {
+      let score = 0;
+      let pure = 0;
+
+      for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
+        const t = getPlayerTotals(teamIndex, p);
+        score += t.score;
+        pure += t.pure;
+      }
+
+      return { score, pure };
+    }
+
+    // 3. 팀 정렬 (1등팀)
+    const teams = [];
+
+    for (let i = 0; i < TEAM_COUNT; i++) {
+      const totals = getTeamTotals(i);
+
+      teams.push({
+        teamIndex: i,
+        teamName: sheetState.teams[i].teamName,
+        score: totals.score,
+        pure: totals.pure,
+        members: sheetState.teams[i].players
+      });
+    }
+
+    teams.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.teamIndex - b.teamIndex;
     });
 
-    if (!mainRes.ok) {
-      return withCors(
-        json(
-          { ok: false, error: "메인 시트 로드 실패", status: mainRes.status },
-          500
-        )
-      );
+    const winner = teams[0];
+
+    // 4. MVP
+    const players = [];
+
+    for (let t = 0; t < TEAM_COUNT; t++) {
+      for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
+        const totals = getPlayerTotals(t, p);
+
+        players.push({
+          name: sheetState.teams[t].players[p],
+          score: totals.score,
+          pure: totals.pure
+        });
+      }
     }
 
-    const csvText = await mainRes.text();
-    const rows = parseCSV(csvText);
+    players.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.name.localeCompare(b.name, 'ko');
+    });
 
-    const topTeamText = buildTopTeamText(rows) || "";
-    const recentMatch = findRecentDetailedMatch(rows);
-    const topTeamInfo = parseTopTeamInfo(topTeamText);
-    const winnerMembers = findWinningTeamMembers(rows, topTeamText);
-    const mvp = findMVPPlayer(rows);
+    const mvp = players[0];
 
-    if (!recentMatch) {
-      return withCors(
-        json({ ok: false, error: "최근 내전 결과를 찾지 못했습니다." }, 400)
-      );
-    }
+    // 5. 날짜
+    const now = new Date();
+    const match_date = now.toISOString().slice(0, 10);
 
-    const displayDate = normalizeDisplayDate(recentMatch.date);
-    const storageDate = normalizeStorageDate(recentMatch.date);
-    const snapshotKey = `${round.id}|${storageDate}|${recentMatch.summary}`;
-    const createdAtKST = getKoreaNowString();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const match_date_text = `${month}.${day}`;
 
-    const exists = await env.DB.prepare(
-      `SELECT id FROM match_results WHERE snapshot_key = ? LIMIT 1`
-    )
-      .bind(snapshotKey)
-      .first();
+    const snapshot_key = match_date + '-' + Date.now();
 
-    if (exists) {
-      return withCors(
-        json({
-          ok: true,
-          saved: false,
-          message: "이미 저장된 내전 결과입니다.",
-          id: exists.id,
-          round_id: round.id,
-          round_name: round.name,
-        })
-      );
-    }
+    // 6. summary 텍스트
+    const summary_text =
+      '[' + teams.reduce((sum, t) => sum + t.score, 0) + '] ' +
+      teams.map(t => `${t.teamName} ${t.score}`).join(' : ');
 
-    const insertResult = await env.DB.prepare(`
+    // 7. 결과 저장
+    const result = await env.DB.prepare(`
       INSERT INTO match_results (
-        round_id,
         snapshot_key,
         match_date,
         match_date_text,
-        title,
         summary_text,
         winner_team,
         winner_score,
         winner_members_json,
         mvp_name,
-        mvp_score,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-      .bind(
-        round.id,
-        snapshotKey,
-        storageDate,
-        displayDate,
-        recentMatch.title || "최근 내전 결과",
-        recentMatch.summary || "",
-        topTeamInfo.teamName || "",
-        topTeamInfo.score ?? null,
-        JSON.stringify(winnerMembers || []),
-        mvp ? mvp.name : "",
-        mvp ? mvp.score : null,
-        createdAtKST
+        mvp_score
       )
-      .run();
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      snapshot_key,
+      match_date,
+      match_date_text,
+      summary_text,
+      winner.teamName,
+      winner.score,
+      JSON.stringify(winner.members),
+      mvp.name,
+      mvp.score
+    ).run();
 
-    const resultId = insertResult.meta?.last_row_id;
-    if (!resultId) {
-      return withCors(
-        json({ ok: false, error: "결과 저장 후 ID를 가져오지 못했습니다." }, 500)
-      );
+    const result_id = result.meta.last_row_id;
+
+    // 8. 표 저장 (match_rows)
+    let rowNo = 1;
+
+    for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
+      const row = [];
+
+      for (let i = 0; i < teams.length; i++) {
+        const teamIndex = teams[i].teamIndex;
+        const name = sheetState.teams[teamIndex].players[p];
+        const totals = getPlayerTotals(teamIndex, p);
+
+        row.push(`${name}\n${totals.score} (${totals.kill}-${totals.top10})`);
+      }
+
+      await env.DB.prepare(`
+        INSERT INTO match_rows (result_id, row_no, col1, col2, col3, col4, col5)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        result_id,
+        rowNo++,
+        row[0] || '',
+        row[1] || '',
+        row[2] || '',
+        row[3] || '',
+        row[4] || ''
+      ).run();
     }
 
-    const rowStatements = [];
-    for (let i = 0; i < recentMatch.rows.length; i++) {
-      const row = recentMatch.rows[i] || [];
-      rowStatements.push(
-        env.DB.prepare(`
-          INSERT INTO match_rows (
-            result_id, row_no, col1, col2, col3, col4, col5
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).bind(
-          resultId,
-          i + 1,
-          row[0] || "",
-          row[1] || "",
-          row[2] || "",
-          row[3] || "",
-          row[4] || ""
-        )
-      );
-    }
+    return new Response(JSON.stringify({
+      ok: true,
+      saved: true,
+      match_date,
+      round_name: null
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-    if (rowStatements.length) {
-      await env.DB.batch(rowStatements);
-    }
-
-    return withCors(
-      json({
-        ok: true,
-        saved: true,
-        id: resultId,
-        round_id: round.id,
-        round_name: round.name,
-        match_date: displayDate,
-        winner_team: topTeamInfo.teamName || "",
-        winner_score: topTeamInfo.score ?? null,
-        winner_members: winnerMembers,
-        mvp_name: mvp ? mvp.name : "",
-        mvp_score: mvp ? mvp.score : null,
-        created_at: createdAtKST,
-      })
-    );
-  } catch (error) {
-    return withCors(
-      json(
-        {
-          ok: false,
-          error: error.message || "저장 중 오류가 발생했습니다.",
-        },
-        500
-      )
-    );
+  } catch (e) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: e.message
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
