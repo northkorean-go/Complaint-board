@@ -2260,24 +2260,29 @@
         const target = event.target;
 
         if (target.classList.contains('kill-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+  const roundIndex = Number(target.dataset.roundIndex);
+  const teamIndex = Number(target.dataset.teamIndex);
+  const playerIndex = Number(target.dataset.playerIndex);
 
-          editingCellKey = '';
+  editingCellKey = '';
 
-          saveSheetPatchToServer({
-            type: 'kill',
-            roundIndex,
-            teamIndex,
-            playerIndex,
-            value: target.value
-          });
+  saveSheetPatchToServer({
+    type: 'kill',
+    roundIndex,
+    teamIndex,
+    playerIndex,
+    value: target.value
+  });
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 50);
-        }
+  renderSheetHead();
+  attachSheetEvents();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+
+  setTimeout(() => {
+    loadSheetFromServer();
+  }, 50);
+}
 
         if (target.classList.contains('map-input')) {
           const roundIndex = Number(target.dataset.roundIndex);
