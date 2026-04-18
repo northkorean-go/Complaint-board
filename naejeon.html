@@ -1282,17 +1282,18 @@
   function getDefaultSheetState() {
     return {
       teams: [
-        { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] }
+        { teamName: '1팀', players: ['', '', '', ''], minusScores: ['-2', '-1.5', '-1', '-0.5'] },
+        { teamName: '2팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '3팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '4팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '5팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] }
       ],
       rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
         round: index + 1,
         map: '사녹',
         teams: Array.from({ length: TEAM_COUNT }, () => ({
           top10: false,
+          chicken: false,
           players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
             kill: ''
           }))
@@ -1318,10 +1319,35 @@
     return Number.isInteger(num) ? String(num) : String(num);
   }
 
+  function formatCellValue(value) {
+    const num = Number(value || 0);
+    if (!num) return '0';
+    return Number.isInteger(num) ? String(num) : String(num);
+  }
+
   function getTeamMinusTotal(teamIndex) {
     const team = sheetState.teams[teamIndex];
     if (!team || !Array.isArray(team.minusScores)) return 0;
     return team.minusScores.reduce((sum, value) => sum + Number(value || 0), 0);
+  }
+
+  function getTeamChickenScore(roundData, teamIndex) {
+    const team = roundData.teams[teamIndex];
+    if (!team) return 0;
+    return team.chicken ? 10 : 0;
+  }
+
+  function getPlayerMinusOnlyTotal(teamIndex, playerIndex) {
+    let total = 0;
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const roundTeam = sheetState.rounds[roundIndex].teams[teamIndex];
+      if (roundTeam && roundTeam.top10) {
+        total += Number(sheetState.teams[teamIndex].minusScores[playerIndex] || 0);
+      }
+    }
+
+    return total;
   }
 
   function getKoreaNowDate() {
@@ -1622,7 +1648,7 @@
 
         if (Array.isArray(data.teams[t].players)) {
           for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
-            base.teams[t].players[p] = String(data.teams[t].players[p] || `선수${p + 1}`);
+            base.teams[t].players[p] = String(data.teams[t].players[p] || '');
           }
         }
 
@@ -1647,6 +1673,7 @@
             if (!inTeam) continue;
 
             base.rounds[r].teams[t].top10 = !!inTeam.top10;
+            base.rounds[r].teams[t].chicken = !!inTeam.chicken;
 
             if (Array.isArray(inTeam.players)) {
               for (let p = 0; p < Math.min(PLAYERS_PER_TEAM, inTeam.players.length); p++) {
@@ -1710,10 +1737,14 @@
       killTotal += Number(player.kill || 0);
     }
 
+    const pure = killTotal;
+    const minusOnly = getPlayerMinusOnlyTotal(teamIndex, playerIndex);
+
     return {
       kill: killTotal,
-      pure: killTotal,
-      score: killTotal
+      pure,
+      minusOnly,
+      score: pure + minusOnly
     };
   }
 
@@ -1728,6 +1759,8 @@
     if (team.top10) {
       total += getTeamMinusTotal(teamIndex);
     }
+
+    total += getTeamChickenScore(roundData, teamIndex);
 
     return total;
   }
@@ -1763,7 +1796,7 @@
 
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const playerName = sheetState.teams[teamIndex].players[playerIndex] || `선수${playerIndex + 1}`;
+        const playerName = (sheetState.teams[teamIndex].players[playerIndex] || '').trim();
         const totals = getPlayerTotals(teamIndex, playerIndex);
 
         list.push({
@@ -1884,33 +1917,27 @@
     const head = document.getElementById('sheetHead');
     if (!head) return;
 
-    let teamRow = `
+    let html = `
       <tr>
-        <th rowspan="3" class="sticky-round-header">라운드</th>
-        <th rowspan="3" class="sticky-map-header">맵</th>
+        <th rowspan="6">라운드</th>
+        <th class="team-group-head">팀</th>
     `;
 
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
-      teamRow += `<th colspan="${PLAYERS_PER_TEAM + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+      html += `<th colspan="${PLAYERS_PER_TEAM + 3}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
     }
-    teamRow += `</tr>`;
+    html += `</tr>`;
 
-    let playerRow = `<tr>`;
+    html += `<tr><th class="label-head">마이너스</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
+
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         const selectedMinus = team.minusScores[playerIndex] ?? '0';
 
-        playerRow += `
+        html += `
           <th class="player-head-cell">
-            <input
-              class="player-name-input"
-              type="text"
-              value="${escapeHtml(team.players[playerIndex])}"
-              data-team-index="${teamIndex}"
-              data-player-index="${playerIndex}"
-            />
             <select
               class="minus-select"
               data-team-index="${teamIndex}"
@@ -1924,24 +1951,76 @@
         `;
       }
 
-      playerRow += `
-        <th class="sum-head">
-          <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
-        </th>
+      html += `
+        <th class="sum-head">${formatMinusValue(getTeamMinusTotal(teamIndex))}</th>
+        <th rowspan="4" class="sum-head">치킨</th>
+        <th rowspan="4" class="sum-head">점수</th>
       `;
     }
-    playerRow += `</tr>`;
+    html += `</tr>`;
 
-    let statRow = `<tr>`;
+    html += `<tr><th class="label-head">이름</th>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        html += `
+          <th class="player-head-cell">
+            <input
+              class="player-name-input"
+              type="text"
+              value="${escapeHtml(team.players[playerIndex] || '')}"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+              placeholder=""
+            />
+          </th>
+        `;
+      }
+
+      html += `<th class="sum-head"></th>`;
+    }
+    html += `</tr>`;
+
+    html += `<tr><th class="label-head">순수킬</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        statRow += `<th class="kill-head">KILL</th>`;
+        const totals = getPlayerTotals(teamIndex, playerIndex);
+        html += `<th class="kill-head">${formatCellValue(totals.pure)}</th>`;
       }
-      statRow += `<th class="top10-head">TOP10</th>`;
+      html += `<th class="sum-head"></th>`;
     }
-    statRow += `</tr>`;
+    html += `</tr>`;
 
-    head.innerHTML = teamRow + playerRow + statRow;
+    html += `<tr><th class="label-head">점수</th>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const totals = getPlayerTotals(teamIndex, playerIndex);
+        html += `
+          <th class="score-split-head">
+            <div class="score-split-box">
+              <div>${formatCellValue(totals.pure)}</div>
+              <div>${formatCellValue(totals.minusOnly)}</div>
+            </div>
+          </th>
+        `;
+      }
+      html += `<th class="sum-head">합</th>`;
+    }
+    html += `</tr>`;
+
+    html += `<tr><th class="label-head">맵</th>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        html += `<th class="kill-head">KILL</th>`;
+      }
+      html += `<th class="top10-head">TOP10</th>`;
+      html += `<th class="top10-head">10점</th>`;
+      html += `<th class="top10-head">판점수</th>`;
+    }
+    html += `</tr>`;
+
+    head.innerHTML = html;
   }
 
   function renderSheetBody() {
@@ -1986,8 +2065,7 @@
         }
 
         html += `
-          <td class="top10-cell" id="team-sum-${roundIndex}-${teamIndex}">
-            <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+          <td class="top10-cell">
             <input
               type="checkbox"
               class="top10-check"
@@ -1995,6 +2073,24 @@
               data-team-index="${teamIndex}"
               ${roundData.teams[teamIndex].top10 ? 'checked' : ''}
             />
+          </td>
+        `;
+
+        html += `
+          <td class="chicken-cell">
+            <input
+              type="checkbox"
+              class="chicken-check"
+              data-round-index="${roundIndex}"
+              data-team-index="${teamIndex}"
+              ${roundData.teams[teamIndex].chicken ? 'checked' : ''}
+            />
+          </td>
+        `;
+
+        html += `
+          <td class="sum-cell">
+            ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
           </td>
         `;
       }
@@ -2020,13 +2116,13 @@
       let teamPureTotal = 0;
 
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
+        const playerName = (team.players[playerIndex] || '').trim();
         const totals = getPlayerTotals(teamIndex, playerIndex);
         teamPureTotal += totals.pure;
 
         playerLines.push(`
           <div class="sheet-summary-player">
-            ${escapeHtml(playerName)} ${totals.pure}킬
+            ${escapeHtml(playerName)}${playerName ? ' ' : ''}${totals.pure}킬
           </div>
         `);
       }
@@ -2047,25 +2143,8 @@
   }
 
   function updateAllRoundSums(shouldQueueSave = true) {
-    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-        if (!sumCell) continue;
-
-        sumCell.innerHTML = `
-          <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
-          <input
-            type="checkbox"
-            class="top10-check"
-            data-round-index="${roundIndex}"
-            data-team-index="${teamIndex}"
-            ${sheetState.rounds[roundIndex].teams[teamIndex].top10 ? 'checked' : ''}
-          />
-        `;
-      }
-    }
-
     renderSheetHead();
+    renderSheetBody();
     attachSheetEvents();
     renderSheetSummary();
     refreshDashboardFromSheetState();
@@ -2137,6 +2216,15 @@
           const teamIndex = Number(target.dataset.teamIndex);
 
           sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
+          updateAllRoundSums(true);
+          return;
+        }
+
+        if (target.classList.contains('chicken-check')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          const teamIndex = Number(target.dataset.teamIndex);
+
+          sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
           updateAllRoundSums(true);
         }
       };
