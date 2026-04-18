@@ -2112,9 +2112,13 @@
         `;
 
         html += `
-          <td class="sum-cell">
-            ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
-          </td>
+          <td
+  class="sum-cell"
+  data-round-index="${roundIndex}"
+  data-team-index="${teamIndex}"
+>
+  ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
+</td>
         `;
       }
 
