@@ -1098,11 +1098,12 @@
   </div>
 
   <div class="naejeon-top-actions">
-    <a class="back-btn" href="/">← 메인으로</a>
-    <a class="back-btn" href="/history.html">📚 내전 기록</a>
-    <button class="back-btn" id="saveBtn" type="button">💾 결과 저장</button>
-    <div class="save-status" id="saveStatus"></div>
-  </div>
+  <a class="back-btn" href="/">← 메인으로</a>
+  <a class="back-btn" href="/history.html">📚 내전 기록</a>
+  <button class="back-btn" id="saveBtn" type="button">💾 결과 저장</button>
+  <button class="back-btn" id="resetSheetBtn" type="button">🗑 입력표 초기화</button>
+  <div class="save-status" id="saveStatus"></div>
+</div>
 
   <div class="naejeon-shell">
     <div class="naejeon-grid">
@@ -1980,14 +1981,54 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-      const saveBtn = document.getElementById('saveBtn');
-      if (saveBtn) {
-        saveBtn.addEventListener('click', saveCurrentMatch);
-      }
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveCurrentMatch);
+  }
 
-      loadRoundSummary();
-      initAdvancedSheet();
-    });
+  const resetSheetBtn = document.getElementById('resetSheetBtn');
+  if (resetSheetBtn) {
+    resetSheetBtn.addEventListener('click', resetSheetState);
+  }
+
+  loadRoundSummary();
+  initAdvancedSheet();
+      function resetSheetState() {
+  const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
+  if (!ok) return;
+
+  sheetState.teams = [
+    { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
+  ];
+
+  sheetState.rounds = Array.from({ length: ROUND_COUNT }, (_, index) => ({
+    round: index + 1,
+    map: '사녹',
+    teams: Array.from({ length: TEAM_COUNT }, () => ({
+      players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
+        kill: '',
+        top10: false
+      }))
+    }))
+  }));
+
+  renderSheetHead();
+  renderSheetBody();
+  attachSheetEvents();
+  updateAllRoundSums();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+
+  const statusEl = document.getElementById('saveStatus');
+  if (statusEl) {
+    statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
+  }
+}
+});
   </script>
 
   <div class="roulette-section">
