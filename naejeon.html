@@ -1274,10 +1274,16 @@
   const ROUND_COUNT = 30;
   const MINUS_OPTIONS = ['-2', '-1.5', '-1', '-0.5', '0'];
 
-  let syncTimer = null;
-  let lastSyncedJson = '';
+  const LOCAL_DRAFT_KEY = 'zara_naejeon_sheet_draft_v3';
+  const REMOTE_SYNC_INTERVAL = 1200;
+  const REMOTE_BLOCK_MS = 2500;
+
+  let sheetState = getDefaultSheetState();
+  let lastServerJson = '';
   let isRemoteApplying = false;
-  let fastSyncInterval = null;
+  let editingCellKey = '';
+  let remoteBlockedUntil = 0;
+  let syncInterval = null;
 
   function getDefaultSheetState() {
     return {
@@ -1302,8 +1308,6 @@
     };
   }
 
-  let sheetState = getDefaultSheetState();
-
   function escapeHtml(text) {
     return String(text || '')
       .replace(/&/g, '&amp;')
@@ -1323,6 +1327,15 @@
     const num = Number(value || 0);
     if (!num) return '0';
     return Number.isInteger(num) ? String(num) : String(num);
+  }
+
+  function normalizeKillValue(value) {
+    if (value === null || value === undefined) return '';
+    const text = String(value).trim();
+    if (!text) return '';
+    const num = Number(text);
+    if (!Number.isFinite(num) || num < 0) return '';
+    return String(num);
   }
 
   function getRawPlayerName(teamIndex, playerIndex) {
@@ -1348,15 +1361,121 @@
 
   function getPlayerMinusOnlyTotal(teamIndex, playerIndex) {
     let total = 0;
-
     for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
       const roundTeam = sheetState.rounds[roundIndex].teams[teamIndex];
       if (roundTeam && roundTeam.top10) {
         total += Number(sheetState.teams[teamIndex].minusScores[playerIndex] || 0);
       }
     }
+    return total;
+  }
+
+  function getPlayerTotals(teamIndex, playerIndex) {
+    let killTotal = 0;
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+      killTotal += Number(player.kill || 0);
+    }
+
+    const pure = killTotal;
+    const minusOnly = getPlayerMinusOnlyTotal(teamIndex, playerIndex);
+
+    return {
+      kill: killTotal,
+      pure,
+      minusOnly,
+      score: pure + minusOnly
+    };
+  }
+
+  function getTeamRoundTotal(roundData, teamIndex) {
+    const team = roundData.teams[teamIndex];
+    if (!team) return 0;
+
+    let total = team.players.reduce((sum, player) => {
+      return sum + Number(player.kill || 0);
+    }, 0);
+
+    if (team.top10) {
+      total += getTeamMinusTotal(teamIndex);
+    }
+
+    total += getTeamChickenScore(roundData, teamIndex);
 
     return total;
+  }
+
+  function getTeamPureTotal(teamIndex) {
+    let pure = 0;
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        pure += Number(sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill || 0);
+      }
+    }
+    return pure;
+  }
+
+  function getTeamTotals(teamIndex) {
+    let score = 0;
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      score += getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
+    }
+    return {
+      score,
+      pure: getTeamPureTotal(teamIndex)
+    };
+  }
+
+  function getAllPlayerRanking() {
+    const list = [];
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const playerName = getRawPlayerName(teamIndex, playerIndex);
+        const totals = getPlayerTotals(teamIndex, playerIndex);
+
+        list.push({
+          name: playerName,
+          kill: totals.kill,
+          pure: totals.pure,
+          minusOnly: totals.minusOnly,
+          score: totals.score
+        });
+      }
+    }
+
+    return list.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.name.localeCompare(b.name, 'ko');
+    });
+  }
+
+  function getWinningTeamInfo() {
+    const teams = [];
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const teamName = sheetState.teams[teamIndex].teamName;
+      const totals = getTeamTotals(teamIndex);
+      const members = sheetState.teams[teamIndex].players.map(v => String(v || '').trim()).filter(Boolean);
+
+      teams.push({
+        teamIndex,
+        teamName,
+        score: totals.score,
+        pure: totals.pure,
+        members
+      });
+    }
+
+    teams.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.teamIndex - b.teamIndex;
+    });
+
+    return teams[0] || null;
   }
 
   function getKoreaNowDate() {
@@ -1517,10 +1636,7 @@
         return;
       }
 
-      lines = raw
-        .split(/\s*\/\s*|\n+/)
-        .map(v => v.trim())
-        .filter(Boolean);
+      lines = raw.split(/\s*\/\s*|\n+/).map(v => v.trim()).filter(Boolean);
     }
 
     if (!lines.length) {
@@ -1614,45 +1730,58 @@
     }
   }
 
-  async function saveSheetToServer() {
-    if (isRemoteApplying) return;
-
+  function saveDraftToLocal() {
     try {
-      const payload = JSON.stringify(sheetState);
-
-      const res = await fetch('/api/sheet-save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: payload
-      });
-
-      const data = await res.json().catch(() => ({ ok: false }));
-      if (data.ok) {
-        lastSyncedJson = payload;
-      }
+      localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(sheetState));
     } catch (e) {
-      console.error('sheet-save 실패', e);
+      console.error('local draft save failed', e);
     }
   }
 
-  function queueSaveSheet() {
-    if (isRemoteApplying) return;
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(saveSheetToServer, 120);
+  function loadDraftFromLocal() {
+    try {
+      const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return hydrateIncomingSheetState(parsed);
+    } catch (e) {
+      console.error('local draft load failed', e);
+      return null;
+    }
+  }
+
+  function blockRemoteSync(ms = REMOTE_BLOCK_MS) {
+    remoteBlockedUntil = Date.now() + ms;
+  }
+
+  function isRemoteBlocked() {
+    return Date.now() < remoteBlockedUntil;
+  }
+
+  function setEditingCellKey(key) {
+    editingCellKey = key || '';
+    blockRemoteSync();
+  }
+
+  function clearEditingCellKey() {
+    editingCellKey = '';
+    blockRemoteSync(1200);
+  }
+
+  function cellKey(type, roundIndex, teamIndex, playerIndex) {
+    return [type, roundIndex, teamIndex, playerIndex].join(':');
   }
 
   function hydrateIncomingSheetState(data) {
     const base = getDefaultSheetState();
-
     if (!data || typeof data !== 'object') return base;
 
     if (Array.isArray(data.teams)) {
       for (let t = 0; t < TEAM_COUNT; t++) {
         if (!data.teams[t]) continue;
 
-        if (data.teams[t].teamName) {
-          base.teams[t].teamName = String(data.teams[t].teamName);
+        if (data.teams[t].teamName !== undefined) {
+          base.teams[t].teamName = String(data.teams[t].teamName || '');
         }
 
         if (Array.isArray(data.teams[t].players)) {
@@ -1663,7 +1792,8 @@
 
         if (Array.isArray(data.teams[t].minusScores)) {
           for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
-            base.teams[t].minusScores[p] = String(data.teams[t].minusScores[p] ?? '0');
+            const value = data.teams[t].minusScores[p];
+            base.teams[t].minusScores[p] = value === undefined ? '0' : String(value);
           }
         }
       }
@@ -1688,7 +1818,7 @@
               for (let p = 0; p < Math.min(PLAYERS_PER_TEAM, inTeam.players.length); p++) {
                 const inPlayer = inTeam.players[p] || {};
                 base.rounds[r].teams[t].players[p] = {
-                  kill: String(inPlayer.kill || '')
+                  kill: normalizeKillValue(inPlayer.kill)
                 };
               }
             }
@@ -1700,7 +1830,10 @@
     return base;
   }
 
-  async function loadSheetFromServer() {
+  async function loadSheetFromServer(force = false) {
+    if (isRemoteApplying) return false;
+    if (!force && (isRemoteBlocked() || editingCellKey)) return false;
+
     try {
       const res = await fetch('/api/sheet-load', {
         cache: 'no-store',
@@ -1712,15 +1845,17 @@
 
       const hydrated = hydrateIncomingSheetState(data.data);
       const incomingJson = JSON.stringify(hydrated);
+      const localJson = JSON.stringify(sheetState);
 
-      if (incomingJson === lastSyncedJson) return false;
+      if (!force && incomingJson === localJson) {
+        lastServerJson = incomingJson;
+        return false;
+      }
 
       isRemoteApplying = true;
       sheetState = hydrated;
-      lastSyncedJson = incomingJson;
-
+      lastServerJson = incomingJson;
       renderAllFromState();
-
       isRemoteApplying = false;
       return true;
     } catch (e) {
@@ -1730,210 +1865,26 @@
     }
   }
 
-  function startFastSync() {
-    if (fastSyncInterval) clearInterval(fastSyncInterval);
-
-    fastSyncInterval = setInterval(async () => {
-      await loadSheetFromServer();
-    }, 300);
-  }
-
-  function getPlayerTotals(teamIndex, playerIndex) {
-    let killTotal = 0;
-
-    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-      const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-      killTotal += Number(player.kill || 0);
-    }
-
-    const pure = killTotal;
-    const minusOnly = getPlayerMinusOnlyTotal(teamIndex, playerIndex);
-
-    return {
-      kill: killTotal,
-      pure,
-      minusOnly,
-      score: pure + minusOnly
-    };
-  }
-
-  function getTeamRoundTotal(roundData, teamIndex) {
-    const team = roundData.teams[teamIndex];
-    if (!team) return 0;
-
-    let total = team.players.reduce((sum, player) => {
-      return sum + Number(player.kill || 0);
-    }, 0);
-
-    if (team.top10) {
-      total += getTeamMinusTotal(teamIndex);
-    }
-
-    total += getTeamChickenScore(roundData, teamIndex);
-
-    return total;
-  }
-
-  function getTeamPureTotal(teamIndex) {
-    let pure = 0;
-
-    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-        pure += Number(player.kill || 0);
-      }
-    }
-
-    return pure;
-  }
-
-  function getTeamTotals(teamIndex) {
-    let score = 0;
-
-    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-      score += getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
-    }
-
-    return {
-      score,
-      pure: getTeamPureTotal(teamIndex)
-    };
-  }
-
-  function getAllPlayerRanking() {
-    const list = [];
-
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const playerName = getRawPlayerName(teamIndex, playerIndex);
-        const totals = getPlayerTotals(teamIndex, playerIndex);
-
-        list.push({
-          name: playerName,
-          kill: totals.kill,
-          pure: totals.pure,
-          minusOnly: totals.minusOnly,
-          score: totals.score
-        });
-      }
-    }
-
-    return list.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (b.pure !== a.pure) return b.pure - a.pure;
-      return a.name.localeCompare(b.name, 'ko');
-    });
-  }
-
-  function getWinningTeamInfo() {
-    const teams = [];
-
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const teamName = sheetState.teams[teamIndex].teamName;
-      const totals = getTeamTotals(teamIndex);
-      const members = sheetState.teams[teamIndex].players
-        .map(v => String(v || '').trim())
-        .filter(Boolean);
-
-      teams.push({
-        teamIndex,
-        teamName,
-        score: totals.score,
-        pure: totals.pure,
-        members
-      });
-    }
-
-    teams.sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (b.pure !== a.pure) return b.pure - a.pure;
-      return a.teamIndex - b.teamIndex;
-    });
-
-    return teams[0] || null;
-  }
-
-  function refreshDashboardFromSheetState() {
-    const todayTitle = document.getElementById('todayTitle');
-    const topTeamLabel = document.getElementById('topTeamLabel');
-    const topTeamLines = document.getElementById('topTeamLines');
-    const recentMatchCard = document.getElementById('recentMatchCard');
-
-    if (todayTitle) {
-      todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
-    }
-
-    const winner = getWinningTeamInfo();
-    const ranking = getAllPlayerRanking();
-    const mvp = ranking[0] || null;
-
-    if (topTeamLabel) {
-      if (!winner) {
-        topTeamLabel.textContent = '🏆 1등팀';
-      } else {
-        const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
-        topTeamLabel.textContent =
-          `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
-      }
-    }
-
-    if (topTeamLines) {
-      if (!mvp) {
-        topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
-      } else {
-        const mvpLeft = Number(mvp.pure || 0);
-        const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
-        const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
-        topTeamLines.textContent = `MVP ${mvpText}`;
-      }
-    }
-
-    if (recentMatchCard) {
-      const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
-        const totals = getTeamTotals(i);
-        return {
-          teamIndex: i,
-          teamName: sheetState.teams[i].teamName,
-          score: totals.score,
-          pure: totals.pure
-        };
-      }).sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.pure !== a.pure) return b.pure - a.pure;
-        return a.teamIndex - b.teamIndex;
+  async function saveSheetPatchToServer(patch) {
+    try {
+      const res = await fetch('/api/sheet-patch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(patch)
       });
 
-      const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
-        teamOrder.map(team => `${team.teamName} ${formatCellValue(team.score)}`).join(' : ');
-
-      let rowsHtml = '';
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        rowsHtml += '<tr>';
-
-        for (let i = 0; i < teamOrder.length; i++) {
-          const teamIndex = teamOrder[i].teamIndex;
-          const playerName = getRawPlayerName(teamIndex, playerIndex);
-          const totals = getPlayerTotals(teamIndex, playerIndex);
-
-          const leftScore = Number(totals.pure || 0);
-          const rightScore = Math.abs(Number(totals.minusOnly || 0));
-          const finalScore = Number(totals.score || 0);
-
-          const cellText = `${playerName ? playerName + '\n' : ''}${formatCellValue(finalScore)}점 (${formatCellValue(leftScore)}-${formatCellValue(rightScore)})`;
-
-          rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
-        }
-
-        rowsHtml += '</tr>';
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (!data.ok) {
+        console.error('sheet-patch 실패', data);
+        return false;
       }
 
-      recentMatchCard.innerHTML =
-        `<div class="recent-match-head">최근 내전 결과</div>` +
-        `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
-        `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
-        `<div class="recent-match-table-wrap">` +
-          `<table class="recent-match-table"><tbody>${rowsHtml}</tbody></table>` +
-        `</div>`;
+      lastServerJson = JSON.stringify(sheetState);
+      return true;
+    } catch (e) {
+      console.error('sheet-patch 오류', e);
+      return false;
     }
   }
 
@@ -2046,19 +1997,6 @@
     head.innerHTML = html;
   }
 
-  function updateRoundScoreCell(roundIndex, teamIndex) {
-  const body = document.getElementById('sheetBody');
-  if (!body) return;
-
-  const cell = body.querySelector(
-    `.sum-cell[data-round-index="${roundIndex}"][data-team-index="${teamIndex}"]`
-  );
-  if (!cell) return;
-
-  const roundData = sheetState.rounds[roundIndex];
-  cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
-}
-
   function renderSheetBody() {
     const body = document.getElementById('sheetBody');
     if (!body) return;
@@ -2125,13 +2063,9 @@
         `;
 
         html += `
-          <td
-  class="sum-cell"
-  data-round-index="${roundIndex}"
-  data-team-index="${teamIndex}"
->
-  ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
-</td>
+          <td class="sum-cell" data-round-index="${roundIndex}" data-team-index="${teamIndex}">
+            ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
+          </td>
         `;
       }
 
@@ -2139,6 +2073,19 @@
     }
 
     body.innerHTML = html;
+  }
+
+  function updateRoundScoreCell(roundIndex, teamIndex) {
+    const body = document.getElementById('sheetBody');
+    if (!body) return;
+
+    const cell = body.querySelector(
+      `.sum-cell[data-round-index="${roundIndex}"][data-team-index="${teamIndex}"]`
+    );
+    if (!cell) return;
+
+    const roundData = sheetState.rounds[roundIndex];
+    cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
   }
 
   function renderSheetSummary() {
@@ -2188,132 +2135,377 @@
     gridNode.innerHTML = teamColumns.join('');
   }
 
-  function updateAllRoundSums(shouldQueueSave = true) {
-    renderSheetHead();
-    renderSheetBody();
-    attachSheetEvents();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
+  function refreshDashboardFromSheetState() {
+    const todayTitle = document.getElementById('todayTitle');
+    const topTeamLabel = document.getElementById('topTeamLabel');
+    const topTeamLines = document.getElementById('topTeamLines');
+    const recentMatchCard = document.getElementById('recentMatchCard');
 
-    if (shouldQueueSave) {
-      queueSaveSheet();
-    }
-  }
-
-  function attachSheetEvents() {
-    const head = document.getElementById('sheetHead');
-    const body = document.getElementById('sheetBody');
-
-    if (head) {
-      head.oninput = (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('player-name-input')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
-
-          sheetState.teams[teamIndex].players[playerIndex] = target.value;
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
-
-        if (target.classList.contains('minus-select')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
-
-          sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
-          updateAllRoundSums(true);
-          return;
-        }
-      };
-
-      head.onchange = head.oninput;
+    if (todayTitle) {
+      todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
     }
 
-    if (body) {
-      body.oninput = (event) => {
-        const target = event.target;
+    const winner = getWinningTeamInfo();
+    const ranking = getAllPlayerRanking();
+    const mvp = ranking[0] || null;
 
-        if (target.classList.contains('map-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          sheetState.rounds[roundIndex].map = target.value;
+    if (topTeamLabel) {
+      if (!winner) {
+        topTeamLabel.textContent = '🏆 1등팀';
+      } else {
+        const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
+        topTeamLabel.textContent =
+          `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
+      }
+    }
 
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
+    if (topTeamLines) {
+      if (!mvp) {
+        topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
+      } else {
+        const mvpLeft = Number(mvp.pure || 0);
+        const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
+        const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
+        topTeamLines.textContent = `MVP ${mvpText}`;
+      }
+    }
+
+    if (recentMatchCard) {
+      const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
+        const totals = getTeamTotals(i);
+        return {
+          teamIndex: i,
+          teamName: sheetState.teams[i].teamName,
+          score: totals.score,
+          pure: totals.pure
+        };
+      }).sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.pure !== a.pure) return b.pure - a.pure;
+        return a.teamIndex - b.teamIndex;
+      });
+
+      const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
+        teamOrder.map(team => `${team.teamName} ${formatCellValue(team.score)}`).join(' : ');
+
+      let rowsHtml = '';
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        rowsHtml += '<tr>';
+
+        for (let i = 0; i < teamOrder.length; i++) {
+          const teamIndex = teamOrder[i].teamIndex;
+          const playerName = getRawPlayerName(teamIndex, playerIndex);
+          const totals = getPlayerTotals(teamIndex, playerIndex);
+
+          const leftScore = Number(totals.pure || 0);
+          const rightScore = Math.abs(Number(totals.minusOnly || 0));
+          const finalScore = Number(totals.score || 0);
+
+          const cellText = `${playerName ? playerName + '\n' : ''}${formatCellValue(finalScore)}점 (${formatCellValue(leftScore)}-${formatCellValue(rightScore)})`;
+
+          rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
         }
 
-       if (target.classList.contains('kill-input')) {
-  const roundIndex = Number(target.dataset.roundIndex);
-  const teamIndex = Number(target.dataset.teamIndex);
-  const playerIndex = Number(target.dataset.playerIndex);
+        rowsHtml += '</tr>';
+      }
 
-  sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-
-  renderSheetHead();
-  attachSheetEvents();
-  updateRoundScoreCell(roundIndex, teamIndex);
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  queueSaveSheet();
-  return;
-  }
- };
-
-      body.onchange = (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('top10-check')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-
-          sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
-          updateAllRoundSums(true);
-          return;
-        }
-
-        if (target.classList.contains('chicken-check')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-
-          sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
-          updateAllRoundSums(true);
-          return;
-        }
-      };
+      recentMatchCard.innerHTML =
+        `<div class="recent-match-head">최근 내전 결과</div>` +
+        `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
+        `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
+        `<div class="recent-match-table-wrap">` +
+          `<table class="recent-match-table"><tbody>${rowsHtml}</tbody></table>` +
+        `</div>`;
     }
   }
 
   function renderAllFromState() {
     renderSheetHead();
     renderSheetBody();
-    attachSheetEvents();
     renderSheetSummary();
     refreshDashboardFromSheetState();
+    attachSheetEvents();
+    saveDraftToLocal();
   }
 
-  function initAdvancedSheet() {
-    renderAllFromState();
+  function updateUiAfterCellChange(roundIndex, teamIndex, rerenderHead = false) {
+    if (rerenderHead) {
+      renderSheetHead();
+      attachSheetEvents();
+    }
+    updateRoundScoreCell(roundIndex, teamIndex);
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    saveDraftToLocal();
   }
 
-  function resetSheetState() {
-    const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
+  function updateUiAfterGlobalChange() {
+    renderSheetHead();
+    renderSheetBody();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    attachSheetEvents();
+    saveDraftToLocal();
+  }
+
+  function attachSheetEvents() {
+    const head = document.getElementById('sheetHead');
+    const body = document.getElementById('sheetBody');
+    if (!head || !body) return;
+
+    head.oninput = null;
+    head.onchange = null;
+    head.onfocusin = null;
+    head.onfocusout = null;
+    body.oninput = null;
+    body.onchange = null;
+    body.onfocusin = null;
+    body.onfocusout = null;
+
+    head.onfocusin = (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('player-name-input')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        setEditingCellKey(cellKey('name', -1, teamIndex, playerIndex));
+      }
+
+      if (target.classList.contains('minus-select')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        setEditingCellKey(cellKey('minus', -1, teamIndex, playerIndex));
+      }
+    };
+
+    body.onfocusin = (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        setEditingCellKey(cellKey('kill', roundIndex, teamIndex, playerIndex));
+      }
+
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        setEditingCellKey(cellKey('map', roundIndex, -1, -1));
+      }
+    };
+
+    head.onchange = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('minus-select')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        const value = String(target.value);
+
+        sheetState.teams[teamIndex].minusScores[playerIndex] = value;
+        blockRemoteSync();
+        updateUiAfterGlobalChange();
+        await saveSheetPatchToServer({
+          type: 'minus',
+          teamIndex,
+          playerIndex,
+          value
+        });
+        clearEditingCellKey();
+        return;
+      }
+    };
+
+    head.onfocusout = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('player-name-input')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        const value = String(target.value || '');
+
+        sheetState.teams[teamIndex].players[playerIndex] = value;
+        blockRemoteSync();
+        updateUiAfterGlobalChange();
+        await saveSheetPatchToServer({
+          type: 'playerName',
+          teamIndex,
+          playerIndex,
+          value
+        });
+        clearEditingCellKey();
+        return;
+      }
+
+      if (target.classList.contains('minus-select')) {
+        clearEditingCellKey();
+      }
+    };
+
+    body.oninput = (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        const value = normalizeKillValue(target.value);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
+        blockRemoteSync();
+        updateUiAfterCellChange(roundIndex, teamIndex, false);
+        return;
+      }
+
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const value = String(target.value || '');
+
+        sheetState.rounds[roundIndex].map = value;
+        blockRemoteSync();
+        saveDraftToLocal();
+        return;
+      }
+    };
+
+    body.onchange = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('top10-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const checked = !!target.checked;
+
+        sheetState.rounds[roundIndex].teams[teamIndex].top10 = checked;
+        blockRemoteSync();
+        updateUiAfterGlobalChange();
+        await saveSheetPatchToServer({
+          type: 'top10',
+          roundIndex,
+          teamIndex,
+          value: checked
+        });
+        clearEditingCellKey();
+        return;
+      }
+
+      if (target.classList.contains('chicken-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const checked = !!target.checked;
+
+        sheetState.rounds[roundIndex].teams[teamIndex].chicken = checked;
+        blockRemoteSync();
+        updateUiAfterGlobalChange();
+        await saveSheetPatchToServer({
+          type: 'chicken',
+          roundIndex,
+          teamIndex,
+          value: checked
+        });
+        clearEditingCellKey();
+        return;
+      }
+    };
+
+    body.onfocusout = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+        const value = normalizeKillValue(target.value);
+
+        target.value = value;
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
+        blockRemoteSync();
+        updateUiAfterCellChange(roundIndex, teamIndex, false);
+        await saveSheetPatchToServer({
+          type: 'kill',
+          roundIndex,
+          teamIndex,
+          playerIndex,
+          value
+        });
+        clearEditingCellKey();
+        return;
+      }
+
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const value = String(target.value || '');
+
+        sheetState.rounds[roundIndex].map = value;
+        blockRemoteSync();
+        saveDraftToLocal();
+        await saveSheetPatchToServer({
+          type: 'map',
+          roundIndex,
+          value
+        });
+        clearEditingCellKey();
+        return;
+      }
+    };
+  }
+
+  async function startRemoteSync() {
+    if (syncInterval) clearInterval(syncInterval);
+
+    syncInterval = setInterval(async () => {
+      await loadSheetFromServer(false);
+    }, REMOTE_SYNC_INTERVAL);
+  }
+
+  async function resetSheetToDefault() {
+    const ok = window.confirm('입력표를 초기화할까요?');
     if (!ok) return;
 
-    sheetState = getDefaultSheetState();
-    renderAllFromState();
-    queueSaveSheet();
-
     const statusEl = document.getElementById('saveStatus');
-    if (statusEl) {
-      statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
+    if (statusEl) statusEl.textContent = '초기화 중...';
+
+    try {
+      const res = await fetch('/api/sheet-reset', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+
+      if (!data.ok) {
+        if (statusEl) statusEl.textContent = '❌ 초기화 실패';
+        return;
+      }
+
+      localStorage.removeItem(LOCAL_DRAFT_KEY);
+      sheetState = getDefaultSheetState();
+      renderAllFromState();
+      blockRemoteSync();
+      if (statusEl) statusEl.textContent = '✅ 입력표 초기화 완료';
+      await loadSheetFromServer(true);
+    } catch (e) {
+      console.error('sheet-reset 실패', e);
+      if (statusEl) statusEl.textContent = '❌ 초기화 실패';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async function () {
+  async function bootstrapSheetState() {
+    const draft = loadDraftFromLocal();
+    if (draft) {
+      sheetState = draft;
+      renderAllFromState();
+    } else {
+      renderAllFromState();
+    }
+
+    await loadSheetFromServer(true);
+
+    if (!lastServerJson) {
+      saveDraftToLocal();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
       saveBtn.addEventListener('click', saveCurrentMatch);
@@ -2321,32 +2513,13 @@
 
     const resetSheetBtn = document.getElementById('resetSheetBtn');
     if (resetSheetBtn) {
-      resetSheetBtn.addEventListener('click', resetSheetState);
+      resetSheetBtn.addEventListener('click', resetSheetToDefault);
     }
 
+    await bootstrapSheetState();
     await loadRoundSummary();
-
-    initAdvancedSheet();
-    await loadSheetFromServer();
-    startFastSync();
+    startRemoteSync();
   });
-
-  // 마우스 휠 막기
-  document.addEventListener('wheel', function (e) {
-    if (document.activeElement && document.activeElement.type === 'number') {
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  // ↑ ↓ 키 막기
-  document.addEventListener('keydown', function (e) {
-    if (document.activeElement && document.activeElement.type === 'number') {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-        e.preventDefault();
-      }
-    }
-  });
-
 </script>
   
   <div class="roulette-section">
