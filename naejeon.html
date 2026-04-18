@@ -1274,16 +1274,19 @@
   const ROUND_COUNT = 30;
   const MINUS_OPTIONS = ['-2', '-1.5', '-1', '-0.5', '0'];
 
-  const LOCAL_DRAFT_KEY = 'zara_naejeon_sheet_draft_v3';
+  const LOCAL_DRAFT_KEY = 'zara_naejeon_sheet_draft_v4';
   const REMOTE_SYNC_INTERVAL = 1200;
-  const REMOTE_BLOCK_MS = 2500;
+  const REMOTE_BLOCK_MS = 1800;
+  const SAVE_STATUS_CLEAR_MS = 3000;
 
   let sheetState = getDefaultSheetState();
-  let lastServerJson = '';
   let isRemoteApplying = false;
   let editingCellKey = '';
   let remoteBlockedUntil = 0;
   let syncInterval = null;
+  let dirtyCells = new Set();
+  let pendingPatches = new Map();
+  let lastLocalEditAt = 0;
 
   function getDefaultSheetState() {
     return {
@@ -1750,7 +1753,22 @@
     }
   }
 
+  function setStatus(message, isError = false) {
+    const statusEl = document.getElementById('saveStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+    if (!isError && message) {
+      window.clearTimeout(setStatus._timer);
+      setStatus._timer = window.setTimeout(() => {
+        if (statusEl.textContent === message) {
+          statusEl.textContent = '';
+        }
+      }, SAVE_STATUS_CLEAR_MS);
+    }
+  }
+
   function blockRemoteSync(ms = REMOTE_BLOCK_MS) {
+    lastLocalEditAt = Date.now();
     remoteBlockedUntil = Date.now() + ms;
   }
 
@@ -1770,6 +1788,20 @@
 
   function cellKey(type, roundIndex, teamIndex, playerIndex) {
     return [type, roundIndex, teamIndex, playerIndex].join(':');
+  }
+
+  function markDirty(key, patch) {
+    dirtyCells.add(key);
+    if (patch) {
+      pendingPatches.set(key, patch);
+    }
+    blockRemoteSync();
+    saveDraftToLocal();
+  }
+
+  function clearDirty(key) {
+    dirtyCells.delete(key);
+    pendingPatches.delete(key);
   }
 
   function hydrateIncomingSheetState(data) {
@@ -1830,9 +1862,58 @@
     return base;
   }
 
+  function mergeRemoteStatePreservingDirty(remoteState) {
+    const next = JSON.parse(JSON.stringify(sheetState));
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const nameKey = cellKey('playerName', -1, teamIndex, playerIndex);
+        if (!dirtyCells.has(nameKey)) {
+          next.teams[teamIndex].players[playerIndex] = remoteState.teams[teamIndex].players[playerIndex];
+        }
+
+        const minusKey = cellKey('minus', -1, teamIndex, playerIndex);
+        if (!dirtyCells.has(minusKey)) {
+          next.teams[teamIndex].minusScores[playerIndex] = remoteState.teams[teamIndex].minusScores[playerIndex];
+        }
+      }
+    }
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const mapKey = cellKey('map', roundIndex, -1, -1);
+      if (!dirtyCells.has(mapKey)) {
+        next.rounds[roundIndex].map = remoteState.rounds[roundIndex].map;
+      }
+
+      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+        const top10Key = cellKey('top10', roundIndex, teamIndex, -1);
+        if (!dirtyCells.has(top10Key)) {
+          next.rounds[roundIndex].teams[teamIndex].top10 = remoteState.rounds[roundIndex].teams[teamIndex].top10;
+        }
+
+        const chickenKey = cellKey('chicken', roundIndex, teamIndex, -1);
+        if (!dirtyCells.has(chickenKey)) {
+          next.rounds[roundIndex].teams[teamIndex].chicken = remoteState.rounds[roundIndex].teams[teamIndex].chicken;
+        }
+
+        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+          const killKey = cellKey('kill', roundIndex, teamIndex, playerIndex);
+          if (!dirtyCells.has(killKey)) {
+            next.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill =
+              remoteState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill;
+          }
+        }
+      }
+    }
+
+    return next;
+  }
+
   async function loadSheetFromServer(force = false) {
     if (isRemoteApplying) return false;
-    if (!force && (isRemoteBlocked() || editingCellKey)) return false;
+
+    const justEdited = Date.now() - lastLocalEditAt < 3000;
+    if (!force && (isRemoteBlocked() || editingCellKey || justEdited)) return false;
 
     try {
       const res = await fetch('/api/sheet-load', {
@@ -1843,18 +1924,10 @@
 
       if (!data.ok || !data.data) return false;
 
-      const hydrated = hydrateIncomingSheetState(data.data);
-      const incomingJson = JSON.stringify(hydrated);
-      const localJson = JSON.stringify(sheetState);
-
-      if (!force && incomingJson === localJson) {
-        lastServerJson = incomingJson;
-        return false;
-      }
+      const remoteState = hydrateIncomingSheetState(data.data);
 
       isRemoteApplying = true;
-      sheetState = hydrated;
-      lastServerJson = incomingJson;
+      sheetState = force ? remoteState : mergeRemoteStatePreservingDirty(remoteState);
       renderAllFromState();
       isRemoteApplying = false;
       return true;
@@ -1865,7 +1938,7 @@
     }
   }
 
-  async function saveSheetPatchToServer(patch) {
+  async function saveSheetPatchToServer(key, patch) {
     try {
       const res = await fetch('/api/sheet-patch', {
         method: 'POST',
@@ -1877,14 +1950,32 @@
       const data = await res.json().catch(() => ({ ok: false }));
       if (!data.ok) {
         console.error('sheet-patch 실패', data);
+        setStatus('❌ 저장 실패 - 입력값은 유지됩니다.', true);
+        blockRemoteSync(8000);
         return false;
       }
 
-      lastServerJson = JSON.stringify(sheetState);
+      clearDirty(key);
+      setStatus('저장됨');
       return true;
     } catch (e) {
       console.error('sheet-patch 오류', e);
+      setStatus('❌ 저장 실패 - 입력값은 유지됩니다.', true);
+      blockRemoteSync(8000);
       return false;
+    }
+  }
+
+  async function retryPendingPatches() {
+    if (!pendingPatches.size) return;
+    if (editingCellKey) return;
+
+    const entries = Array.from(pendingPatches.entries());
+    for (const [key, patch] of entries) {
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (!ok) {
+        break;
+      }
     }
   }
 
@@ -2268,7 +2359,7 @@
       if (target.classList.contains('player-name-input')) {
         const teamIndex = Number(target.dataset.teamIndex);
         const playerIndex = Number(target.dataset.playerIndex);
-        setEditingCellKey(cellKey('name', -1, teamIndex, playerIndex));
+        setEditingCellKey(cellKey('playerName', -1, teamIndex, playerIndex));
       }
 
       if (target.classList.contains('minus-select')) {
@@ -2301,17 +2392,20 @@
         const teamIndex = Number(target.dataset.teamIndex);
         const playerIndex = Number(target.dataset.playerIndex);
         const value = String(target.value);
-
-        sheetState.teams[teamIndex].minusScores[playerIndex] = value;
-        blockRemoteSync();
-        updateUiAfterGlobalChange();
-        await saveSheetPatchToServer({
+        const key = cellKey('minus', -1, teamIndex, playerIndex);
+        const patch = {
           type: 'minus',
           teamIndex,
           playerIndex,
           value
-        });
-        clearEditingCellKey();
+        };
+
+        sheetState.teams[teamIndex].minusScores[playerIndex] = value;
+        markDirty(key, patch);
+        updateUiAfterGlobalChange();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
     };
@@ -2323,22 +2417,27 @@
         const teamIndex = Number(target.dataset.teamIndex);
         const playerIndex = Number(target.dataset.playerIndex);
         const value = String(target.value || '');
-
-        sheetState.teams[teamIndex].players[playerIndex] = value;
-        blockRemoteSync();
-        updateUiAfterGlobalChange();
-        await saveSheetPatchToServer({
+        const key = cellKey('playerName', -1, teamIndex, playerIndex);
+        const patch = {
           type: 'playerName',
           teamIndex,
           playerIndex,
           value
-        });
-        clearEditingCellKey();
+        };
+
+        sheetState.teams[teamIndex].players[playerIndex] = value;
+        markDirty(key, patch);
+        updateUiAfterGlobalChange();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
 
       if (target.classList.contains('minus-select')) {
-        clearEditingCellKey();
+        if (!pendingPatches.has(editingCellKey)) {
+          clearEditingCellKey();
+        }
       }
     };
 
@@ -2350,9 +2449,18 @@
         const teamIndex = Number(target.dataset.teamIndex);
         const playerIndex = Number(target.dataset.playerIndex);
         const value = normalizeKillValue(target.value);
+        const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
+        const patch = {
+          type: 'kill',
+          roundIndex,
+          teamIndex,
+          playerIndex,
+          value
+        };
 
+        target.value = value;
         sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
-        blockRemoteSync();
+        markDirty(key, patch);
         updateUiAfterCellChange(roundIndex, teamIndex, false);
         return;
       }
@@ -2360,10 +2468,15 @@
       if (target.classList.contains('map-input')) {
         const roundIndex = Number(target.dataset.roundIndex);
         const value = String(target.value || '');
+        const key = cellKey('map', roundIndex, -1, -1);
+        const patch = {
+          type: 'map',
+          roundIndex,
+          value
+        };
 
         sheetState.rounds[roundIndex].map = value;
-        blockRemoteSync();
-        saveDraftToLocal();
+        markDirty(key, patch);
         return;
       }
     };
@@ -2374,36 +2487,42 @@
       if (target.classList.contains('top10-check')) {
         const roundIndex = Number(target.dataset.roundIndex);
         const teamIndex = Number(target.dataset.teamIndex);
-        const checked = !!target.checked;
-
-        sheetState.rounds[roundIndex].teams[teamIndex].top10 = checked;
-        blockRemoteSync();
-        updateUiAfterGlobalChange();
-        await saveSheetPatchToServer({
+        const value = !!target.checked;
+        const key = cellKey('top10', roundIndex, teamIndex, -1);
+        const patch = {
           type: 'top10',
           roundIndex,
           teamIndex,
-          value: checked
-        });
-        clearEditingCellKey();
+          value
+        };
+
+        sheetState.rounds[roundIndex].teams[teamIndex].top10 = value;
+        markDirty(key, patch);
+        updateUiAfterGlobalChange();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
 
       if (target.classList.contains('chicken-check')) {
         const roundIndex = Number(target.dataset.roundIndex);
         const teamIndex = Number(target.dataset.teamIndex);
-        const checked = !!target.checked;
-
-        sheetState.rounds[roundIndex].teams[teamIndex].chicken = checked;
-        blockRemoteSync();
-        updateUiAfterGlobalChange();
-        await saveSheetPatchToServer({
+        const value = !!target.checked;
+        const key = cellKey('chicken', roundIndex, teamIndex, -1);
+        const patch = {
           type: 'chicken',
           roundIndex,
           teamIndex,
-          value: checked
-        });
-        clearEditingCellKey();
+          value
+        };
+
+        sheetState.rounds[roundIndex].teams[teamIndex].chicken = value;
+        markDirty(key, patch);
+        updateUiAfterGlobalChange();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
     };
@@ -2416,35 +2535,41 @@
         const teamIndex = Number(target.dataset.teamIndex);
         const playerIndex = Number(target.dataset.playerIndex);
         const value = normalizeKillValue(target.value);
-
-        target.value = value;
-        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
-        blockRemoteSync();
-        updateUiAfterCellChange(roundIndex, teamIndex, false);
-        await saveSheetPatchToServer({
+        const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
+        const patch = {
           type: 'kill',
           roundIndex,
           teamIndex,
           playerIndex,
           value
-        });
-        clearEditingCellKey();
+        };
+
+        target.value = value;
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
+        markDirty(key, patch);
+        updateUiAfterCellChange(roundIndex, teamIndex, false);
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
 
       if (target.classList.contains('map-input')) {
         const roundIndex = Number(target.dataset.roundIndex);
         const value = String(target.value || '');
-
-        sheetState.rounds[roundIndex].map = value;
-        blockRemoteSync();
-        saveDraftToLocal();
-        await saveSheetPatchToServer({
+        const key = cellKey('map', roundIndex, -1, -1);
+        const patch = {
           type: 'map',
           roundIndex,
           value
-        });
-        clearEditingCellKey();
+        };
+
+        sheetState.rounds[roundIndex].map = value;
+        markDirty(key, patch);
+        saveDraftToLocal();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
         return;
       }
     };
@@ -2454,6 +2579,7 @@
     if (syncInterval) clearInterval(syncInterval);
 
     syncInterval = setInterval(async () => {
+      await retryPendingPatches();
       await loadSheetFromServer(false);
     }, REMOTE_SYNC_INTERVAL);
   }
@@ -2478,9 +2604,12 @@
       }
 
       localStorage.removeItem(LOCAL_DRAFT_KEY);
+      dirtyCells.clear();
+      pendingPatches.clear();
+      editingCellKey = '';
       sheetState = getDefaultSheetState();
       renderAllFromState();
-      blockRemoteSync();
+      blockRemoteSync(2000);
       if (statusEl) statusEl.textContent = '✅ 입력표 초기화 완료';
       await loadSheetFromServer(true);
     } catch (e) {
@@ -2493,16 +2622,10 @@
     const draft = loadDraftFromLocal();
     if (draft) {
       sheetState = draft;
-      renderAllFromState();
-    } else {
-      renderAllFromState();
     }
 
+    renderAllFromState();
     await loadSheetFromServer(true);
-
-    if (!lastServerJson) {
-      saveDraftToLocal();
-    }
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
