@@ -2152,41 +2152,55 @@
     }
 
     function renderSheetSummary() {
-      const grid = document.getElementById('sheetSummaryGrid');
-      const total = document.getElementById('sheetSummaryTotal');
-      if (!grid || !total) return;
+  const total = document.getElementById('sheetSummaryTotal');
+  const grid = document.getElementById('sheetSummaryGrid');
+  if (!total || !grid) return;
 
-      const teamSummaries = [];
+  const teamColumns = [];
+  const totalTexts = [];
+  let grandTotal = 0;
 
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        teamSummaries.push(getTeamSummary(teamIndex));
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    const team = sheetState.teams[teamIndex];
+    const playerLines = [];
+    let teamPureTotal = 0;
+
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
+
+      let killTotal = 0;
+      let top10Total = 0;
+
+      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+        killTotal += Number(player.kill || 0);
+        if (player.top10) top10Total += 1;
       }
 
-      const grandTotal = teamSummaries.reduce((sum, team) => sum + team.pureTotal, 0);
+      const pure = killTotal - top10Total;
+      teamPureTotal += pure;
 
-      total.textContent =
-        `[${grandTotal}] ` +
-        teamSummaries.map(team => `${team.teamName} ${team.pureTotal}`).join(' : ');
-
-      grid.innerHTML = teamSummaries.map((team) => {
-        const playerHtml = team.players.map(player => {
-          return `
-            <div class="sheet-summary-player">
-              ${escapeHtml(player.name)} ${player.pure} (${player.kill}-${player.top10})
-            </div>
-          `;
-        }).join('');
-
-        return `
-          <div class="sheet-summary-team">
-            <div class="sheet-summary-team-head">${escapeHtml(team.teamName)}</div>
-            <div class="sheet-summary-team-sub">순수킬</div>
-            ${playerHtml}
-            <div class="sheet-summary-footer">팀합 ${team.pureTotal}</div>
-          </div>
-        `;
-      }).join('');
+      playerLines.push(`
+        <div class="sheet-summary-player">
+          ${escapeHtml(playerName)} ${pure} (${killTotal} - ${top10Total})
+        </div>
+      `);
     }
+
+    grandTotal += teamPureTotal;
+    totalTexts.push(`${team.teamName} ${teamPureTotal}`);
+
+    teamColumns.push(`
+      <div class="sheet-summary-team">
+        ${playerLines.join('')}
+        <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
+      </div>
+    `);
+  }
+
+  total.textContent = `[${grandTotal}] ` + totalTexts.join(' : ');
+  grid.innerHTML = teamColumns.join('');
+}
 
     function updateAllRoundSums() {
       for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
