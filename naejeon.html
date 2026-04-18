@@ -1000,6 +1000,31 @@
       </aside>
     </div>
   </div>
+  <div class="sheet-wrap">
+  <h2 class="sheet-title">📊 내전 입력표</h2>
+
+  <div class="sheet-table-wrap">
+    <table class="sheet-table" id="sheetTable">
+      <thead>
+        <tr>
+          <th>라운드</th>
+          <th>맵</th>
+          <th>팀1 KILL</th>
+          <th>TOP10</th>
+          <th>팀2 KILL</th>
+          <th>TOP10</th>
+          <th>팀3 KILL</th>
+          <th>TOP10</th>
+          <th>팀4 KILL</th>
+          <th>TOP10</th>
+          <th>팀5 KILL</th>
+          <th>TOP10</th>
+        </tr>
+      </thead>
+      <tbody id="sheetBody"></tbody>
+    </table>
+  </div>
+</div>
 
   <script>
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/1gvrn7SDzU7kjtXwmiJjN6Xf9HSsCDuYOo9rajIKnC7c/export?format=csv&gid=0';
@@ -1692,6 +1717,30 @@
       loadSpreadsheetData();
       loadRoundSummary();
     });
+    function createSheet() {
+  const body = document.getElementById('sheetBody');
+
+  for (let i = 1; i <= 40; i++) {
+    const tr = document.createElement('tr');
+
+    let html = `
+      <td class="round">${i}</td>
+      <td><input class="map-input" value="사녹" /></td>
+    `;
+
+    for (let t = 0; t < 5; t++) {
+      html += `
+        <td><input type="number" class="kill-input" /></td>
+        <td><input type="checkbox" class="top10-check" /></td>
+      `;
+    }
+
+    tr.innerHTML = html;
+    body.appendChild(tr);
+  }
+}
+
+createSheet();
   </script>
 
   <div class="roulette-section">
