@@ -1273,7 +1273,7 @@
     const PLAYERS_PER_TEAM = 4;
     const ROUND_COUNT = 40;
 
-    const sheetState = {
+    let sheetState = {
       teams: [
         { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
         { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
@@ -1292,6 +1292,97 @@
         }))
       }))
     };
+    let syncTimer = null;
+let lastSyncedJson = '';
+let isRemoteApplying = false;
+
+function getDefaultSheetState() {
+  return {
+    teams: [
+      { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+      { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
+    ],
+    rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
+      round: index + 1,
+      map: '사녹',
+      teams: Array.from({ length: TEAM_COUNT }, () => ({
+        players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
+          kill: '',
+          top10: false
+        }))
+      }))
+    }))
+  };
+}
+
+async function saveSheetToServer() {
+  if (isRemoteApplying) return;
+
+  try {
+    const payload = JSON.stringify(sheetState);
+
+    await fetch('/api/sheet-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: payload
+    });
+
+    lastSyncedJson = payload;
+  } catch (e) {
+    console.error('sheet-save 실패', e);
+  }
+}
+
+function queueSaveSheet() {
+  if (isRemoteApplying) return;
+
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    saveSheetToServer();
+  }, 120);
+}
+
+async function loadSheetFromServer() {
+  try {
+    const res = await fetch('/api/sheet-load', {
+      cache: 'no-store',
+      credentials: 'include'
+    });
+    const data = await res.json();
+
+    if (!data.ok || !data.data) return false;
+
+    const incomingJson = JSON.stringify(data.data);
+    if (incomingJson === lastSyncedJson) return false;
+
+    isRemoteApplying = true;
+    sheetState = data.data;
+    lastSyncedJson = incomingJson;
+
+    renderSheetHead();
+    renderSheetBody();
+    updateAllRoundSums();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+
+    isRemoteApplying = false;
+    return true;
+  } catch (e) {
+    console.error('sheet-load 실패', e);
+    isRemoteApplying = false;
+    return false;
+  }
+}
+
+function startFastSync() {
+  setInterval(async () => {
+    await loadSheetFromServer();
+  }, 300);
+}
 
     function escapeHtml(text) {
       return String(text || '')
@@ -1905,71 +1996,74 @@
     }
 
     function updateAllRoundSums() {
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-          const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-          if (!sumCell) continue;
-          sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
-        }
-      }
-
-      renderSheetSummary();
-      refreshDashboardFromSheetState();
+  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+      if (!sumCell) continue;
+      sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
     }
+  }
+
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  queueSaveSheet();
+}
 
     function attachSheetEvents() {
-      const head = document.getElementById('sheetHead');
-      const body = document.getElementById('sheetBody');
+  const head = document.getElementById('sheetHead');
+  const body = document.getElementById('sheetBody');
 
-      if (head) {
-        head.addEventListener('input', (event) => {
-          const target = event.target;
-          if (!target.classList.contains('player-name-input')) return;
+  if (head) {
+    head.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!target.classList.contains('player-name-input')) return;
 
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.teams[teamIndex].players[playerIndex] = target.value;
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-        });
+      sheetState.teams[teamIndex].players[playerIndex] = target.value;
+      renderSheetSummary();
+      refreshDashboardFromSheetState();
+      queueSaveSheet();
+    });
+  }
+
+  if (body) {
+    body.addEventListener('input', (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        sheetState.rounds[roundIndex].map = target.value;
+        refreshDashboardFromSheetState();
+        queueSaveSheet();
+        return;
       }
 
-      if (body) {
-        body.addEventListener('input', (event) => {
-          const target = event.target;
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
 
-          if (target.classList.contains('map-input')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            sheetState.rounds[roundIndex].map = target.value;
-            refreshDashboardFromSheetState();
-            return;
-          }
-
-          if (target.classList.contains('kill-input')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            const teamIndex = Number(target.dataset.teamIndex);
-            const playerIndex = Number(target.dataset.playerIndex);
-
-            sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-            updateAllRoundSums();
-          }
-        });
-
-        body.addEventListener('change', (event) => {
-          const target = event.target;
-
-          if (target.classList.contains('top10-check')) {
-            const roundIndex = Number(target.dataset.roundIndex);
-            const teamIndex = Number(target.dataset.teamIndex);
-            const playerIndex = Number(target.dataset.playerIndex);
-
-            sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
-            updateAllRoundSums();
-          }
-        });
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+        updateAllRoundSums();
       }
-    }
+    });
+
+    body.addEventListener('change', (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('top10-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
+        updateAllRoundSums();
+      }
+    });
+  }
+}
 
     function initAdvancedSheet() {
       renderSheetHead();
@@ -1980,7 +2074,7 @@
       refreshDashboardFromSheetState();
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', async function () {
   const saveBtn = document.getElementById('saveBtn');
   if (saveBtn) {
     saveBtn.addEventListener('click', saveCurrentMatch);
@@ -1992,7 +2086,12 @@
   }
 
   loadRoundSummary();
+
   initAdvancedSheet();
+
+  await loadSheetFromServer();
+  startFastSync();
+});
       function resetSheetState() {
   const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
   if (!ok) return;
@@ -2022,6 +2121,7 @@
   updateAllRoundSums();
   renderSheetSummary();
   refreshDashboardFromSheetState();
+  queueSaveSheet();
 
   const statusEl = document.getElementById('saveStatus');
   if (statusEl) {
