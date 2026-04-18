@@ -16,12 +16,8 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json' }
     });
-
   } catch (e) {
-    return new Response(JSON.stringify({
-      ok: false,
-      error: e.message
-    }), {
+    return new Response(JSON.stringify({ ok: false, error: e.message }), {
       headers: { 'Content-Type': 'application/json' }
     });
   }
