@@ -1274,15 +1274,10 @@
   const ROUND_COUNT = 30;
   const MINUS_OPTIONS = ['-2', '-1.5', '-1', '-0.5', '0'];
 
+  let syncTimer = null;
   let lastSyncedJson = '';
   let isRemoteApplying = false;
   let fastSyncInterval = null;
-  let editingCellKey = '';
-  let suppressRemoteUntil = 0;
-
-  function blockRemoteSync(ms = 1000) {
-    suppressRemoteUntil = Date.now() + ms;
-  }
 
   function getDefaultSheetState() {
     return {
@@ -1619,27 +1614,32 @@
     }
   }
 
-  async function saveSheetPatchToServer(patch) {
+  async function saveSheetToServer() {
     if (isRemoteApplying) return;
 
     try {
-      const res = await fetch('/api/sheet-patch', {
+      const payload = JSON.stringify(sheetState);
+
+      const res = await fetch('/api/sheet-save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(patch)
+        body: payload
       });
 
       const data = await res.json().catch(() => ({ ok: false }));
-if (!data.ok) {
-  console.error('sheet-patch 실패', data);
-  return;
-}
-
-lastSyncedJson = JSON.stringify(sheetState);
+      if (data.ok) {
+        lastSyncedJson = payload;
+      }
     } catch (e) {
-      console.error('sheet-patch 실패', e);
+      console.error('sheet-save 실패', e);
     }
+  }
+
+  function queueSaveSheet() {
+    if (isRemoteApplying) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(saveSheetToServer, 120);
   }
 
   function hydrateIncomingSheetState(data) {
@@ -1702,9 +1702,6 @@ lastSyncedJson = JSON.stringify(sheetState);
 
   async function loadSheetFromServer() {
     try {
-      if (editingCellKey) return false;
-      if (Date.now() < suppressRemoteUntil) return false;
-
       const res = await fetch('/api/sheet-load', {
         cache: 'no-store',
         credentials: 'include'
@@ -2050,17 +2047,17 @@ lastSyncedJson = JSON.stringify(sheetState);
   }
 
   function updateRoundScoreCell(roundIndex, teamIndex) {
-    const body = document.getElementById('sheetBody');
-    if (!body) return;
+  const body = document.getElementById('sheetBody');
+  if (!body) return;
 
-    const cell = body.querySelector(
-      `.sum-cell[data-round-index="${roundIndex}"][data-team-index="${teamIndex}"]`
-    );
-    if (!cell) return;
+  const cell = body.querySelector(
+    `.sum-cell[data-round-index="${roundIndex}"][data-team-index="${teamIndex}"]`
+  );
+  if (!cell) return;
 
-    const roundData = sheetState.rounds[roundIndex];
-    cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
-  }
+  const roundData = sheetState.rounds[roundIndex];
+  cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
+}
 
   function renderSheetBody() {
     const body = document.getElementById('sheetBody');
@@ -2129,12 +2126,12 @@ lastSyncedJson = JSON.stringify(sheetState);
 
         html += `
           <td
-            class="sum-cell"
-            data-round-index="${roundIndex}"
-            data-team-index="${teamIndex}"
-          >
-            ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
-          </td>
+  class="sum-cell"
+  data-round-index="${roundIndex}"
+  data-team-index="${teamIndex}"
+>
+  ${formatCellValue(getTeamRoundTotal(roundData, teamIndex))}
+</td>
         `;
       }
 
@@ -2191,12 +2188,16 @@ lastSyncedJson = JSON.stringify(sheetState);
     gridNode.innerHTML = teamColumns.join('');
   }
 
-  function updateAllRoundSums() {
+  function updateAllRoundSums(shouldQueueSave = true) {
     renderSheetHead();
     renderSheetBody();
     attachSheetEvents();
     renderSheetSummary();
     refreshDashboardFromSheetState();
+
+    if (shouldQueueSave) {
+      queueSaveSheet();
+    }
   }
 
   function attachSheetEvents() {
@@ -2212,109 +2213,26 @@ lastSyncedJson = JSON.stringify(sheetState);
           const playerIndex = Number(target.dataset.playerIndex);
 
           sheetState.teams[teamIndex].players[playerIndex] = target.value;
-
           renderSheetSummary();
           refreshDashboardFromSheetState();
-
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'playerName',
-            teamIndex,
-            playerIndex,
-            value: target.value
-          });
+          queueSaveSheet();
           return;
         }
-      };
-
-      head.onchange = (event) => {
-        const target = event.target;
 
         if (target.classList.contains('minus-select')) {
           const teamIndex = Number(target.dataset.teamIndex);
           const playerIndex = Number(target.dataset.playerIndex);
 
           sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
-          updateAllRoundSums();
-
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'minusScore',
-            teamIndex,
-            playerIndex,
-            value: target.value
-          });
-
-          
+          updateAllRoundSums(true);
           return;
         }
       };
+
+      head.onchange = head.oninput;
     }
 
     if (body) {
-      body.onfocusin = (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('kill-input')) {
-          editingCellKey = [
-            'kill',
-            target.dataset.roundIndex,
-            target.dataset.teamIndex,
-            target.dataset.playerIndex
-          ].join(':');
-        }
-
-        if (target.classList.contains('map-input')) {
-          editingCellKey = ['map', target.dataset.roundIndex].join(':');
-        }
-      };
-
-      body.onfocusout = (event) => {
-  const target = event.target;
-
-  if (target.classList.contains('kill-input')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-    const teamIndex = Number(target.dataset.teamIndex);
-    const playerIndex = Number(target.dataset.playerIndex);
-
-    editingCellKey = '';
-
-    blockRemoteSync();
-    saveSheetPatchToServer({
-      type: 'kill',
-      roundIndex,
-      teamIndex,
-      playerIndex,
-      value: target.value
-    });
-
-    renderSheetHead();
-    attachSheetEvents();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    return;
-  }
-
-  if (target.classList.contains('map-input')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-
-    editingCellKey = '';
-
-    blockRemoteSync();
-    saveSheetPatchToServer({
-      type: 'map',
-      roundIndex,
-      value: target.value
-    });
-
-    renderSheetHead();
-    attachSheetEvents();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    return;
-  }
-};
-
       body.oninput = (event) => {
         const target = event.target;
 
@@ -2324,22 +2242,26 @@ lastSyncedJson = JSON.stringify(sheetState);
 
           renderSheetSummary();
           refreshDashboardFromSheetState();
+          queueSaveSheet();
           return;
         }
 
-        if (target.classList.contains('kill-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+       if (target.classList.contains('kill-input')) {
+  const roundIndex = Number(target.dataset.roundIndex);
+  const teamIndex = Number(target.dataset.teamIndex);
+  const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+  sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
 
-          updateRoundScoreCell(roundIndex, teamIndex);
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          return;
-        }
-      };
+  renderSheetHead();
+  attachSheetEvents();
+  updateRoundScoreCell(roundIndex, teamIndex);
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  queueSaveSheet();
+  return;
+  }
+ };
 
       body.onchange = (event) => {
         const target = event.target;
@@ -2349,17 +2271,7 @@ lastSyncedJson = JSON.stringify(sheetState);
           const teamIndex = Number(target.dataset.teamIndex);
 
           sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
-          updateAllRoundSums();
-
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'top10',
-            roundIndex,
-            teamIndex,
-            value: target.checked
-          });
-
-          
+          updateAllRoundSums(true);
           return;
         }
 
@@ -2368,17 +2280,7 @@ lastSyncedJson = JSON.stringify(sheetState);
           const teamIndex = Number(target.dataset.teamIndex);
 
           sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
-          updateAllRoundSums();
-
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'chicken',
-            roundIndex,
-            teamIndex,
-            value: target.checked
-          });
-
-         
+          updateAllRoundSums(true);
           return;
         }
       };
@@ -2397,21 +2299,13 @@ lastSyncedJson = JSON.stringify(sheetState);
     renderAllFromState();
   }
 
-  async function resetSheetState() {
+  function resetSheetState() {
     const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
     if (!ok) return;
 
     sheetState = getDefaultSheetState();
     renderAllFromState();
-
-    try {
-      await fetch('/api/sheet-reset', {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (e) {
-      console.error('sheet-reset 실패', e);
-    }
+    queueSaveSheet();
 
     const statusEl = document.getElementById('saveStatus');
     if (statusEl) {
@@ -2437,12 +2331,14 @@ lastSyncedJson = JSON.stringify(sheetState);
     startFastSync();
   });
 
+  // 마우스 휠 막기
   document.addEventListener('wheel', function (e) {
     if (document.activeElement && document.activeElement.type === 'number') {
       e.preventDefault();
     }
   }, { passive: false });
 
+  // ↑ ↓ 키 막기
   document.addEventListener('keydown', function (e) {
     if (document.activeElement && document.activeElement.type === 'number') {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -2450,6 +2346,7 @@ lastSyncedJson = JSON.stringify(sheetState);
       }
     }
   });
+
 </script>
   
   <div class="roulette-section">
