@@ -1229,3 +1229,70 @@ button:disabled {
     letter-spacing: 2px;
   }
 }
+/* =========================
+   SHEET (내전 입력표)
+========================= */
+
+.sheet-wrap {
+  max-width: 1680px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.sheet-title {
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.sheet-table-wrap {
+  overflow-x: auto;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px;
+}
+
+.sheet-table th,
+.sheet-table td {
+  border: 1px solid #e5e5e5;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sheet-table th {
+  background: #111;
+  color: #fff;
+}
+
+.sheet-table .round {
+  background: #ffe600;
+  font-weight: 900;
+}
+
+.kill-input {
+  width: 60px;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.map-input {
+  width: 80px;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.top10-check {
+  transform: scale(1.2);
+}
