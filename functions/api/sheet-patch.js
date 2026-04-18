@@ -37,6 +37,10 @@ async function readSheetState(env) {
   }
 }
 
+function safeIndex(index, max) {
+  return Number.isInteger(index) && index >= 0 && index < max;
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
 
@@ -44,43 +48,115 @@ export async function onRequestPost(context) {
     const patch = await request.json();
     const data = await readSheetState(env);
 
-    if (patch.type === 'playerName') {
-      const { teamIndex, playerIndex, value } = patch;
-      data.teams[teamIndex].players[playerIndex] = String(value || '');
-    }
-
-    else if (patch.type === 'minusScore') {
-      const { teamIndex, playerIndex, value } = patch;
-      data.teams[teamIndex].minusScores[playerIndex] = String(value ?? '0');
-    }
-
-    else if (patch.type === 'map') {
-      const { roundIndex, value } = patch;
-      data.rounds[roundIndex].map = String(value || '');
-    }
-
-    else if (patch.type === 'kill') {
-      const { roundIndex, teamIndex, playerIndex, value } = patch;
-      data.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = String(value || '');
-    }
-
-    else if (patch.type === 'top10') {
-      const { roundIndex, teamIndex, value } = patch;
-      data.rounds[roundIndex].teams[teamIndex].top10 = !!value;
-    }
-
-    else if (patch.type === 'chicken') {
-      const { roundIndex, teamIndex, value } = patch;
-      data.rounds[roundIndex].teams[teamIndex].chicken = !!value;
-    }
-
-    else {
-      return new Response(JSON.stringify({ ok: false, error: 'unknown patch type' }), {
+    if (!patch || typeof patch !== 'object') {
+      return new Response(JSON.stringify({ ok: false, error: 'invalid patch' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    const {
+      type,
+      teamIndex,
+      playerIndex,
+      roundIndex,
+      value
+    } = patch;
+
+    /* ======================
+       PLAYER NAME
+    ====================== */
+    if (type === 'playerName') {
+      if (!safeIndex(teamIndex, 5) || !safeIndex(playerIndex, 4)) {
+        throw new Error('invalid playerName index');
+      }
+
+      data.teams[teamIndex].players[playerIndex] = String(value || '');
+    }
+
+    /* ======================
+       MINUS (🔥 중요)
+    ====================== */
+    else if (type === 'minus') {
+      if (!safeIndex(teamIndex, 5) || !safeIndex(playerIndex, 4)) {
+        throw new Error('invalid minus index');
+      }
+
+      data.teams[teamIndex].minusScores[playerIndex] = String(value ?? '0');
+    }
+
+    /* ======================
+       MAP
+    ====================== */
+    else if (type === 'map') {
+      if (!safeIndex(roundIndex, 30)) {
+        throw new Error('invalid map index');
+      }
+
+      data.rounds[roundIndex].map = String(value || '');
+    }
+
+    /* ======================
+       KILL
+    ====================== */
+    else if (type === 'kill') {
+      if (
+        !safeIndex(roundIndex, 30) ||
+        !safeIndex(teamIndex, 5) ||
+        !safeIndex(playerIndex, 4)
+      ) {
+        throw new Error('invalid kill index');
+      }
+
+      const v = String(value || '').trim();
+
+      // 숫자 아닌 값 방지
+      if (v !== '' && !/^\d+$/.test(v)) {
+        throw new Error('invalid kill value');
+      }
+
+      data.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = v;
+    }
+
+    /* ======================
+       TOP10
+    ====================== */
+    else if (type === 'top10') {
+      if (!safeIndex(roundIndex, 30) || !safeIndex(teamIndex, 5)) {
+        throw new Error('invalid top10 index');
+      }
+
+      data.rounds[roundIndex].teams[teamIndex].top10 = !!value;
+    }
+
+    /* ======================
+       CHICKEN
+    ====================== */
+    else if (type === 'chicken') {
+      if (!safeIndex(roundIndex, 30) || !safeIndex(teamIndex, 5)) {
+        throw new Error('invalid chicken index');
+      }
+
+      data.rounds[roundIndex].teams[teamIndex].chicken = !!value;
+    }
+
+    /* ======================
+       UNKNOWN TYPE
+    ====================== */
+    else {
+      return new Response(JSON.stringify({
+        ok: false,
+        error: 'unknown patch type',
+        received: type
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    /* ======================
+       SAVE
+    ====================== */
     await env.DB.prepare(`
       INSERT INTO sheet_state (id, data, updated_at)
       VALUES (1, ?, datetime('now'))
@@ -92,8 +168,12 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json' }
     });
+
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: e.message }), {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: e.message
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
