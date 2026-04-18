@@ -2046,6 +2046,19 @@
     head.innerHTML = html;
   }
 
+  function updateRoundScoreCell(roundIndex, teamIndex) {
+  const body = document.getElementById('sheetBody');
+  if (!body) return;
+
+  const cell = body.querySelector(
+    `.sum-cell[data-round-index="${roundIndex}"][data-team-index="${teamIndex}"]`
+  );
+  if (!cell) return;
+
+  const roundData = sheetState.rounds[roundIndex];
+  cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
+}
+
   function renderSheetBody() {
     const body = document.getElementById('sheetBody');
     if (!body) return;
@@ -2233,7 +2246,7 @@
           return;
         }
 
-        if (target.classList.contains('kill-input')) {
+       if (target.classList.contains('kill-input')) {
   const roundIndex = Number(target.dataset.roundIndex);
   const teamIndex = Number(target.dataset.teamIndex);
   const playerIndex = Number(target.dataset.playerIndex);
@@ -2242,12 +2255,12 @@
 
   renderSheetHead();
   attachSheetEvents();
+  updateRoundScoreCell(roundIndex, teamIndex);
   renderSheetSummary();
   refreshDashboardFromSheetState();
   queueSaveSheet();
   return;
 }
-      };
 
       body.onchange = (event) => {
         const target = event.target;
