@@ -1569,21 +1569,22 @@
     }
 
     function getPlayerTotals(teamIndex, playerIndex) {
-      let killTotal = 0;
-      let top10Total = 0;
+  let killTotal = 0;
+  let top10Total = 0;
 
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-        killTotal += Number(player.kill || 0);
-        if (player.top10) top10Total += 1;
-      }
+  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+    const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+    killTotal += Number(player.kill || 0);
+    if (player.top10) top10Total += 1;
+  }
 
-      return {
-        kill: killTotal,
-        top10: top10Total,
-        pure: killTotal - top10Total
-      };
-    }
+  return {
+    kill: killTotal,
+    top10: top10Total,
+    pure: killTotal - top10Total,
+    score: killTotal + top10Total
+  };
+}
 
     function getTeamTotals(teamIndex) {
       let score = 0;
