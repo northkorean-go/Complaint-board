@@ -2183,86 +2183,88 @@
   }
 
   function attachSheetEvents() {
-    const head = document.getElementById('sheetHead');
-    const body = document.getElementById('sheetBody');
+  const head = document.getElementById('sheetHead');
+  const body = document.getElementById('sheetBody');
 
-    if (head) {
-      head.oninput = (event) => {
-        const target = event.target;
+  if (head) {
+    head.oninput = (event) => {
+      const target = event.target;
 
-        if (target.classList.contains('player-name-input')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+      if (target.classList.contains('player-name-input')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.teams[teamIndex].players[playerIndex] = target.value;
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
+        sheetState.teams[teamIndex].players[playerIndex] = target.value;
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+        queueSaveSheet();
+        return;
+      }
 
-        if (target.classList.contains('minus-select')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+      if (target.classList.contains('minus-select')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
-          updateAllRoundSums(true);
-          return;
-        }
-      };
+        sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
+        updateAllRoundSums(true);
+        return;
+      }
+    };
 
-      head.onchange = head.oninput;
-    }
-
-    if (body) {
-      body.oninput = (event) => {
-  const target = event.target;
-
-  if (target.classList.contains('map-input')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-    sheetState.rounds[roundIndex].map = target.value;
-
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    queueSaveSheet();
-    return;
+    head.onchange = head.oninput;
   }
 
-  if (target.classList.contains('kill-input')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-    const teamIndex = Number(target.dataset.teamIndex);
-    const playerIndex = Number(target.dataset.playerIndex);
+  if (body) {
+    body.oninput = (event) => {
+      const target = event.target;
 
-    sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        sheetState.rounds[roundIndex].map = target.value;
 
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    queueSaveSheet();
-    return;
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+        queueSaveSheet();
+        return;
+      }
+
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+        queueSaveSheet();
+        return;
+      }
+    };
+
+    body.onchange = (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('top10-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
+        updateAllRoundSums(true);
+        return;
+      }
+
+      if (target.classList.contains('chicken-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
+        updateAllRoundSums(true);
+        return;
+      }
+    };
   }
-};
-
-body.onchange = (event) => {
-  const target = event.target;
-
-  if (target.classList.contains('top10-check')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-    const teamIndex = Number(target.dataset.teamIndex);
-
-    sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
-    updateAllRoundSums(true);
-    return;
-  }
-
-  if (target.classList.contains('chicken-check')) {
-    const roundIndex = Number(target.dataset.roundIndex);
-    const teamIndex = Number(target.dataset.teamIndex);
-
-    sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
-    updateAllRoundSums(true);
-    return;
-  }
-};
+}
 
         if (target.classList.contains('chicken-check')) {
           const roundIndex = Number(target.dataset.roundIndex);
