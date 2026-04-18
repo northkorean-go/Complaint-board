@@ -2009,7 +2009,7 @@
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         const totals = getPlayerTotals(teamIndex, playerIndex);
-        html += `<th class="kill-head">${formatCellValue(totals.pure + totals.minusOnly)}</th>`;
+        html += `<th class="kill-head">${formatCellValue(totals.score)}</th>`;
       }
       html += `<th class="sum-head"></th>`;
     }
@@ -2022,7 +2022,7 @@
         html += `
           <th class="score-split-head">
             <div class="score-split-box">
-              <div>${formatCellValue(totals.pure + totals.minusOnly)}</div>
+              <div>${formatCellValue(totals.score)}</div>
               <div>${formatCellValue(totals.minusOnly)}</div>
             </div>
           </th>
@@ -2304,7 +2304,7 @@
     startFastSync();
   });
 </script>
-
+  
   <div class="roulette-section">
     <div class="roulette-header">
       <div class="roulette-line"></div>
