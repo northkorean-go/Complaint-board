@@ -1329,47 +1329,48 @@ button:disabled {
 .sheet-wrap {
   width: 100%;
   max-width: 100%;
-  margin: 22px 0 60px;
-  padding: 0 4px;
+  margin: 22px 0 64px;
+  padding: 0 6px;
 }
 
 .sheet-head {
-  margin-bottom: 16px;
-  padding: 0 4px;
+  margin-bottom: 18px;
+  padding: 0 6px;
 }
 
 .sheet-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 30px;
-  line-height: 1.1;
+  font-size: 32px;
+  line-height: 1.08;
   font-weight: 900;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
   color: #111;
 }
 
 .sheet-desc {
   margin-top: 10px;
   font-size: 13px;
-  color: #6b7280;
+  color: #7a818a;
   line-height: 1.7;
 }
 
 .sheet-table-wrap {
   width: 100%;
   overflow-x: auto;
-  border-radius: 28px;
+  border-top: 1px solid #111;
+  border-bottom: 1px solid #111;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: none;
 }
 
 .sheet-table {
   width: 100%;
-  min-width: 2200px;
+  min-width: 2400px;
   table-layout: fixed;
   border-collapse: collapse;
   background: #fff;
@@ -1378,7 +1379,7 @@ button:disabled {
 .sheet-table th,
 .sheet-table td {
   box-sizing: border-box;
-  border: 1px solid #e2e2e2;
+  border: 1px solid #e5e5e5;
   text-align: center;
   vertical-align: middle;
   padding: 0;
@@ -1386,16 +1387,17 @@ button:disabled {
 }
 
 .advanced-sheet th {
-  height: 34px;
+  height: 40px;
   font-size: 10px;
   font-weight: 900;
+  letter-spacing: 0.08em;
   background: #fff;
   color: #111;
 }
 
 .advanced-sheet td {
-  height: 36px; /* 30판 입력칸 위아래 폭 넓힘 */
-  font-size: 10px;
+  height: 56px;
+  font-size: 11px;
   font-weight: 800;
   background: #fff;
   color: #111;
@@ -1404,102 +1406,108 @@ button:disabled {
 }
 
 .advanced-sheet .team-group-head {
-  background: #111;
-  color: #fff;
-  font-size: 10px;
+  background: #fff;
+  color: #111;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.04em;
-  height: 34px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-top: 1px solid #111 !important;
+  border-bottom: 1px solid #dcdcdc !important;
 }
 
 .advanced-sheet .label-head {
   background: #fbfbf9;
   color: #111;
+  font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .advanced-sheet .round-cell {
-  width: 34px;
-  min-width: 34px;
-  max-width: 34px;
-  background: #111;
-  color: #fff;
-  font-size: 10px;
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+  background: #fff;
+  color: #111;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .advanced-sheet .map-cell {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
-  background: #fbfbf9;
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  background: #fff;
 }
 
 .advanced-sheet .kill-cell {
-  width: 52px;
-  min-width: 52px;
-  max-width: 52px;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
   background: #fff;
 }
 
 .advanced-sheet .top10-cell {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
   background: #fcfcfb;
 }
 
 .advanced-sheet .chicken-cell {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
   background: #fff;
 }
 
 .advanced-sheet .sum-cell {
-  width: 54px;
-  min-width: 54px;
-  max-width: 54px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
   background: #fff;
   color: #111;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .advanced-sheet .player-head-cell {
   background: #fff;
-  padding: 3px !important;
-  height: 38px;
+  padding: 4px !important;
+  height: 44px;
 }
 
 .advanced-sheet .kill-head,
 .advanced-sheet .top10-head,
 .advanced-sheet .sum-head {
-  background: #fcfcfb;
+  background: #fff;
   color: #111;
   font-size: 10px;
   font-weight: 900;
-  height: 28px;
+  letter-spacing: 0.08em;
+  height: 34px;
 }
 
 .advanced-sheet .sum-head {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  background: #fcfcfb;
 }
 
 .player-name-input {
-  width: calc(100% - 6px);
-  height: 22px;
+  width: calc(100% - 10px);
+  height: 34px;
   margin: 0 auto;
   display: block;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  border: 1px solid #d7d7d7;
+  border-radius: 0;
   background: #fff;
-  padding: 0 4px;
+  padding: 0 6px;
   text-align: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #111;
   outline: none;
@@ -1507,37 +1515,37 @@ button:disabled {
 }
 
 .minus-select {
-  width: calc(100% - 6px);
-  height: 22px;
+  width: calc(100% - 10px);
+  height: 34px;
   margin: 0 auto;
   display: block;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  border: 1px solid #d7d7d7;
+  border-radius: 0;
   background: #fff;
   text-align: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   color: #111;
   outline: none;
-  padding: 0;
+  padding: 0 4px;
 }
 
 .map-input,
 .kill-input {
-  width: calc(100% - 6px);
-  height: 24px; /* 입력칸 자체도 조금 더 크게 */
+  width: calc(100% - 12px);
+  height: 36px;
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
-  border: 1px solid #d6d6d6;
-  border-radius: 6px;
+  border: 1px solid #d7d7d7;
+  border-radius: 0;
   background: #fff;
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #111;
   outline: none;
-  padding: 0 4px;
+  padding: 0 6px;
   transition: all 0.15s ease;
 }
 
@@ -1546,20 +1554,20 @@ button:disabled {
 .map-input:focus,
 .kill-input:focus {
   border-color: #111;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
   background: #fff;
+  box-shadow: none;
 }
 
 .player-name-input:hover,
 .minus-select:hover,
 .map-input:hover,
 .kill-input:hover {
-  border-color: #bcbcbc;
+  border-color: #bdbdbd;
 }
 
 .top10-check,
 .chicken-check {
-  transform: scale(0.82);
+  transform: scale(0.9);
   cursor: pointer;
   accent-color: #111;
 }
@@ -1577,44 +1585,40 @@ button:disabled {
 }
 
 .score-split-box > div {
-  min-height: 34px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
   color: #111;
   background: #fcfcfb;
 }
 
 .score-split-box > div:first-child {
-  border-right: 1px solid #e2e2e2;
+  border-right: 1px solid #e5e5e5;
 }
 
 #sheetBody tr:hover td {
   background: #fafafa;
 }
 
-#sheetBody tr:hover .round-cell {
-  background: #111;
-  color: #fff;
-}
-
+#sheetBody tr:hover .round-cell,
 #sheetBody tr:hover .map-cell {
   background: #f7f7f4;
 }
 
 .sheet-table-wrap::-webkit-scrollbar {
-  height: 10px;
+  height: 12px;
 }
 
 .sheet-table-wrap::-webkit-scrollbar-thumb {
-  background: #cfcfcf;
+  background: #a9a9a9;
   border-radius: 999px;
 }
 
 .sheet-table-wrap::-webkit-scrollbar-track {
-  background: #f3f3f3;
+  background: #efefef;
 }
 
 @media (max-width: 1100px) {
