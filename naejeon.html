@@ -2216,37 +2216,53 @@
 
     if (body) {
       body.oninput = (event) => {
-        const target = event.target;
+  const target = event.target;
 
-        if (target.classList.contains('map-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          sheetState.rounds[roundIndex].map = target.value;
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
+  if (target.classList.contains('map-input')) {
+    const roundIndex = Number(target.dataset.roundIndex);
+    sheetState.rounds[roundIndex].map = target.value;
 
-        if (target.classList.contains('kill-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    queueSaveSheet();
+    return;
+  }
 
-          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-          updateAllRoundSums(true);
-        }
-      };
+  if (target.classList.contains('kill-input')) {
+    const roundIndex = Number(target.dataset.roundIndex);
+    const teamIndex = Number(target.dataset.teamIndex);
+    const playerIndex = Number(target.dataset.playerIndex);
 
-      body.onchange = (event) => {
-        const target = event.target;
+    sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
 
-        if (target.classList.contains('top10-check')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    queueSaveSheet();
+    return;
+  }
+};
 
-          sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
-          updateAllRoundSums(true);
-          return;
-        }
+body.onchange = (event) => {
+  const target = event.target;
+
+  if (target.classList.contains('top10-check')) {
+    const roundIndex = Number(target.dataset.roundIndex);
+    const teamIndex = Number(target.dataset.teamIndex);
+
+    sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
+    updateAllRoundSums(true);
+    return;
+  }
+
+  if (target.classList.contains('chicken-check')) {
+    const roundIndex = Number(target.dataset.roundIndex);
+    const teamIndex = Number(target.dataset.teamIndex);
+
+    sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
+    updateAllRoundSums(true);
+    return;
+  }
+};
 
         if (target.classList.contains('chicken-check')) {
           const roundIndex = Number(target.dataset.roundIndex);
