@@ -1229,8 +1229,6 @@ button:disabled {
     letter-spacing: 2px;
   }
 }
-
-
 /* =========================
    SHEET SUMMARY
 ========================= */
@@ -1268,6 +1266,7 @@ button:disabled {
   padding: 18px 12px;
   border-bottom: 1px solid #e3e3e3;
   background: #fcfcfc;
+  white-space: pre-line;
 }
 
 .sheet-summary-grid {
@@ -1278,59 +1277,32 @@ button:disabled {
 
 .sheet-summary-team {
   border-right: 1px solid #e3e3e3;
+  background: #fff;
 }
 
 .sheet-summary-team:last-child {
   border-right: none;
 }
 
-.sheet-summary-team-head {
-  background: #5cc7d0;
-  color: #111;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 900;
-  padding: 8px 6px;
-  border-bottom: 1px solid #d8d8d8;
-}
-
-.sheet-summary-team-minus {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 800;
-  padding: 8px 6px;
-  background: #dff6f8;
-  border-bottom: 1px solid #e3e3e3;
-}
-
 .sheet-summary-player {
-  display: grid;
-  grid-template-columns: 1fr;
-  border-bottom: 1px solid #e8e8e8;
-  min-height: 40px;
-  align-items: center;
-  padding: 0 8px;
-  background: #fff;
-}
-
-.sheet-summary-player:last-child {
-  border-bottom: none;
-}
-
-.sheet-summary-player-text {
+  padding: 10px 8px;
   text-align: center;
   font-size: 14px;
   font-weight: 800;
   color: #111;
-  padding: 10px 4px;
+  border-bottom: 1px solid #ececec;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sheet-summary-footer {
   text-align: center;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
   color: #111;
-  padding: 10px 4px;
+  padding: 10px 6px;
   background: #fafafa;
   border-top: 1px solid #e3e3e3;
 }
@@ -1349,6 +1321,7 @@ button:disabled {
     border-bottom: none;
   }
 }
+
 /* =========================
    NAEJEON SHEET FINAL
 ========================= */
@@ -1385,7 +1358,7 @@ button:disabled {
 
 .sheet-table-wrap {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   border-radius: 26px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -1396,7 +1369,7 @@ button:disabled {
 
 .sheet-table {
   width: 100%;
-  min-width: 0;
+  min-width: 2200px;
   table-layout: fixed;
   border-collapse: collapse;
   background: #fff;
@@ -1412,33 +1385,97 @@ button:disabled {
   white-space: nowrap;
 }
 
+.advanced-sheet th {
+  height: 30px;
+  font-size: 10px;
+  font-weight: 900;
+  background: #111;
+  color: #fff;
+}
+
+.advanced-sheet td {
+  height: 28px;
+  font-size: 10px;
+  font-weight: 800;
+  background: #fff;
+  color: #111;
+  line-height: 1;
+}
+
 .advanced-sheet .team-group-head {
-  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  background: #111;
   color: #fff;
   font-size: 10px;
   letter-spacing: -0.02em;
-  height: 28px;
+  height: 30px;
 }
 
-.advanced-sheet .sticky-round-header,
-.advanced-sheet .sticky-map-header {
-  background: #111;
-  color: #fff;
-  z-index: 5;
-  font-size: 9px;
+.advanced-sheet .label-head {
+  background: #fbfbf9;
+  color: #111;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.advanced-sheet .round-cell {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  background: #fbfbf9;
+  color: #111;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.advanced-sheet .map-cell {
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+  background: #fbfbf9;
+}
+
+.advanced-sheet .kill-cell {
+  width: 26px;
+  min-width: 26px;
+  max-width: 26px;
+  background: #fff;
+}
+
+.advanced-sheet .top10-cell {
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  background: #fcfcfb;
+}
+
+.advanced-sheet .chicken-cell {
+  width: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  background: #fff;
+}
+
+.advanced-sheet .sum-cell {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  background: #fff;
+  color: #111;
+  font-size: 10px;
   font-weight: 900;
 }
 
 .advanced-sheet .player-head-cell {
-  background: #f7f3f7;
+  background: #fff;
   padding: 2px !important;
-  height: 42px;
+  height: 30px;
 }
 
 .advanced-sheet .kill-head,
 .advanced-sheet .top10-head,
+.advanced-sheet .map-head-cell,
 .advanced-sheet .sum-head {
-  background: #fafafa;
+  background: #fcfcfb;
   color: #111;
   font-size: 9px;
   font-weight: 900;
@@ -1446,103 +1483,38 @@ button:disabled {
 }
 
 .advanced-sheet .sum-head {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  background: #eef1f4;
-  border-right: 2px solid #cfcfcf !important;
-}
-
-.advanced-sheet .round-cell {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  background: linear-gradient(180deg, #ffe600 0%, #ffd900 100%);
-  color: #111;
-  font-size: 9px;
-  font-weight: 900;
-}
-
-.advanced-sheet .map-cell {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  background: #fff8cf;
-}
-
-.advanced-sheet .kill-cell {
-  width: 24px;
-  min-width: 24px;
-  max-width: 24px;
-  background: #fcf6ee;
-}
-
-.advanced-sheet .top10-cell {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  background: #fbfbfb;
-  border-right: 2px solid #cfcfcf !important;
-}
-
-.advanced-sheet .sum-cell {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  background: #fbfbfb;
-  font-size: 9px;
-  font-weight: 900;
-  color: #111;
-  border-right: 2px solid #cfcfcf !important;
-}
-
-.advanced-sheet td {
-  height: 26px;
-  background: #fff;
-  transition: background 0.15s ease;
-  line-height: 1;
-}
-
-#sheetBody tr:hover td {
-  background: #f8fbff !important;
-}
-
-#sheetBody tr:hover .round-cell {
-  background: linear-gradient(180deg, #ffe600 0%, #ffd900 100%) !important;
-}
-
-#sheetBody tr:hover .map-cell {
-  background: #fff4b8 !important;
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
 }
 
 .player-name-input {
   width: calc(100% - 4px);
-  height: 16px;
+  height: 20px;
   margin: 0 auto;
   display: block;
-  border: 1px solid #d7d7d7;
-  border-radius: 4px;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
   background: #fff;
-  padding: 0 1px;
+  padding: 0 2px;
   text-align: center;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   color: #111;
   outline: none;
-  transition: all 0.15s ease;
 }
 
 .minus-select {
   width: calc(100% - 4px);
-  height: 16px;
-  margin: 2px auto 0;
+  height: 20px;
+  margin: 0 auto;
   display: block;
   border: 1px solid #d8d8d8;
-  border-radius: 4px;
-  background: #fff7db;
+  border-radius: 6px;
+  background: #fff;
   text-align: center;
-  font-size: 8px;
-  font-weight: 900;
+  font-size: 9px;
+  font-weight: 800;
   color: #111;
   outline: none;
   padding: 0;
@@ -1551,20 +1523,19 @@ button:disabled {
 .map-input,
 .kill-input {
   width: calc(100% - 4px);
-  height: 16px;
+  height: 18px;
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
-  border: 1px solid #d5d5d5;
+  border: 1px solid #cfcfcf;
   border-radius: 4px;
   background: #fff;
   text-align: center;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   color: #111;
   outline: none;
   padding: 0;
-  transition: all 0.15s ease;
 }
 
 .player-name-input:focus,
@@ -1576,56 +1547,38 @@ button:disabled {
   background: #fff;
 }
 
-.map-input:hover,
-.kill-input:hover,
-.player-name-input:hover,
-.minus-select:hover {
-  border-color: #bcbcbc;
-}
-
-.team-minus-sum {
-  font-size: 8px;
-  font-weight: 900;
-  color: #111;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.top10-check {
-  display: block;
-  margin: 0 auto;
-  transform: scale(0.7);
+.top10-check,
+.chicken-check {
+  transform: scale(0.8);
   cursor: pointer;
   accent-color: #111;
 }
 
-.advanced-sheet td:last-child,
-.advanced-sheet th:last-child {
-  border-right: none !important;
+.score-split-head {
+  background: #fcfcfb;
+  padding: 0 !important;
 }
 
-.sheet-summary-card {
-  border-radius: 26px;
+.score-split-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
 }
 
-.sheet-summary-title {
-  font-size: 20px;
-  padding: 18px 12px;
+.score-split-box > div {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #111;
+  background: #fcfcfb;
 }
 
-.sheet-summary-total {
-  font-size: 15px;
-  padding: 16px 12px;
-}
-
-.sheet-summary-player {
-  font-size: 13px;
-  min-height: 40px;
-}
-
-.sheet-summary-footer {
-  font-size: 12px;
-  padding: 10px 6px;
+.score-split-box > div:first-child {
+  border-right: 1px solid #dcdcdc;
 }
 
 .sheet-table-wrap::-webkit-scrollbar {
