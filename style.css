@@ -1296,3 +1296,219 @@ button:disabled {
 .top10-check {
   transform: scale(1.2);
 }
+/* =========================
+   ADVANCED SHEET
+========================= */
+
+.sheet-wrap {
+  max-width: 1680px;
+  margin: 40px auto 56px;
+  padding: 0 20px;
+}
+
+.sheet-head {
+  margin-bottom: 16px;
+}
+
+.sheet-title {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #111;
+}
+
+.sheet-desc {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666f7c;
+  line-height: 1.7;
+}
+
+.sheet-table-wrap {
+  overflow-x: auto;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.04);
+}
+
+.sheet-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.sheet-table th,
+.sheet-table td {
+  border: 1px solid #dddddd;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.advanced-sheet th {
+  height: 42px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.advanced-sheet td {
+  height: 40px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.team-group-head {
+  background: #111;
+  color: #fff;
+  min-width: 330px;
+  letter-spacing: -0.02em;
+}
+
+.sticky-round-header,
+.sticky-map-header {
+  background: #111;
+  color: #fff;
+  z-index: 5;
+}
+
+.player-head-cell {
+  background: #f4e8ee;
+  min-width: 112px;
+  padding: 6px 4px !important;
+}
+
+.kill-head,
+.top10-head,
+.sum-head {
+  background: #fafafa;
+  color: #111;
+}
+
+.sum-head {
+  min-width: 64px;
+}
+
+.player-name-input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
+}
+
+.player-name-input:focus {
+  border-color: #111;
+}
+
+.round-cell {
+  width: 72px;
+  background: #ffe600;
+  font-weight: 900;
+  color: #111;
+}
+
+.map-cell {
+  width: 104px;
+  background: #fff8cf;
+}
+
+.kill-cell {
+  width: 62px;
+  background: #f9ecde;
+}
+
+.top10-cell {
+  width: 62px;
+  background: #f7f0c8;
+}
+
+.sum-cell {
+  width: 64px;
+  background: #fff;
+  color: #111;
+  font-weight: 900;
+}
+
+.map-input,
+.kill-input {
+  width: calc(100% - 12px);
+  height: 30px;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
+}
+
+.map-input:focus,
+.kill-input:focus {
+  border-color: #111;
+  background: #fff;
+}
+
+.top10-check {
+  transform: scale(1.08);
+  cursor: pointer;
+}
+
+.sticky-col,
+.sticky-col-2 {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+.sticky-col-2 {
+  left: 72px;
+  z-index: 3;
+}
+
+.sticky-round-header.sticky-col {
+  left: 0;
+}
+
+.sticky-map-header.sticky-col-2 {
+  left: 72px;
+}
+
+@media (max-width: 720px) {
+  .sheet-wrap {
+    padding: 0 16px;
+  }
+
+  .sheet-title {
+    font-size: 28px;
+  }
+
+  .sheet-desc {
+    font-size: 13px;
+  }
+
+  .advanced-sheet th {
+    height: 38px;
+    font-size: 11px;
+  }
+
+  .advanced-sheet td {
+    height: 38px;
+    font-size: 12px;
+  }
+
+  .player-name-input,
+  .map-input,
+  .kill-input {
+    font-size: 12px;
+  }
+}
