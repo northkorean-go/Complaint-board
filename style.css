@@ -1831,3 +1831,463 @@ body .sheet-wrap .score-split-box > div {
 body #sheetBody tr:hover td {
   background: #fafafa !important;
 }
+/* =========================================================
+   ZARA NAEJEON PREMIUM OVERRIDE
+   반드시 style.css 맨 아래에 그대로 추가
+========================================================= */
+
+body {
+  background: #f7f7f5 !important;
+  color: #111 !important;
+}
+
+/* ===== 순수킬 카드 ===== */
+body .sheet-summary-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 28px 0 22px !important;
+  padding: 0 8px !important;
+}
+
+body .sheet-summary-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 30px !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.04) !important;
+}
+
+body .sheet-summary-title {
+  background: #000 !important;
+  color: #fff !important;
+  text-align: center !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  padding: 22px 12px !important;
+}
+
+body .sheet-summary-total {
+  text-align: center !important;
+  font-size: 22px !important;
+  line-height: 1.4 !important;
+  font-weight: 900 !important;
+  color: #111 !important;
+  padding: 24px 16px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fcfcfb !important;
+  white-space: pre-line !important;
+}
+
+body .sheet-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+}
+
+body .sheet-summary-team {
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #fff !important;
+}
+
+body .sheet-summary-team:last-child {
+  border-right: none !important;
+}
+
+body .sheet-summary-player {
+  min-height: 58px !important;
+  padding: 14px 10px !important;
+  text-align: center !important;
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+  font-weight: 800 !important;
+  color: #111 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body .sheet-summary-footer {
+  text-align: center !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.01em !important;
+  color: #111 !important;
+  padding: 14px 8px !important;
+  background: #fafaf8 !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ===== 내전표 헤더 ===== */
+body .sheet-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 34px 0 70px !important;
+  padding: 0 8px !important;
+}
+
+body .sheet-head {
+  margin-bottom: 18px !important;
+  padding: 0 4px !important;
+}
+
+body .sheet-head::before {
+  content: "ZARA CLAN MATCH" !important;
+  display: block !important;
+  margin-bottom: 12px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.34em !important;
+  color: #8d8d8d !important;
+}
+
+body .sheet-title {
+  display: block !important;
+  font-size: 54px !important;
+  line-height: 0.96 !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.065em !important;
+  color: #111 !important;
+  margin: 0 !important;
+}
+
+body .sheet-desc {
+  margin-top: 14px !important;
+  font-size: 13px !important;
+  line-height: 1.8 !important;
+  color: #7c8088 !important;
+  max-width: 980px !important;
+}
+
+/* 혹시 제목 앞 이모지가 남아있어도 최대한 정리된 느낌 */
+body .sheet-title span,
+body .sheet-title i {
+  display: none !important;
+}
+
+/* ===== 표 전체 ===== */
+body .sheet-wrap .sheet-table-wrap {
+  width: 100% !important;
+  overflow-x: auto !important;
+  border-top: 1px solid #111 !important;
+  border-bottom: 1px solid #111 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+body .sheet-wrap .sheet-table {
+  width: 100% !important;
+  min-width: 2400px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: #fff !important;
+}
+
+body .sheet-wrap .sheet-table th,
+body .sheet-wrap .sheet-table td {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 0 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+/* ===== 테이블 헤더 ===== */
+body .sheet-wrap .advanced-sheet th {
+  height: 44px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.14em !important;
+  background: #fff !important;
+  color: #111 !important;
+}
+
+body .sheet-wrap .advanced-sheet td {
+  height: 58px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  background: #fff !important;
+  color: #111 !important;
+  line-height: 1 !important;
+  transition: background 0.15s ease !important;
+}
+
+body .sheet-wrap .advanced-sheet .team-group-head {
+  background: #000 !important;
+  color: #fff !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  border-top: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+}
+
+body .sheet-wrap .advanced-sheet .sheet-left-head {
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+}
+
+body .sheet-wrap .advanced-sheet .label-head {
+  background: #fafaf8 !important;
+  color: #111 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+/* ===== 셀 폭/톤 ===== */
+body .sheet-wrap .advanced-sheet .round-cell {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  background: #f4f4f1 !important;
+  color: #111 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+body .sheet-wrap .advanced-sheet .map-cell {
+  width: 86px !important;
+  min-width: 86px !important;
+  max-width: 86px !important;
+  background: #fcfcfb !important;
+}
+
+body .sheet-wrap .advanced-sheet .kill-cell {
+  width: 74px !important;
+  min-width: 74px !important;
+  max-width: 74px !important;
+  background: #fff !important;
+}
+
+body .sheet-wrap .advanced-sheet .top10-cell {
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  background: #fcfcfb !important;
+}
+
+body .sheet-wrap .advanced-sheet .chicken-cell {
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  background: #fff !important;
+}
+
+body .sheet-wrap .advanced-sheet .sum-cell {
+  width: 62px !important;
+  min-width: 62px !important;
+  max-width: 62px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+body .sheet-wrap .advanced-sheet .player-head-cell {
+  background: #fff !important;
+  padding: 5px !important;
+  height: 48px !important;
+}
+
+body .sheet-wrap .advanced-sheet .kill-head,
+body .sheet-wrap .advanced-sheet .top10-head,
+body .sheet-wrap .advanced-sheet .sum-head {
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  height: 38px !important;
+  text-transform: uppercase !important;
+}
+
+body .sheet-wrap .advanced-sheet .sum-head {
+  background: #fafaf8 !important;
+}
+
+/* ===== 입력칸 ===== */
+body .sheet-wrap .player-name-input,
+body .sheet-wrap .minus-select,
+body .sheet-wrap .map-input,
+body .sheet-wrap .kill-input {
+  display: block !important;
+  margin: 0 auto !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #111 !important;
+  outline: none !important;
+}
+
+body .sheet-wrap .player-name-input,
+body .sheet-wrap .minus-select {
+  width: calc(100% - 10px) !important;
+  height: 36px !important;
+  padding: 0 6px !important;
+  text-align: center !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+body .sheet-wrap .map-input,
+body .sheet-wrap .kill-input {
+  width: calc(100% - 12px) !important;
+  height: 38px !important;
+  padding: 0 6px !important;
+  text-align: center !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+body .sheet-wrap .player-name-input:focus,
+body .sheet-wrap .minus-select:focus,
+body .sheet-wrap .map-input:focus,
+body .sheet-wrap .kill-input:focus {
+  border-color: #000 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+body .sheet-wrap .player-name-input:hover,
+body .sheet-wrap .minus-select:hover,
+body .sheet-wrap .map-input:hover,
+body .sheet-wrap .kill-input:hover {
+  border-color: rgba(0, 0, 0, 0.22) !important;
+}
+
+/* ===== 체크박스 ===== */
+body .sheet-wrap .top10-check,
+body .sheet-wrap .chicken-check {
+  transform: scale(0.9) !important;
+  cursor: pointer !important;
+  accent-color: #111 !important;
+}
+
+/* ===== SCORE 분할칸 ===== */
+body .sheet-wrap .score-split-head {
+  background: #fafaf8 !important;
+  padding: 0 !important;
+}
+
+body .sheet-wrap .score-split-box {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body .sheet-wrap .score-split-box > div {
+  min-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #111 !important;
+  background: #fafaf8 !important;
+}
+
+body .sheet-wrap .score-split-box > div:first-child {
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ===== hover ===== */
+body #sheetBody tr:hover td {
+  background: #fafaf8 !important;
+}
+
+body #sheetBody tr:hover .round-cell,
+body #sheetBody tr:hover .map-cell {
+  background: #f2f2ee !important;
+}
+
+/* ===== 스크롤바 ===== */
+body .sheet-table-wrap::-webkit-scrollbar {
+  height: 12px !important;
+}
+
+body .sheet-table-wrap::-webkit-scrollbar-thumb {
+  background: #b0b0b0 !important;
+  border-radius: 999px !important;
+}
+
+body .sheet-table-wrap::-webkit-scrollbar-track {
+  background: #ecece8 !important;
+}
+
+/* ===== 모바일 ===== */
+@media (max-width: 1100px) {
+  body .sheet-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body .sheet-summary-team {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  }
+
+  body .sheet-summary-team:last-child {
+    border-bottom: none !important;
+  }
+
+  body .sheet-title {
+    font-size: 38px !important;
+  }
+
+  body .sheet-desc {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  body .sheet-summary-wrap,
+  body .sheet-wrap {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+
+  body .sheet-summary-title {
+    font-size: 18px !important;
+    padding: 18px 10px !important;
+  }
+
+  body .sheet-summary-total {
+    font-size: 17px !important;
+    padding: 18px 10px !important;
+  }
+
+  body .sheet-summary-player {
+    min-height: 50px !important;
+    font-size: 13px !important;
+  }
+
+  body .sheet-title {
+    font-size: 30px !important;
+    line-height: 1.02 !important;
+  }
+
+  body .sheet-desc {
+    margin-top: 10px !important;
+    font-size: 12px !important;
+    line-height: 1.7 !important;
+  }
+
+  body .sheet-wrap .advanced-sheet .team-group-head {
+    font-size: 13px !important;
+    letter-spacing: 0.14em !important;
+  }
+}
