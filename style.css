@@ -2098,19 +2098,6 @@ button:disabled {
   line-height: 1;
 }
 
-/* 팀 경계선 정리 */
-#sheetHead th:nth-child(11),
-#sheetBody td:nth-child(11),
-#sheetHead th:nth-child(20),
-#sheetBody td:nth-child(20),
-#sheetHead th:nth-child(29),
-#sheetBody td:nth-child(29),
-#sheetHead th:nth-child(38),
-#sheetBody td:nth-child(38),
-#sheetHead th:nth-child(47),
-#sheetBody td:nth-child(47) {
-  border-right: 2px solid #111 !important;
-}
 /* 팀 경계선 자연스럽게 */
 .advanced-sheet .sum-cell,
 .advanced-sheet .sum-head {
