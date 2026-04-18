@@ -1329,12 +1329,12 @@ button:disabled {
 .sheet-wrap {
   width: 100%;
   max-width: 100%;
-  margin: 18px 0 56px;
-  padding: 0 2px;
+  margin: 22px 0 60px;
+  padding: 0 4px;
 }
 
 .sheet-head {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   padding: 0 4px;
 }
 
@@ -1342,10 +1342,10 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1.1;
   font-weight: 900;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   color: #111;
 }
 
@@ -1353,17 +1353,17 @@ button:disabled {
   margin-top: 10px;
   font-size: 13px;
   color: #6b7280;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .sheet-table-wrap {
   width: 100%;
   overflow-x: auto;
-  border-radius: 26px;
+  border-radius: 28px;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow:
-    0 18px 40px rgba(0, 0, 0, 0.05),
+    0 18px 40px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -1378,7 +1378,7 @@ button:disabled {
 .sheet-table th,
 .sheet-table td {
   box-sizing: border-box;
-  border: 1px solid #dcdcdc;
+  border: 1px solid #e2e2e2;
   text-align: center;
   vertical-align: middle;
   padding: 0;
@@ -1386,130 +1386,132 @@ button:disabled {
 }
 
 .advanced-sheet th {
-  height: 30px;
+  height: 34px;
   font-size: 10px;
   font-weight: 900;
-  background: #111;
-  color: #fff;
+  background: #fff;
+  color: #111;
 }
 
 .advanced-sheet td {
-  height: 28px;
+  height: 36px; /* 30판 입력칸 위아래 폭 넓힘 */
   font-size: 10px;
   font-weight: 800;
   background: #fff;
   color: #111;
   line-height: 1;
+  transition: background 0.15s ease;
 }
 
 .advanced-sheet .team-group-head {
   background: #111;
   color: #fff;
   font-size: 10px;
-  letter-spacing: -0.02em;
-  height: 30px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  height: 34px;
 }
 
 .advanced-sheet .label-head {
   background: #fbfbf9;
   color: #111;
   font-weight: 900;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
 }
 
 .advanced-sheet .round-cell {
-  width: 32px;
-  min-width: 32px;
-  max-width: 32px;
-  background: #fbfbf9;
-  color: #111;
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  background: #111;
+  color: #fff;
   font-size: 10px;
   font-weight: 900;
 }
 
 .advanced-sheet .map-cell {
-  width: 42px;
-  min-width: 42px;
-  max-width: 42px;
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
   background: #fbfbf9;
 }
 
 .advanced-sheet .kill-cell {
-  width: 26px;
-  min-width: 26px;
-  max-width: 26px;
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
   background: #fff;
 }
 
 .advanced-sheet .top10-cell {
-  width: 22px;
-  min-width: 22px;
-  max-width: 22px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
   background: #fcfcfb;
 }
 
 .advanced-sheet .chicken-cell {
-  width: 22px;
-  min-width: 22px;
-  max-width: 22px;
-  background: #fff;
-}
-
-.advanced-sheet .sum-cell {
   width: 40px;
   min-width: 40px;
   max-width: 40px;
   background: #fff;
+}
+
+.advanced-sheet .sum-cell {
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
+  background: #fff;
   color: #111;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
 }
 
 .advanced-sheet .player-head-cell {
   background: #fff;
-  padding: 2px !important;
-  height: 30px;
+  padding: 3px !important;
+  height: 38px;
 }
 
 .advanced-sheet .kill-head,
 .advanced-sheet .top10-head,
-.advanced-sheet .map-head-cell,
 .advanced-sheet .sum-head {
   background: #fcfcfb;
   color: #111;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  height: 24px;
+  height: 28px;
 }
 
 .advanced-sheet .sum-head {
-  width: 34px;
-  min-width: 34px;
-  max-width: 34px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
 }
 
 .player-name-input {
-  width: calc(100% - 4px);
-  height: 20px;
+  width: calc(100% - 6px);
+  height: 22px;
   margin: 0 auto;
   display: block;
-  border: 1px solid #d8d8d8;
+  border: 1px solid #d9d9d9;
   border-radius: 6px;
   background: #fff;
-  padding: 0 2px;
+  padding: 0 4px;
   text-align: center;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   color: #111;
   outline: none;
+  transition: all 0.15s ease;
 }
 
 .minus-select {
-  width: calc(100% - 4px);
-  height: 20px;
+  width: calc(100% - 6px);
+  height: 22px;
   margin: 0 auto;
   display: block;
-  border: 1px solid #d8d8d8;
+  border: 1px solid #d9d9d9;
   border-radius: 6px;
   background: #fff;
   text-align: center;
@@ -1522,20 +1524,21 @@ button:disabled {
 
 .map-input,
 .kill-input {
-  width: calc(100% - 4px);
-  height: 18px;
+  width: calc(100% - 6px);
+  height: 24px; /* 입력칸 자체도 조금 더 크게 */
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
-  border: 1px solid #cfcfcf;
-  border-radius: 4px;
+  border: 1px solid #d6d6d6;
+  border-radius: 6px;
   background: #fff;
   text-align: center;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 700;
   color: #111;
   outline: none;
-  padding: 0;
+  padding: 0 4px;
+  transition: all 0.15s ease;
 }
 
 .player-name-input:focus,
@@ -1543,13 +1546,20 @@ button:disabled {
 .map-input:focus,
 .kill-input:focus {
   border-color: #111;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
   background: #fff;
+}
+
+.player-name-input:hover,
+.minus-select:hover,
+.map-input:hover,
+.kill-input:hover {
+  border-color: #bcbcbc;
 }
 
 .top10-check,
 .chicken-check {
-  transform: scale(0.8);
+  transform: scale(0.82);
   cursor: pointer;
   accent-color: #111;
 }
@@ -1567,7 +1577,7 @@ button:disabled {
 }
 
 .score-split-box > div {
-  min-height: 30px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1578,7 +1588,20 @@ button:disabled {
 }
 
 .score-split-box > div:first-child {
-  border-right: 1px solid #dcdcdc;
+  border-right: 1px solid #e2e2e2;
+}
+
+#sheetBody tr:hover td {
+  background: #fafafa;
+}
+
+#sheetBody tr:hover .round-cell {
+  background: #111;
+  color: #fff;
+}
+
+#sheetBody tr:hover .map-cell {
+  background: #f7f7f4;
 }
 
 .sheet-table-wrap::-webkit-scrollbar {
@@ -1597,6 +1620,10 @@ button:disabled {
 @media (max-width: 1100px) {
   .sheet-title {
     font-size: 24px;
+  }
+
+  .sheet-desc {
+    font-size: 12px;
   }
 }
 
