@@ -2179,7 +2179,8 @@
     gridNode.innerHTML = teamColumns.join('');
   }
 
-  ffunction updateAllRoundSums() {
+  
+  function updateAllRoundSums() {
   renderSheetHead();
   renderSheetBody();
   attachSheetEvents();
@@ -2259,9 +2260,9 @@
 
         sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
 
+        updateRoundScoreCell(roundIndex, teamIndex);
         renderSheetHead();
         attachSheetEvents();
-        updateRoundScoreCell(roundIndex, teamIndex);
         renderSheetSummary();
         refreshDashboardFromSheetState();
 
