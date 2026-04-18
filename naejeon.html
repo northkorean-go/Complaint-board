@@ -1943,17 +1943,16 @@
 
     let html = `
       <tr>
-        <th rowspan="6">라운드</th>
-        <th class="team-group-head">팀</th>
+        <th rowspan="6" class="sheet-left-head">ROUND</th>
+        <th class="sheet-left-head">TEAM</th>
     `;
 
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const team = sheetState.teams[teamIndex];
-      html += `<th colspan="${PLAYERS_PER_TEAM + 3}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+      html += `<th colspan="${PLAYERS_PER_TEAM + 3}" class="team-group-head">TEAM ${teamIndex + 1}</th>`;
     }
     html += `</tr>`;
 
-    html += `<tr><th class="label-head">마이너스</th>`;
+    html += `<tr><th class="label-head">MINUS</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
 
@@ -1983,7 +1982,7 @@
     }
     html += `</tr>`;
 
-    html += `<tr><th class="label-head">이름</th>`;
+    html += `<tr><th class="label-head">NAME</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
 
@@ -2006,7 +2005,7 @@
     }
     html += `</tr>`;
 
-    html += `<tr><th class="label-head">순수킬</th>`;
+    html += `<tr><th class="label-head">PURE KILL</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         const totals = getPlayerTotals(teamIndex, playerIndex);
@@ -2016,14 +2015,14 @@
     }
     html += `</tr>`;
 
-    html += `<tr><th class="label-head">점수</th>`;
+    html += `<tr><th class="label-head">SCORE</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         const totals = getPlayerTotals(teamIndex, playerIndex);
         html += `
           <th class="score-split-head">
             <div class="score-split-box">
-              <div>${formatCellValue(totals.pure)}</div>
+              <div>${formatCellValue(totals.pure + totals.minusOnly)}</div>
               <div>${formatCellValue(totals.minusOnly)}</div>
             </div>
           </th>
@@ -2033,12 +2032,12 @@
     }
     html += `</tr>`;
 
-    html += `<tr><th class="label-head">맵</th>`;
+    html += `<tr><th class="label-head">MAP</th>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         html += `<th class="kill-head">KILL</th>`;
       }
-      html += `<th class="top10-head">TOP10</th>`;
+      html += `<th class="top10-head">TOP 10</th>`;
       html += `<th class="top10-head">10점</th>`;
       html += `<th class="top10-head">판점수</th>`;
     }
@@ -2063,7 +2062,7 @@
           <input
             class="map-input"
             type="text"
-            value="${escapeHtml(roundData.map)}"
+            value="${escapeHtml(roundData.map).toUpperCase()}"
             data-round-index="${roundIndex}"
           />
         </td>
@@ -2135,7 +2134,6 @@
     let grandTotal = 0;
 
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const team = sheetState.teams[teamIndex];
       const playerLines = [];
       let teamDisplayTotal = 0;
 
@@ -2159,7 +2157,7 @@
       }
 
       grandTotal += teamDisplayTotal;
-      totalTexts.push(`${team.teamName} ${formatCellValue(teamDisplayTotal)}`);
+      totalTexts.push(`${sheetState.teams[teamIndex].teamName} ${formatCellValue(teamDisplayTotal)}`);
 
       teamColumns.push(`
         <div class="sheet-summary-team">
