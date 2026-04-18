@@ -1563,3 +1563,86 @@ button:disabled {
     transform: scale(0.8);
   }
 }
+/* =========================
+   FINAL SHEET FIT (5팀 꽉맞춤)
+========================= */
+
+.sheet-wrap {
+  padding: 0 4px !important;
+}
+
+.sheet-table-wrap {
+  overflow-x: hidden !important;
+}
+
+.sheet-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* 전체 셀 더 압축 */
+.advanced-sheet th {
+  height: 30px !important;
+  font-size: 10px !important;
+}
+
+.advanced-sheet td {
+  height: 28px !important;
+  font-size: 10px !important;
+}
+
+/* 좌측 */
+.round-cell {
+  width: 32px !important;
+  font-size: 10px !important;
+}
+
+.map-cell {
+  width: 42px !important;
+}
+
+/* 팀 내부 */
+.kill-cell {
+  width: 26px !important;
+}
+
+.top10-cell {
+  width: 20px !important;
+}
+
+.sum-cell,
+.sum-head {
+  width: 32px !important;
+  min-width: 32px !important;
+  font-size: 10px !important;
+}
+
+/* 입력칸 극압축 */
+.player-name-input {
+  height: 20px !important;
+  font-size: 9px !important;
+  padding: 0 2px !important;
+  border-radius: 6px !important;
+}
+
+.map-input,
+.kill-input {
+  height: 18px !important;
+  font-size: 9px !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+}
+
+/* 체크박스 */
+.top10-check {
+  transform: scale(0.75) !important;
+}
+
+/* sticky 위치 보정 */
+.sticky-col-2 {
+  left: 32px !important;
+}
+
+.sticky-map-header.sticky-col-2 {
+  left: 32px !important;
+}
