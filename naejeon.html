@@ -2074,7 +2074,27 @@ function startFastSync() {
       refreshDashboardFromSheetState();
     }
 
-    document.addEventListener('DOMContentLoaded', async function () {
+  function resetSheetState() {
+  const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
+  if (!ok) return;
+
+  sheetState = getDefaultSheetState();
+
+  renderSheetHead();
+  renderSheetBody();
+  attachSheetEvents();
+  updateAllRoundSums();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  queueSaveSheet();
+
+  const statusEl = document.getElementById('saveStatus');
+  if (statusEl) {
+    statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
   const saveBtn = document.getElementById('saveBtn');
   if (saveBtn) {
     saveBtn.addEventListener('click', saveCurrentMatch);
@@ -2086,7 +2106,6 @@ function startFastSync() {
   }
 
   loadRoundSummary();
-
   initAdvancedSheet();
 
   await loadSheetFromServer();
