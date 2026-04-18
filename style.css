@@ -2323,3 +2323,19 @@ input[type="number"] {
 .advanced-sheet .team-group-head:last-child {
   border-right: none !important;
 }
+/* ===== 팀 헤더 구분선 (상단 TEAM1, TEAM2 나누기) ===== */
+
+.advanced-sheet .team-group-head {
+  position: relative;
+}
+
+/* 각 팀 오른쪽에 흰색 구분선 */
+.advanced-sheet .team-group-head:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 15%;
+  right: 0;
+  width: 2px;
+  height: 70%;
+  background: rgba(255,255,255,0.7);
+}
