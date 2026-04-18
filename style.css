@@ -2021,3 +2021,108 @@ button:disabled {
     min-width: 1400px;
   }
 }
+/* ===== 입력표 정렬 보정 ===== */
+
+.sheet-table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 1500px;
+}
+
+.sheet-table th,
+.sheet-table td {
+  box-sizing: border-box;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.advanced-sheet .round-cell,
+.advanced-sheet .sticky-round-header {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+}
+
+.advanced-sheet .map-cell,
+.advanced-sheet .sticky-map-header {
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
+}
+
+.advanced-sheet .kill-cell,
+.advanced-sheet .kill-head {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+}
+
+.advanced-sheet .top10-cell,
+.advanced-sheet .top10-head {
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+}
+
+.advanced-sheet .sum-cell,
+.advanced-sheet .sum-head {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+}
+
+.player-name-input {
+  width: calc(100% - 8px);
+  height: 22px;
+  margin: 0 auto;
+  display: block;
+}
+
+.map-input,
+.kill-input {
+  width: calc(100% - 8px);
+  height: 22px;
+  margin: 0 auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.top10-check {
+  display: block;
+  margin: 0 auto;
+}
+
+.advanced-sheet th.team-group-head {
+  height: 34px;
+}
+
+.advanced-sheet th.player-head-cell {
+  height: 32px;
+}
+
+.advanced-sheet th.kill-head,
+.advanced-sheet th.top10-head,
+.advanced-sheet th.sum-head {
+  height: 30px;
+}
+
+.advanced-sheet td {
+  height: 30px;
+  line-height: 1;
+}
+
+/* 팀 경계선 정리 */
+#sheetHead th:nth-child(11),
+#sheetBody td:nth-child(11),
+#sheetHead th:nth-child(20),
+#sheetBody td:nth-child(20),
+#sheetHead th:nth-child(29),
+#sheetBody td:nth-child(29),
+#sheetHead th:nth-child(38),
+#sheetBody td:nth-child(38),
+#sheetHead th:nth-child(47),
+#sheetBody td:nth-child(47) {
+  border-right: 2px solid #111 !important;
+}
+
