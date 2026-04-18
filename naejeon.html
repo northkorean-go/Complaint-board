@@ -1631,9 +1631,12 @@
       });
 
       const data = await res.json().catch(() => ({ ok: false }));
-      if (!data.ok) {
-        console.error('sheet-patch 실패', data);
-      }
+if (!data.ok) {
+  console.error('sheet-patch 실패', data);
+  return;
+}
+
+lastSyncedJson = JSON.stringify(sheetState);
     } catch (e) {
       console.error('sheet-patch 실패', e);
     }
@@ -2242,9 +2245,7 @@
             value: target.value
           });
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 80);
+          
           return;
         }
       };
@@ -2310,9 +2311,7 @@
           renderSheetSummary();
           refreshDashboardFromSheetState();
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 80);
+        
         }
       };
 
@@ -2360,9 +2359,7 @@
             value: target.checked
           });
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 80);
+          
           return;
         }
 
@@ -2381,9 +2378,7 @@
             value: target.checked
           });
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 80);
+         
           return;
         }
       };
