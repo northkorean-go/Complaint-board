@@ -1310,6 +1310,20 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+  function updateCheckedStyles() {
+  const checks = document.querySelectorAll('.top10-check');
+
+  checks.forEach((check) => {
+    const td = check.closest('.top10-cell');
+    if (!td) return;
+
+    if (check.checked) {
+      td.style.background = '#fff0a8';
+    } else {
+      td.style.background = '';
+    }
+  });
+}
 
   function getKoreaNowDate() {
     const now = new Date();
@@ -2003,21 +2017,22 @@
   }
 
   function updateAllRoundSums(shouldQueueSave = true) {
-    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-        if (!sumCell) continue;
-        sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
-      }
-    }
-
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-
-    if (shouldQueueSave) {
-      queueSaveSheet();
+  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+      if (!sumCell) continue;
+      sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
     }
   }
+
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  updateCheckedStyles();
+
+  if (shouldQueueSave) {
+    queueSaveSheet();
+  }
+}
 
   function attachSheetEvents() {
     const head = document.getElementById('sheetHead');
@@ -2076,12 +2091,12 @@
   }
 
   function renderAllFromState() {
-    renderSheetHead();
-    renderSheetBody();
-    attachSheetEvents();
-    updateAllRoundSums(false);
-  }
-
+  renderSheetHead();
+  renderSheetBody();
+  attachSheetEvents();
+  updateAllRoundSums(false);
+  updateCheckedStyles();
+}
   function initAdvancedSheet() {
     renderAllFromState();
   }
