@@ -1268,12 +1268,18 @@
     </div>
   </div>
 
-  <script>
-    const TEAM_COUNT = 5;
-    const PLAYERS_PER_TEAM = 4;
-    const ROUND_COUNT = 40;
+ <script>
+  const TEAM_COUNT = 5;
+  const PLAYERS_PER_TEAM = 4;
+  const ROUND_COUNT = 40;
 
-    let sheetState = {
+  let syncTimer = null;
+  let lastSyncedJson = '';
+  let isRemoteApplying = false;
+  let fastSyncInterval = null;
+
+  function getDefaultSheetState() {
+    return {
       teams: [
         { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
         { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
@@ -1292,863 +1298,826 @@
         }))
       }))
     };
-    let syncTimer = null;
-let lastSyncedJson = '';
-let isRemoteApplying = false;
-
-function getDefaultSheetState() {
-  return {
-    teams: [
-      { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-      { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-      { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-      { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-      { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
-    ],
-    rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
-      round: index + 1,
-      map: '사녹',
-      teams: Array.from({ length: TEAM_COUNT }, () => ({
-        players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
-          kill: '',
-          top10: false
-        }))
-      }))
-    }))
-  };
-}
-
-async function saveSheetToServer() {
-  if (isRemoteApplying) return;
-
-  try {
-    const payload = JSON.stringify(sheetState);
-
-    await fetch('/api/sheet-save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: payload
-    });
-
-    lastSyncedJson = payload;
-  } catch (e) {
-    console.error('sheet-save 실패', e);
   }
-}
 
-function queueSaveSheet() {
-  if (isRemoteApplying) return;
+  let sheetState = getDefaultSheetState();
 
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => {
-    saveSheetToServer();
-  }, 120);
-}
-
-async function loadSheetFromServer() {
-  try {
-    const res = await fetch('/api/sheet-load', {
-      cache: 'no-store',
-      credentials: 'include'
-    });
-    const data = await res.json();
-
-    if (!data.ok || !data.data) return false;
-
-    const incomingJson = JSON.stringify(data.data);
-    if (incomingJson === lastSyncedJson) return false;
-
-    isRemoteApplying = true;
-    sheetState = data.data;
-    lastSyncedJson = incomingJson;
-
-    renderSheetHead();
-    renderSheetBody();
-    updateAllRoundSums();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-
-    isRemoteApplying = false;
-    return true;
-  } catch (e) {
-    console.error('sheet-load 실패', e);
-    isRemoteApplying = false;
-    return false;
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
-}
 
-function startFastSync() {
-  setInterval(async () => {
-    await loadSheetFromServer();
-  }, 300);
-}
+  function getKoreaNowDate() {
+    const now = new Date();
+    const koreaText = now.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
+    return new Date(koreaText.replace(' ', 'T'));
+  }
 
-    function escapeHtml(text) {
-      return String(text || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+  function getMatchDisplayDate() {
+    const korea = getKoreaNowDate();
+    const hour = korea.getHours();
+    const base = new Date(korea.getFullYear(), korea.getMonth(), korea.getDate());
+
+    if (hour < 6) {
+      base.setDate(base.getDate() - 1);
     }
 
-    function getKoreaNowDate() {
-      const now = new Date();
-      const koreaText = now.toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' });
-      return new Date(koreaText.replace(' ', 'T'));
+    const month = String(base.getMonth() + 1).padStart(2, '0');
+    const day = String(base.getDate()).padStart(2, '0');
+    return `${month}.${day}`;
+  }
+
+  function buildFixedRankingHtml(items, className) {
+    const maxRows = className === 'mvp' ? 5 : 10;
+    let html = '';
+
+    for (let i = 0; i < maxRows; i++) {
+      const item = items[i];
+      const noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
+      const nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
+      const countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
+      const leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
+      const itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
+
+      html +=
+        '<div class="' + itemClass + '">' +
+          '<div class="' + leftClass + '">' +
+            '<span class="' + noClass + '">' + (i + 1) + '</span>' +
+            '<span class="' + nameClass + '">' + (item ? escapeHtml(item.name) : '') + '</span>' +
+          '</div>' +
+          '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
+        '</div>';
     }
 
-    function getMatchDisplayDate() {
-      const korea = getKoreaNowDate();
-      const hour = korea.getHours();
-      const base = new Date(korea.getFullYear(), korea.getMonth(), korea.getDate());
+    return html;
+  }
 
-      if (hour < 6) {
-        base.setDate(base.getDate() - 1);
-      }
+  function renderRoundRecordTable(items) {
+    const wrap = document.getElementById('roundRecordTableWrap');
+    if (!wrap) return;
 
-      const month = String(base.getMonth() + 1).padStart(2, '0');
-      const day = String(base.getDate()).padStart(2, '0');
-      return `${month}.${day}`;
-    }
+    const rows = Array.isArray(items) ? items.slice(0, 4) : [];
 
-    function buildFixedRankingHtml(items, className) {
-      const maxRows = className === 'mvp' ? 5 : 10;
-      let html = '';
-
-      for (let i = 0; i < maxRows; i++) {
-        const item = items[i];
-        const noClass = className === 'mvp' ? 'mvp-no' : 'ranking-no';
-        const nameClass = className === 'mvp' ? 'mvp-name' : 'ranking-name';
-        const countClass = className === 'mvp' ? 'mvp-count' : 'ranking-count';
-        const leftClass = className === 'mvp' ? 'mvp-left' : 'ranking-left';
-        const itemClass = className === 'mvp' ? 'mvp-item' : 'ranking-item';
-
-        html +=
-          '<div class="' + itemClass + '">' +
-            '<div class="' + leftClass + '">' +
-              '<span class="' + noClass + '">' + (i + 1) + '</span>' +
-              '<span class="' + nameClass + '">' + (item ? escapeHtml(item.name) : '') + '</span>' +
-            '</div>' +
-            '<div class="' + countClass + '">' + (item ? item.count + '회' : '') + '</div>' +
-          '</div>';
-      }
-
-      return html;
-    }
-
-    function renderRoundRecordTable(items) {
-      const wrap = document.getElementById('roundRecordTableWrap');
-      if (!wrap) return;
-
-      const rows = Array.isArray(items) ? items.slice(0, 4) : [];
-
-      while (rows.length < 4) {
-        rows.push({
-          match_date_text: '',
-          winner_members: ['', '', '', '']
-        });
-      }
-
-      let html = `
-        <table class="round-record-table">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>1등</th>
-              <th>2등</th>
-              <th>3등</th>
-              <th>4등</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      rows.forEach((item) => {
-        let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
-
-        while (members.length < 4) {
-          members.push('');
-        }
-
-        html += `
-          <tr>
-            <td>${escapeHtml(item.match_date_text || '')}</td>
-            <td>${escapeHtml(members[0] || '')}</td>
-            <td>${escapeHtml(members[1] || '')}</td>
-            <td>${escapeHtml(members[2] || '')}</td>
-            <td>${escapeHtml(members[3] || '')}</td>
-          </tr>
-        `;
+    while (rows.length < 4) {
+      rows.push({
+        match_date_text: '',
+        winner_members: ['', '', '', '']
       });
+    }
+
+    let html = `
+      <table class="round-record-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>1등</th>
+            <th>2등</th>
+            <th>3등</th>
+            <th>4등</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    rows.forEach((item) => {
+      let members = Array.isArray(item.winner_members) ? [...item.winner_members] : [];
+
+      while (members.length < 4) {
+        members.push('');
+      }
 
       html += `
-          </tbody>
-        </table>
+        <tr>
+          <td>${escapeHtml(item.match_date_text || '')}</td>
+          <td>${escapeHtml(members[0] || '')}</td>
+          <td>${escapeHtml(members[1] || '')}</td>
+          <td>${escapeHtml(members[2] || '')}</td>
+          <td>${escapeHtml(members[3] || '')}</td>
+        </tr>
       `;
+    });
 
-      wrap.innerHTML = html;
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    wrap.innerHTML = html;
+  }
+
+  function renderRoundInfo(currentRound, nextScheduleText) {
+    const roundNameEl = document.getElementById('currentRoundName');
+    const roundMetaEl = document.getElementById('currentRoundMeta');
+
+    if (!roundNameEl || !roundMetaEl) return;
+
+    if (!currentRound || !currentRound.is_open) {
+      roundNameEl.textContent = '회차 미오픈';
+      roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
+      return;
     }
 
-    function renderRoundInfo(currentRound, nextScheduleText) {
-      const roundNameEl = document.getElementById('currentRoundName');
-      const roundMetaEl = document.getElementById('currentRoundMeta');
+    roundNameEl.textContent = currentRound.name || '현재 회차';
+    roundMetaEl.textContent =
+      '상태: 진행중\n' +
+      '시작일: ' + (currentRound.started_at || '-') + '\n' +
+      '다음 일정: ' + (nextScheduleText || '미정');
+  }
 
-      if (!roundNameEl || !roundMetaEl) return;
+  function getScheduleBadgeText(line) {
+    const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
+    if (!match) return '';
 
-      if (!currentRound || !currentRound.is_open) {
-        roundNameEl.textContent = '회차 미오픈';
-        roundMetaEl.textContent = '관리자 페이지에서 회차를 오픈한 뒤 저장을 진행해주세요.';
-        return;
-      }
+    const month = Number(match[1]);
+    const day = Number(match[2]);
 
-      roundNameEl.textContent = currentRound.name || '현재 회차';
-      roundMetaEl.textContent =
-        '상태: 진행중\n' +
-        '시작일: ' + (currentRound.started_at || '-') + '\n' +
-        '다음 일정: ' + (nextScheduleText || '미정');
-    }
+    const now = getKoreaNowDate();
+    const target = new Date(now.getFullYear(), month - 1, day);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((target - today) / 86400000);
 
-    function getScheduleBadgeText(line) {
-      const match = String(line || '').match(/^(\d{2})\.(\d{2})/);
-      if (!match) return '';
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '내일';
+    if (diffDays < 0) return '';
+    return `D-${diffDays}`;
+  }
 
-      const month = Number(match[1]);
-      const day = Number(match[2]);
+  function getScheduleBadgeClass(text) {
+    if (text === '오늘') return 'today';
+    if (text === '내일') return 'tomorrow';
+    if (text === 'D-day') return 'dday';
+    return '';
+  }
 
-      const now = getKoreaNowDate();
-      const target = new Date(now.getFullYear(), month - 1, day);
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const diffDays = Math.round((target - today) / 86400000);
+  function renderScheduleText(rawValue) {
+    const scheduleText = document.getElementById('scheduleText');
+    if (!scheduleText) return;
 
-      if (diffDays === 0) return '오늘';
-      if (diffDays === 1) return '내일';
-      if (diffDays < 0) return '';
-      return `D-${diffDays}`;
-    }
+    let lines = [];
 
-    function getScheduleBadgeClass(text) {
-      if (text === '오늘') return 'today';
-      if (text === '내일') return 'tomorrow';
-      if (text === 'D-day') return 'dday';
-      return '';
-    }
+    if (Array.isArray(rawValue)) {
+      lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
+    } else {
+      const raw = String(rawValue || '미정').trim();
 
-    function renderScheduleText(rawValue) {
-      const scheduleText = document.getElementById('scheduleText');
-      if (!scheduleText) return;
-
-      let lines = [];
-
-      if (Array.isArray(rawValue)) {
-        lines = rawValue.map(v => String(v || '').trim()).filter(Boolean);
-      } else {
-        const raw = String(rawValue || '미정').trim();
-
-        if (!raw || raw === '미정') {
-          scheduleText.textContent = '미정';
-          return;
-        }
-
-        lines = raw
-          .split(/\s*\/\s*|\n+/)
-          .map(v => v.trim())
-          .filter(Boolean);
-      }
-
-      if (!lines.length) {
+      if (!raw || raw === '미정') {
         scheduleText.textContent = '미정';
         return;
       }
 
-      scheduleText.innerHTML = lines.map(line => {
-        const badgeText = getScheduleBadgeText(line);
-        const badgeClass = getScheduleBadgeClass(badgeText);
-
-        return `
-          <div class="schedule-line">
-            <div class="schedule-main">${escapeHtml(line)}</div>
-            ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
-          </div>
-        `;
-      }).join('');
+      lines = raw
+        .split(/\s*\/\s*|\n+/)
+        .map(v => v.trim())
+        .filter(Boolean);
     }
 
-    async function loadRoundSummary() {
-      try {
-        const res = await fetch('/api/round-summary', { cache: 'no-store' });
-        const data = await res.json();
-
-        renderRoundRecordTable(data.roundRecords || []);
-        renderRoundInfo(data.currentRound || data.round || null, data.nextScheduleText || '미정');
-
-        const rankingList = document.getElementById('rankingList');
-        if (rankingList) {
-          rankingList.innerHTML = buildFixedRankingHtml(data.ranking || [], 'ranking');
-        }
-
-        const mvpList = document.getElementById('mvpList');
-        if (mvpList) {
-          mvpList.innerHTML = buildFixedRankingHtml(data.mvpRanking || [], 'mvp');
-        }
-
-        const benefitText = document.getElementById('benefitText');
-        if (benefitText) {
-          benefitText.textContent = data.benefitText || '미설정';
-        }
-
-        renderScheduleText(data.nextScheduleItems || data.nextScheduleText || '미정');
-      } catch (error) {
-        console.error('회차 요약 로드 실패:', error);
-        renderRoundRecordTable([]);
-        renderRoundInfo(null, '미정');
-
-        const rankingList = document.getElementById('rankingList');
-        if (rankingList) {
-          rankingList.innerHTML = buildFixedRankingHtml([], 'ranking');
-        }
-
-        const mvpList = document.getElementById('mvpList');
-        if (mvpList) {
-          mvpList.innerHTML = buildFixedRankingHtml([], 'mvp');
-        }
-
-        const benefitText = document.getElementById('benefitText');
-        if (benefitText) {
-          benefitText.textContent = '불러오기 실패';
-        }
-
-        renderScheduleText('미정');
-      }
+    if (!lines.length) {
+      scheduleText.textContent = '미정';
+      return;
     }
 
-    async function saveCurrentMatch() {
-      const statusEl = document.getElementById('saveStatus');
-      if (statusEl) statusEl.textContent = '저장 중...';
+    scheduleText.innerHTML = lines.map(line => {
+      const badgeText = getScheduleBadgeText(line);
+      const badgeClass = getScheduleBadgeClass(badgeText);
 
-      try {
-        const res = await fetch('/api/save-match', {
-          method: 'POST',
-          credentials: 'include'
-        });
-        const data = await res.json();
-
-        if (!data.ok) {
-          if (statusEl) {
-            statusEl.textContent = '❌ 저장 실패: ' + (data.error || data.message || '알 수 없는 오류');
-          }
-          return;
-        }
-
-        if (statusEl) {
-          if (data.saved) {
-            statusEl.textContent =
-              '✅ 저장 완료 (' + (data.match_date || '-') + ')' +
-              (data.round_name ? '\n회차: ' + data.round_name : '');
-          } else {
-            statusEl.textContent =
-              '⚠️ 이미 저장된 결과' +
-              (data.round_name ? '\n회차: ' + data.round_name : '');
-          }
-        }
-
-        await loadRoundSummary();
-      } catch (e) {
-        console.error('저장 실패:', e);
-        if (statusEl) statusEl.textContent = '❌ 서버 오류';
-      }
-    }
-
-    function getPlayerTotals(teamIndex, playerIndex) {
-  let killTotal = 0;
-  let top10Total = 0;
-
-  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-    const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-    killTotal += Number(player.kill || 0);
-    if (player.top10) top10Total += 1;
+      return `
+        <div class="schedule-line">
+          <div class="schedule-main">${escapeHtml(line)}</div>
+          ${badgeText ? `<div class="schedule-badge ${badgeClass}">${escapeHtml(badgeText)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
   }
 
-  return {
-    kill: killTotal,
-    top10: top10Total,
-    pure: killTotal - top10Total,
-    score: killTotal + top10Total
-  };
-}
+  async function loadRoundSummary() {
+    try {
+      const res = await fetch('/api/round-summary', { cache: 'no-store' });
+      const data = await res.json();
 
-    function getTeamTotals(teamIndex) {
-      let score = 0;
-      let pure = 0;
+      renderRoundRecordTable(data.roundRecords || []);
+      renderRoundInfo(data.currentRound || data.round || null, data.nextScheduleText || '미정');
 
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-          const kill = Number(player.kill || 0);
-          const top10 = player.top10 ? 1 : 0;
-          score += kill + top10;
-          pure += kill - top10;
+      const rankingList = document.getElementById('rankingList');
+      if (rankingList) rankingList.innerHTML = buildFixedRankingHtml(data.ranking || [], 'ranking');
+
+      const mvpList = document.getElementById('mvpList');
+      if (mvpList) mvpList.innerHTML = buildFixedRankingHtml(data.mvpRanking || [], 'mvp');
+
+      const benefitText = document.getElementById('benefitText');
+      if (benefitText) benefitText.textContent = data.benefitText || '미설정';
+
+      renderScheduleText(data.nextScheduleItems || data.nextScheduleText || '미정');
+    } catch (error) {
+      console.error('회차 요약 로드 실패:', error);
+      renderRoundRecordTable([]);
+      renderRoundInfo(null, '미정');
+
+      const rankingList = document.getElementById('rankingList');
+      if (rankingList) rankingList.innerHTML = buildFixedRankingHtml([], 'ranking');
+
+      const mvpList = document.getElementById('mvpList');
+      if (mvpList) mvpList.innerHTML = buildFixedRankingHtml([], 'mvp');
+
+      const benefitText = document.getElementById('benefitText');
+      if (benefitText) benefitText.textContent = '불러오기 실패';
+
+      renderScheduleText('미정');
+    }
+  }
+
+  async function saveCurrentMatch() {
+    const statusEl = document.getElementById('saveStatus');
+    if (statusEl) statusEl.textContent = '저장 중...';
+
+    try {
+      const res = await fetch('/api/save-match', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (!data.ok) {
+        if (statusEl) {
+          statusEl.textContent = '❌ 저장 실패: ' + (data.error || data.message || '알 수 없는 오류');
+        }
+        return;
+      }
+
+      if (statusEl) {
+        if (data.saved) {
+          statusEl.textContent =
+            '✅ 저장 완료 (' + (data.match_date || '-') + ')' +
+            (data.round_name ? '\n회차: ' + data.round_name : '');
+        } else {
+          statusEl.textContent =
+            '⚠️ 이미 저장된 결과' +
+            (data.round_name ? '\n회차: ' + data.round_name : '');
         }
       }
 
-      return { score, pure };
+      await loadRoundSummary();
+    } catch (e) {
+      console.error('저장 실패:', e);
+      if (statusEl) statusEl.textContent = '❌ 서버 오류';
+    }
+  }
+
+  async function saveSheetToServer() {
+    if (isRemoteApplying) return;
+
+    try {
+      const payload = JSON.stringify(sheetState);
+
+      const res = await fetch('/api/sheet-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: payload
+      });
+
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (data.ok) {
+        lastSyncedJson = payload;
+      }
+    } catch (e) {
+      console.error('sheet-save 실패', e);
+    }
+  }
+
+  function queueSaveSheet() {
+    if (isRemoteApplying) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(saveSheetToServer, 120);
+  }
+
+  function hydrateIncomingSheetState(data) {
+    const base = getDefaultSheetState();
+
+    if (!data || typeof data !== 'object') return base;
+
+    if (Array.isArray(data.teams)) {
+      for (let t = 0; t < TEAM_COUNT; t++) {
+        if (!data.teams[t]) continue;
+        if (data.teams[t].teamName) base.teams[t].teamName = String(data.teams[t].teamName);
+        if (Array.isArray(data.teams[t].players)) {
+          for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
+            base.teams[t].players[p] = String(data.teams[t].players[p] || `선수${p + 1}`);
+          }
+        }
+      }
     }
 
-    function getAllPlayerRanking() {
-      const list = [];
+    if (Array.isArray(data.rounds)) {
+      for (let r = 0; r < Math.min(ROUND_COUNT, data.rounds.length); r++) {
+        const inRound = data.rounds[r];
+        if (!inRound) continue;
 
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          const playerName = sheetState.teams[teamIndex].players[playerIndex] || `선수${playerIndex + 1}`;
-          const totals = getPlayerTotals(teamIndex, playerIndex);
+        base.rounds[r].map = String(inRound.map || '사녹');
 
-          list.push({
-            name: playerName,
-            kill: totals.kill,
-            top10: totals.top10,
-            pure: totals.pure,
-            score: totals.kill + totals.top10
-          });
+        if (Array.isArray(inRound.teams)) {
+          for (let t = 0; t < Math.min(TEAM_COUNT, inRound.teams.length); t++) {
+            const inTeam = inRound.teams[t];
+            if (!inTeam || !Array.isArray(inTeam.players)) continue;
+
+            for (let p = 0; p < Math.min(PLAYERS_PER_TEAM, inTeam.players.length); p++) {
+              const inPlayer = inTeam.players[p] || {};
+              base.rounds[r].teams[t].players[p] = {
+                kill: String(inPlayer.kill || ''),
+                top10: !!inPlayer.top10
+              };
+            }
+          }
         }
       }
+    }
 
-      return list.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.pure !== a.pure) return b.pure - a.pure;
-        return a.name.localeCompare(b.name, 'ko');
+    return base;
+  }
+
+  async function loadSheetFromServer() {
+    try {
+      const res = await fetch('/api/sheet-load', {
+        cache: 'no-store',
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (!data.ok || !data.data) return false;
+
+      const hydrated = hydrateIncomingSheetState(data.data);
+      const incomingJson = JSON.stringify(hydrated);
+
+      if (incomingJson === lastSyncedJson) return false;
+
+      isRemoteApplying = true;
+      sheetState = hydrated;
+      lastSyncedJson = incomingJson;
+
+      renderAllFromState();
+
+      isRemoteApplying = false;
+      return true;
+    } catch (e) {
+      console.error('sheet-load 실패', e);
+      isRemoteApplying = false;
+      return false;
+    }
+  }
+
+  function startFastSync() {
+    if (fastSyncInterval) clearInterval(fastSyncInterval);
+
+    fastSyncInterval = setInterval(async () => {
+      await loadSheetFromServer();
+    }, 300);
+  }
+
+  function getPlayerTotals(teamIndex, playerIndex) {
+    let killTotal = 0;
+    let top10Total = 0;
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+      killTotal += Number(player.kill || 0);
+      if (player.top10) top10Total += 1;
+    }
+
+    return {
+      kill: killTotal,
+      top10: top10Total,
+      pure: killTotal - top10Total,
+      score: killTotal + top10Total
+    };
+  }
+
+  function getTeamTotals(teamIndex) {
+    let score = 0;
+    let pure = 0;
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
+        const kill = Number(player.kill || 0);
+        const top10 = player.top10 ? 1 : 0;
+        score += kill + top10;
+        pure += kill - top10;
+      }
+    }
+
+    return { score, pure };
+  }
+
+  function getAllPlayerRanking() {
+    const list = [];
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const playerName = sheetState.teams[teamIndex].players[playerIndex] || `선수${playerIndex + 1}`;
+        const totals = getPlayerTotals(teamIndex, playerIndex);
+
+        list.push({
+          name: playerName,
+          kill: totals.kill,
+          top10: totals.top10,
+          pure: totals.pure,
+          score: totals.score
+        });
+      }
+    }
+
+    return list.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.name.localeCompare(b.name, 'ko');
+    });
+  }
+
+  function getWinningTeamInfo() {
+    const teams = [];
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const teamName = sheetState.teams[teamIndex].teamName;
+      const totals = getTeamTotals(teamIndex);
+      const members = sheetState.teams[teamIndex].players.filter(Boolean);
+
+      teams.push({
+        teamIndex,
+        teamName,
+        score: totals.score,
+        pure: totals.pure,
+        members
       });
     }
 
-    function getWinningTeamInfo() {
-      const teams = [];
+    teams.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (b.pure !== a.pure) return b.pure - a.pure;
+      return a.teamIndex - b.teamIndex;
+    });
 
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const teamName = sheetState.teams[teamIndex].teamName;
-        const totals = getTeamTotals(teamIndex);
-        const members = sheetState.teams[teamIndex].players.filter(Boolean);
+    return teams[0] || null;
+  }
 
-        teams.push({
-          teamIndex,
-          teamName,
-          score: totals.score,
-          pure: totals.pure,
-          members
-        });
+  function refreshDashboardFromSheetState() {
+    const todayTitle = document.getElementById('todayTitle');
+    const topTeamLabel = document.getElementById('topTeamLabel');
+    const topTeamLines = document.getElementById('topTeamLines');
+    const recentMatchCard = document.getElementById('recentMatchCard');
+
+    if (todayTitle) {
+      todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
+    }
+
+    const winner = getWinningTeamInfo();
+    const ranking = getAllPlayerRanking();
+    const mvp = ranking[0] || null;
+
+    if (topTeamLabel) {
+      if (!winner) {
+        topTeamLabel.textContent = '🏆 1등팀';
+      } else {
+        topTeamLabel.textContent =
+          `🏆 1등팀 ${winner.teamName} ${winner.score}점 (${winner.members.join(' / ')})`;
       }
+    }
 
-      teams.sort((a, b) => {
+    if (topTeamLines) {
+      if (!mvp) {
+        topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
+      } else {
+        topTeamLines.textContent = `MVP ${mvp.name} ${mvp.score}점`;
+      }
+    }
+
+    if (recentMatchCard) {
+      const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
+        const totals = getTeamTotals(i);
+        return {
+          teamIndex: i,
+          teamName: sheetState.teams[i].teamName,
+          score: totals.score,
+          pure: totals.pure
+        };
+      }).sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         if (b.pure !== a.pure) return b.pure - a.pure;
         return a.teamIndex - b.teamIndex;
       });
 
-      return teams[0] || null;
+      const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
+        teamOrder.map(team => `${team.teamName} ${team.score}`).join(' : ');
+
+      let rowsHtml = '';
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        rowsHtml += '<tr>';
+        for (let i = 0; i < teamOrder.length; i++) {
+          const teamIndex = teamOrder[i].teamIndex;
+          const playerName = sheetState.teams[teamIndex].players[playerIndex] || '';
+          const totals = getPlayerTotals(teamIndex, playerIndex);
+          const cellText = playerName
+            ? `${playerName}\n${totals.score} (${totals.kill}-${totals.top10})`
+            : '';
+          rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
+        }
+        rowsHtml += '</tr>';
+      }
+
+      recentMatchCard.innerHTML =
+        `<div class="recent-match-head">최근 내전 결과</div>` +
+        `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
+        `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
+        `<div class="recent-match-table-wrap">` +
+          `<table class="recent-match-table"><tbody>${rowsHtml}</tbody></table>` +
+        `</div>`;
     }
+  }
 
-    function refreshDashboardFromSheetState() {
-      const todayTitle = document.getElementById('todayTitle');
-      const topTeamLabel = document.getElementById('topTeamLabel');
-      const topTeamLines = document.getElementById('topTeamLines');
-      const recentMatchCard = document.getElementById('recentMatchCard');
+  function renderSheetHead() {
+    const head = document.getElementById('sheetHead');
+    if (!head) return;
 
-      if (todayTitle) {
-        todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
+    let teamRow = `
+      <tr>
+        <th rowspan="3" class="sticky-round-header">라운드</th>
+        <th rowspan="3" class="sticky-map-header">맵</th>
+    `;
+
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+    }
+    teamRow += `</tr>`;
+
+    let playerRow = `<tr>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        playerRow += `
+          <th colspan="2" class="player-head-cell">
+            <input
+              class="player-name-input"
+              type="text"
+              value="${escapeHtml(team.players[playerIndex])}"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+            />
+          </th>
+        `;
       }
+      playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
+    }
+    playerRow += `</tr>`;
 
-      const winner = getWinningTeamInfo();
-      const ranking = getAllPlayerRanking();
-      const mvp = ranking[0] || null;
-
-      if (topTeamLabel) {
-        if (!winner) {
-          topTeamLabel.textContent = '🏆 1등팀';
-        } else {
-          topTeamLabel.textContent =
-            `🏆 1등팀 ${winner.teamName} ${winner.score}점 (${winner.members.join(' / ')})`;
-        }
-      }
-
-      if (topTeamLines) {
-        if (!mvp) {
-          topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
-        } else {
-          topTeamLines.textContent = `MVP ${mvp.name} ${mvp.score}점`;
-        }
-      }
-
-      if (recentMatchCard) {
-        const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
-          const totals = getTeamTotals(i);
-          return {
-            teamIndex: i,
-            teamName: sheetState.teams[i].teamName,
-            score: totals.score,
-            pure: totals.pure
-          };
-        }).sort((a, b) => {
-          if (b.score !== a.score) return b.score - a.score;
-          if (b.pure !== a.pure) return b.pure - a.pure;
-          return a.teamIndex - b.teamIndex;
-        });
-
-        const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
-          teamOrder.map(team => `${team.teamName} ${team.score}`).join(' : ');
-
-        let rowsHtml = '';
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          rowsHtml += '<tr>';
-          for (let i = 0; i < teamOrder.length; i++) {
-            const teamIndex = teamOrder[i].teamIndex;
-            const playerName = sheetState.teams[teamIndex].players[playerIndex] || '';
-            const totals = getPlayerTotals(teamIndex, playerIndex);
-            const cellText = playerName
-              ? `${playerName}\n${totals.score} (${totals.kill}-${totals.top10})`
-              : '';
-            rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
-          }
-          rowsHtml += '</tr>';
-        }
-
-        recentMatchCard.innerHTML =
-          `<div class="recent-match-head">최근 내전 결과</div>` +
-          `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
-          `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
-          `<div class="recent-match-table-wrap">` +
-            `<table class="recent-match-table"><tbody>${rowsHtml}</tbody></table>` +
-          `</div>`;
+    let statRow = `<tr>`;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        statRow += `
+          <th class="kill-head">KILL</th>
+          <th class="top10-head">TOP10</th>
+        `;
       }
     }
+    statRow += `</tr>`;
 
-    function renderSheetHead() {
-      const head = document.getElementById('sheetHead');
-      if (!head) return;
+    head.innerHTML = teamRow + playerRow + statRow;
+  }
 
-      let teamRow = `
-        <tr>
-          <th rowspan="3" class="sticky-round-header">라운드</th>
-          <th rowspan="3" class="sticky-map-header">맵</th>
+  function getTeamRoundTotal(roundData, teamIndex) {
+    const team = roundData.teams[teamIndex];
+    if (!team) return 0;
+
+    return team.players.reduce((sum, player) => {
+      const kill = Number(player.kill || 0);
+      const top10 = player.top10 ? 1 : 0;
+      return sum + kill + top10;
+    }, 0);
+  }
+
+  function renderSheetBody() {
+    const body = document.getElementById('sheetBody');
+    if (!body) return;
+
+    let html = '';
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      const roundData = sheetState.rounds[roundIndex];
+
+      html += `<tr>`;
+      html += `<td class="round-cell">${roundData.round}</td>`;
+      html += `
+        <td class="map-cell">
+          <input
+            class="map-input"
+            type="text"
+            value="${escapeHtml(roundData.map)}"
+            data-round-index="${roundIndex}"
+          />
+        </td>
       `;
 
       for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const team = sheetState.teams[teamIndex];
-        teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
-      }
-      teamRow += `</tr>`;
-
-      let playerRow = `<tr>`;
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const team = sheetState.teams[teamIndex];
         for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          playerRow += `
-            <th colspan="2" class="player-head-cell">
-              <input
-                class="player-name-input"
-                type="text"
-                value="${escapeHtml(team.players[playerIndex])}"
-                data-team-index="${teamIndex}"
-                data-player-index="${playerIndex}"
-              />
-            </th>
-          `;
-        }
-        playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
-      }
-      playerRow += `</tr>`;
-
-      let statRow = `<tr>`;
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          statRow += `
-            <th class="kill-head">KILL</th>
-            <th class="top10-head">TOP10</th>
-          `;
-        }
-      }
-      statRow += `</tr>`;
-
-      head.innerHTML = teamRow + playerRow + statRow;
-    }
-
-    function getTeamRoundTotal(roundData, teamIndex) {
-      const team = roundData.teams[teamIndex];
-      if (!team) return 0;
-
-      return team.players.reduce((sum, player) => {
-        const kill = Number(player.kill || 0);
-        const top10 = player.top10 ? 1 : 0;
-        return sum + kill + top10;
-      }, 0);
-    }
-
-    function renderSheetBody() {
-      const body = document.getElementById('sheetBody');
-      if (!body) return;
-
-      let html = '';
-
-      for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-        const roundData = sheetState.rounds[roundIndex];
-
-        html += `<tr>`;
-        html += `<td class="round-cell">${roundData.round}</td>`;
-        html += `
-          <td class="map-cell">
-            <input
-              class="map-input"
-              type="text"
-              value="${escapeHtml(roundData.map)}"
-              data-round-index="${roundIndex}"
-            />
-          </td>
-        `;
-
-        for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-          for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-            const player = roundData.teams[teamIndex].players[playerIndex];
-
-            html += `
-              <td class="kill-cell">
-                <input
-                  type="number"
-                  class="kill-input"
-                  value="${escapeHtml(player.kill)}"
-                  data-round-index="${roundIndex}"
-                  data-team-index="${teamIndex}"
-                  data-player-index="${playerIndex}"
-                  min="0"
-                />
-              </td>
-              <td class="top10-cell">
-                <input
-                  type="checkbox"
-                  class="top10-check"
-                  data-round-index="${roundIndex}"
-                  data-team-index="${teamIndex}"
-                  data-player-index="${playerIndex}"
-                  ${player.top10 ? 'checked' : ''}
-                />
-              </td>
-            `;
-          }
+          const player = roundData.teams[teamIndex].players[playerIndex];
 
           html += `
-            <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
-              ${getTeamRoundTotal(roundData, teamIndex)}
+            <td class="kill-cell">
+              <input
+                type="number"
+                class="kill-input"
+                value="${escapeHtml(player.kill)}"
+                data-round-index="${roundIndex}"
+                data-team-index="${teamIndex}"
+                data-player-index="${playerIndex}"
+                min="0"
+              />
+            </td>
+            <td class="top10-cell">
+              <input
+                type="checkbox"
+                class="top10-check"
+                data-round-index="${roundIndex}"
+                data-team-index="${teamIndex}"
+                data-player-index="${playerIndex}"
+                ${player.top10 ? 'checked' : ''}
+              />
             </td>
           `;
         }
 
-        html += `</tr>`;
+        html += `
+          <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
+            ${getTeamRoundTotal(roundData, teamIndex)}
+          </td>
+        `;
       }
 
-      body.innerHTML = html;
+      html += `</tr>`;
     }
 
-    function renderSheetSummary() {
-      const totalNodes = document.querySelectorAll('.sheet-summary-total');
-      const gridNodes = document.querySelectorAll('.sheet-summary-grid');
+    body.innerHTML = html;
+  }
 
-      if (!totalNodes.length || !gridNodes.length) return;
+  function renderSheetSummary() {
+    const totalNode = document.getElementById('sheetSummaryTotal');
+    const gridNode = document.getElementById('sheetSummaryGrid');
+    if (!totalNode || !gridNode) return;
 
-      const teamColumns = [];
-      const totalTexts = [];
-      let grandTotal = 0;
+    const teamColumns = [];
+    const totalTexts = [];
+    let grandTotal = 0;
 
-      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-        const team = sheetState.teams[teamIndex];
-        const playerLines = [];
-        let teamPureTotal = 0;
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const team = sheetState.teams[teamIndex];
+      const playerLines = [];
+      let teamPureTotal = 0;
 
-        for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-          const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
-          const totals = getPlayerTotals(teamIndex, playerIndex);
-          teamPureTotal += totals.pure;
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const playerName = team.players[playerIndex] || `선수${playerIndex + 1}`;
+        const totals = getPlayerTotals(teamIndex, playerIndex);
+        teamPureTotal += totals.pure;
 
-          playerLines.push(`
-            <div class="sheet-summary-player">
-              ${escapeHtml(playerName)} ${totals.pure} (${totals.kill} - ${totals.top10})
-            </div>
-          `);
-        }
-
-        grandTotal += teamPureTotal;
-        totalTexts.push(`${team.teamName} ${teamPureTotal}`);
-
-        teamColumns.push(`
-          <div class="sheet-summary-team">
-            ${playerLines.join('')}
-            <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
+        playerLines.push(`
+          <div class="sheet-summary-player">
+            ${escapeHtml(playerName)} ${totals.pure} (${totals.kill} - ${totals.top10})
           </div>
         `);
       }
 
-      const totalText = `[${grandTotal}] ` + totalTexts.join(' : ');
-      const gridHtml = teamColumns.join('');
+      grandTotal += teamPureTotal;
+      totalTexts.push(`${team.teamName} ${teamPureTotal}`);
 
-      totalNodes.forEach((node) => {
-        node.textContent = totalText;
-      });
-
-      gridNodes.forEach((node) => {
-        node.innerHTML = gridHtml;
-      });
+      teamColumns.push(`
+        <div class="sheet-summary-team">
+          ${playerLines.join('')}
+          <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
+        </div>
+      `);
     }
 
-    function updateAllRoundSums() {
-  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-      if (!sumCell) continue;
-      sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
-    }
+    totalNode.textContent = `[${grandTotal}] ` + totalTexts.join(' : ');
+    gridNode.innerHTML = teamColumns.join('');
   }
 
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  queueSaveSheet();
-}
+  function updateAllRoundSums(shouldQueueSave = true) {
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+        const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+        if (!sumCell) continue;
+        sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
+      }
+    }
 
-    function attachSheetEvents() {
-  const head = document.getElementById('sheetHead');
-  const body = document.getElementById('sheetBody');
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
 
-  if (head) {
-    head.addEventListener('input', (event) => {
-      const target = event.target;
-      if (!target.classList.contains('player-name-input')) return;
-
-      const teamIndex = Number(target.dataset.teamIndex);
-      const playerIndex = Number(target.dataset.playerIndex);
-
-      sheetState.teams[teamIndex].players[playerIndex] = target.value;
-      renderSheetSummary();
-      refreshDashboardFromSheetState();
+    if (shouldQueueSave) {
       queueSaveSheet();
-    });
+    }
   }
 
-  if (body) {
-    body.addEventListener('input', (event) => {
-      const target = event.target;
+  function attachSheetEvents() {
+    const head = document.getElementById('sheetHead');
+    const body = document.getElementById('sheetBody');
 
-      if (target.classList.contains('map-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        sheetState.rounds[roundIndex].map = target.value;
+    if (head) {
+      head.oninput = (event) => {
+        const target = event.target;
+        if (!target.classList.contains('player-name-input')) return;
+
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.teams[teamIndex].players[playerIndex] = target.value;
+        renderSheetSummary();
         refreshDashboardFromSheetState();
         queueSaveSheet();
-        return;
-      }
-
-      if (target.classList.contains('kill-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-
-        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-        updateAllRoundSums();
-      }
-    });
-
-    body.addEventListener('change', (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('top10-check')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-
-        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
-        updateAllRoundSums();
-      }
-    });
-  }
-}
-
-    function initAdvancedSheet() {
-      renderSheetHead();
-      renderSheetBody();
-      attachSheetEvents();
-      updateAllRoundSums();
-      renderSheetSummary();
-      refreshDashboardFromSheetState();
+      };
     }
 
+    if (body) {
+      body.oninput = (event) => {
+        const target = event.target;
+
+        if (target.classList.contains('map-input')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          sheetState.rounds[roundIndex].map = target.value;
+          refreshDashboardFromSheetState();
+          queueSaveSheet();
+          return;
+        }
+
+        if (target.classList.contains('kill-input')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          const teamIndex = Number(target.dataset.teamIndex);
+          const playerIndex = Number(target.dataset.playerIndex);
+
+          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+          updateAllRoundSums(true);
+        }
+      };
+
+      body.onchange = (event) => {
+        const target = event.target;
+
+        if (target.classList.contains('top10-check')) {
+          const roundIndex = Number(target.dataset.roundIndex);
+          const teamIndex = Number(target.dataset.teamIndex);
+          const playerIndex = Number(target.dataset.playerIndex);
+
+          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
+          updateAllRoundSums(true);
+        }
+      };
+    }
+  }
+
+  function renderAllFromState() {
+    renderSheetHead();
+    renderSheetBody();
+    attachSheetEvents();
+    updateAllRoundSums(false);
+  }
+
+  function initAdvancedSheet() {
+    renderAllFromState();
+  }
+
   function resetSheetState() {
-  const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
-  if (!ok) return;
+    const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
+    if (!ok) return;
 
-  sheetState = getDefaultSheetState();
+    sheetState = getDefaultSheetState();
+    renderAllFromState();
+    queueSaveSheet();
 
-  renderSheetHead();
-  renderSheetBody();
-  attachSheetEvents();
-  updateAllRoundSums();
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  queueSaveSheet();
-
-  const statusEl = document.getElementById('saveStatus');
-  if (statusEl) {
-    statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', async function () {
-  const saveBtn = document.getElementById('saveBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', saveCurrentMatch);
+    const statusEl = document.getElementById('saveStatus');
+    if (statusEl) {
+      statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
+    }
   }
 
-  const resetSheetBtn = document.getElementById('resetSheetBtn');
-  if (resetSheetBtn) {
-    resetSheetBtn.addEventListener('click', resetSheetState);
-  }
+  document.addEventListener('DOMContentLoaded', async function () {
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', saveCurrentMatch);
+    }
 
-  loadRoundSummary();
-  initAdvancedSheet();
+    const resetSheetBtn = document.getElementById('resetSheetBtn');
+    if (resetSheetBtn) {
+      resetSheetBtn.addEventListener('click', resetSheetState);
+    }
 
-  await loadSheetFromServer();
-  startFastSync();
-});
-      function resetSheetState() {
-  const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
-  if (!ok) return;
+    await loadRoundSummary();
 
-  sheetState.teams = [
-    { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-    { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-    { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-    { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-    { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
-  ];
-
-  sheetState.rounds = Array.from({ length: ROUND_COUNT }, (_, index) => ({
-    round: index + 1,
-    map: '사녹',
-    teams: Array.from({ length: TEAM_COUNT }, () => ({
-      players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
-        kill: '',
-        top10: false
-      }))
-    }))
-  }));
-
-  renderSheetHead();
-  renderSheetBody();
-  attachSheetEvents();
-  updateAllRoundSums();
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  queueSaveSheet();
-
-  const statusEl = document.getElementById('saveStatus');
-  if (statusEl) {
-    statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
-  }
-}
-});
-  </script>
+    initAdvancedSheet();
+    await loadSheetFromServer();
+    startFastSync();
+  });
+</script>
 
   <div class="roulette-section">
     <div class="roulette-header">
