@@ -1329,12 +1329,12 @@ button:disabled {
 .sheet-wrap {
   width: 100%;
   max-width: 100%;
-  margin: 22px 0 64px;
-  padding: 0 6px;
+  margin: 24px 0 64px;
+  padding: 0 8px;
 }
 
 .sheet-head {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
   padding: 0 6px;
 }
 
@@ -1342,7 +1342,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1.08;
   font-weight: 900;
   letter-spacing: -0.04em;
@@ -1352,8 +1352,8 @@ button:disabled {
 .sheet-desc {
   margin-top: 10px;
   font-size: 13px;
-  color: #7a818a;
-  line-height: 1.7;
+  color: #7b8190;
+  line-height: 1.65;
 }
 
 .sheet-table-wrap {
@@ -1370,7 +1370,7 @@ button:disabled {
 
 .sheet-table {
   width: 100%;
-  min-width: 2400px;
+  min-width: 2380px;
   table-layout: fixed;
   border-collapse: collapse;
   background: #fff;
@@ -1396,7 +1396,7 @@ button:disabled {
 }
 
 .advanced-sheet td {
-  height: 56px;
+  height: 52px;
   font-size: 11px;
   font-weight: 800;
   background: #fff;
@@ -1408,7 +1408,7 @@ button:disabled {
 .advanced-sheet .team-group-head {
   background: #fff;
   color: #111;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -1425,10 +1425,19 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.advanced-sheet .sheet-left-head {
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
 .advanced-sheet .round-cell {
-  width: 42px;
-  min-width: 42px;
-  max-width: 42px;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
   background: #fff;
   color: #111;
   font-size: 12px;
@@ -1436,37 +1445,37 @@ button:disabled {
 }
 
 .advanced-sheet .map-cell {
+  width: 82px;
+  min-width: 82px;
+  max-width: 82px;
+  background: #fff;
+}
+
+.advanced-sheet .kill-cell {
   width: 72px;
   min-width: 72px;
   max-width: 72px;
   background: #fff;
 }
 
-.advanced-sheet .kill-cell {
-  width: 70px;
-  min-width: 70px;
-  max-width: 70px;
-  background: #fff;
-}
-
 .advanced-sheet .top10-cell {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
   background: #fcfcfb;
 }
 
 .advanced-sheet .chicken-cell {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
   background: #fff;
 }
 
 .advanced-sheet .sum-cell {
-  width: 56px;
-  min-width: 56px;
-  max-width: 56px;
+  width: 58px;
+  min-width: 58px;
+  max-width: 58px;
   background: #fff;
   color: #111;
   font-size: 12px;
@@ -1488,12 +1497,13 @@ button:disabled {
   font-weight: 900;
   letter-spacing: 0.08em;
   height: 34px;
+  text-transform: uppercase;
 }
 
 .advanced-sheet .sum-head {
-  width: 44px;
-  min-width: 44px;
-  max-width: 44px;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
   background: #fcfcfb;
 }
 
@@ -1630,5 +1640,4 @@ button:disabled {
     font-size: 12px;
   }
 }
-
 
