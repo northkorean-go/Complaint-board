@@ -2230,17 +2230,15 @@
         }
 
         if (target.classList.contains('kill-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+  const roundIndex = Number(target.dataset.roundIndex);
+  const teamIndex = Number(target.dataset.teamIndex);
+  const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+  sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
 
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
+  updateAllRoundSums(true);
+  return;
+}
       };
 
       body.onchange = (event) => {
