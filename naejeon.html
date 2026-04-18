@@ -1257,7 +1257,7 @@
   <div class="sheet-wrap">
     <div class="sheet-head">
       <h2 class="sheet-title">📊 내전 입력표</h2>
-      <p class="sheet-desc">선수 이름 / KILL / TOP10을 입력하면 위 순수킬 요약과 상단 결과 카드도 같이 반영됩니다.</p>
+      <p class="sheet-desc">선수 이름 / 개인 -점수 / KILL / 팀별 TOP10 체크를 입력하면 위 순수킬 요약과 상단 결과 카드도 같이 반영됩니다.</p>
     </div>
 
     <div class="sheet-table-wrap">
@@ -1268,10 +1268,11 @@
     </div>
   </div>
 
- <script>
+<script>
   const TEAM_COUNT = 5;
   const PLAYERS_PER_TEAM = 4;
-  const ROUND_COUNT = 40;
+  const ROUND_COUNT = 30;
+  const MINUS_OPTIONS = ['-2', '-1.5', '-1', '-0.5', '0'];
 
   let syncTimer = null;
   let lastSyncedJson = '';
@@ -1281,19 +1282,19 @@
   function getDefaultSheetState() {
     return {
       teams: [
-        { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
-        { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
+        { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] },
+        { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'], minusScores: ['0', '0', '0', '0'] }
       ],
       rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
         round: index + 1,
         map: '사녹',
         teams: Array.from({ length: TEAM_COUNT }, () => ({
+          top10: false,
           players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
-            kill: '',
-            top10: false
+            kill: ''
           }))
         }))
       }))
@@ -1310,20 +1311,18 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
-  function updateCheckedStyles() {
-  const checks = document.querySelectorAll('.top10-check');
 
-  checks.forEach((check) => {
-    const td = check.closest('.top10-cell');
-    if (!td) return;
+  function formatMinusValue(value) {
+    const num = Number(value || 0);
+    if (!num) return '0';
+    return Number.isInteger(num) ? String(num) : String(num);
+  }
 
-    if (check.checked) {
-      td.style.background = '#fff0a8';
-    } else {
-      td.style.background = '';
-    }
-  });
-}
+  function getTeamMinusTotal(teamIndex) {
+    const team = sheetState.teams[teamIndex];
+    if (!team || !Array.isArray(team.minusScores)) return 0;
+    return team.minusScores.reduce((sum, value) => sum + Number(value || 0), 0);
+  }
 
   function getKoreaNowDate() {
     const now = new Date();
@@ -1616,10 +1615,20 @@
     if (Array.isArray(data.teams)) {
       for (let t = 0; t < TEAM_COUNT; t++) {
         if (!data.teams[t]) continue;
-        if (data.teams[t].teamName) base.teams[t].teamName = String(data.teams[t].teamName);
+
+        if (data.teams[t].teamName) {
+          base.teams[t].teamName = String(data.teams[t].teamName);
+        }
+
         if (Array.isArray(data.teams[t].players)) {
           for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
             base.teams[t].players[p] = String(data.teams[t].players[p] || `선수${p + 1}`);
+          }
+        }
+
+        if (Array.isArray(data.teams[t].minusScores)) {
+          for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
+            base.teams[t].minusScores[p] = String(data.teams[t].minusScores[p] ?? '0');
           }
         }
       }
@@ -1635,14 +1644,17 @@
         if (Array.isArray(inRound.teams)) {
           for (let t = 0; t < Math.min(TEAM_COUNT, inRound.teams.length); t++) {
             const inTeam = inRound.teams[t];
-            if (!inTeam || !Array.isArray(inTeam.players)) continue;
+            if (!inTeam) continue;
 
-            for (let p = 0; p < Math.min(PLAYERS_PER_TEAM, inTeam.players.length); p++) {
-              const inPlayer = inTeam.players[p] || {};
-              base.rounds[r].teams[t].players[p] = {
-                kill: String(inPlayer.kill || ''),
-                top10: !!inPlayer.top10
-              };
+            base.rounds[r].teams[t].top10 = !!inTeam.top10;
+
+            if (Array.isArray(inTeam.players)) {
+              for (let p = 0; p < Math.min(PLAYERS_PER_TEAM, inTeam.players.length); p++) {
+                const inPlayer = inTeam.players[p] || {};
+                base.rounds[r].teams[t].players[p] = {
+                  kill: String(inPlayer.kill || '')
+                };
+              }
             }
           }
         }
@@ -1692,37 +1704,58 @@
 
   function getPlayerTotals(teamIndex, playerIndex) {
     let killTotal = 0;
-    let top10Total = 0;
 
     for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
       const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
       killTotal += Number(player.kill || 0);
-      if (player.top10) top10Total += 1;
     }
 
     return {
       kill: killTotal,
-      top10: top10Total,
-      pure: killTotal - top10Total,
-      score: killTotal + top10Total
+      pure: killTotal,
+      score: killTotal
     };
   }
 
-  function getTeamTotals(teamIndex) {
-    let score = 0;
+  function getTeamRoundTotal(roundData, teamIndex) {
+    const team = roundData.teams[teamIndex];
+    if (!team) return 0;
+
+    let total = team.players.reduce((sum, player) => {
+      return sum + Number(player.kill || 0);
+    }, 0);
+
+    if (team.top10) {
+      total += getTeamMinusTotal(teamIndex);
+    }
+
+    return total;
+  }
+
+  function getTeamPureTotal(teamIndex) {
     let pure = 0;
 
     for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
         const player = sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex];
-        const kill = Number(player.kill || 0);
-        const top10 = player.top10 ? 1 : 0;
-        score += kill + top10;
-        pure += kill - top10;
+        pure += Number(player.kill || 0);
       }
     }
 
-    return { score, pure };
+    return pure;
+  }
+
+  function getTeamTotals(teamIndex) {
+    let score = 0;
+
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      score += getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
+    }
+
+    return {
+      score,
+      pure: getTeamPureTotal(teamIndex)
+    };
   }
 
   function getAllPlayerRanking() {
@@ -1736,7 +1769,6 @@
         list.push({
           name: playerName,
           kill: totals.kill,
-          top10: totals.top10,
           pure: totals.pure,
           score: totals.score
         });
@@ -1803,7 +1835,7 @@
       if (!mvp) {
         topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
       } else {
-        topTeamLines.textContent = `MVP ${mvp.name} ${mvp.score}점`;
+        topTeamLines.textContent = `MVP ${mvp.name} ${mvp.score}킬`;
       }
     }
 
@@ -1832,9 +1864,7 @@
           const teamIndex = teamOrder[i].teamIndex;
           const playerName = sheetState.teams[teamIndex].players[playerIndex] || '';
           const totals = getPlayerTotals(teamIndex, playerIndex);
-          const cellText = playerName
-            ? `${playerName}\n${totals.score} (${totals.kill}-${totals.top10})`
-            : '';
+          const cellText = playerName ? `${playerName}\n${totals.kill}킬` : '';
           rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
         }
         rowsHtml += '</tr>';
@@ -1862,7 +1892,7 @@
 
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
-      teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+      teamRow += `<th colspan="${PLAYERS_PER_TEAM + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
     }
     teamRow += `</tr>`;
 
@@ -1870,8 +1900,10 @@
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       const team = sheetState.teams[teamIndex];
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const selectedMinus = team.minusScores[playerIndex] ?? '0';
+
         playerRow += `
-          <th colspan="2" class="player-head-cell">
+          <th class="player-head-cell">
             <input
               class="player-name-input"
               type="text"
@@ -1879,36 +1911,37 @@
               data-team-index="${teamIndex}"
               data-player-index="${playerIndex}"
             />
+            <select
+              class="minus-select"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+            >
+              ${MINUS_OPTIONS.map(value => `
+                <option value="${value}" ${selectedMinus === value ? 'selected' : ''}>${value}</option>
+              `).join('')}
+            </select>
           </th>
         `;
       }
-      playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
+
+      playerRow += `
+        <th class="sum-head">
+          <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+        </th>
+      `;
     }
     playerRow += `</tr>`;
 
     let statRow = `<tr>`;
     for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        statRow += `
-          <th class="kill-head">KILL</th>
-          <th class="top10-head">TOP10</th>
-        `;
+        statRow += `<th class="kill-head">KILL</th>`;
       }
+      statRow += `<th class="top10-head">TOP10</th>`;
     }
     statRow += `</tr>`;
 
     head.innerHTML = teamRow + playerRow + statRow;
-  }
-
-  function getTeamRoundTotal(roundData, teamIndex) {
-    const team = roundData.teams[teamIndex];
-    if (!team) return 0;
-
-    return team.players.reduce((sum, player) => {
-      const kill = Number(player.kill || 0);
-      const top10 = player.top10 ? 1 : 0;
-      return sum + kill + top10;
-    }, 0);
   }
 
   function renderSheetBody() {
@@ -1949,22 +1982,19 @@
                 min="0"
               />
             </td>
-            <td class="top10-cell">
-              <input
-                type="checkbox"
-                class="top10-check"
-                data-round-index="${roundIndex}"
-                data-team-index="${teamIndex}"
-                data-player-index="${playerIndex}"
-                ${player.top10 ? 'checked' : ''}
-              />
-            </td>
           `;
         }
 
         html += `
-          <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
-            ${getTeamRoundTotal(roundData, teamIndex)}
+          <td class="top10-cell" id="team-sum-${roundIndex}-${teamIndex}">
+            <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+            <input
+              type="checkbox"
+              class="top10-check"
+              data-round-index="${roundIndex}"
+              data-team-index="${teamIndex}"
+              ${roundData.teams[teamIndex].top10 ? 'checked' : ''}
+            />
           </td>
         `;
       }
@@ -1996,7 +2026,7 @@
 
         playerLines.push(`
           <div class="sheet-summary-player">
-            ${escapeHtml(playerName)} ${totals.pure} (${totals.kill} - ${totals.top10})
+            ${escapeHtml(playerName)} ${totals.pure}킬
           </div>
         `);
       }
@@ -2007,7 +2037,7 @@
       teamColumns.push(`
         <div class="sheet-summary-team">
           ${playerLines.join('')}
-          <div class="sheet-summary-footer">정지(0) 치킨(0)</div>
+          <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
         </div>
       `);
     }
@@ -2017,22 +2047,33 @@
   }
 
   function updateAllRoundSums(shouldQueueSave = true) {
-  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
-      if (!sumCell) continue;
-      sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
+    for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+      for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+        const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+        if (!sumCell) continue;
+
+        sumCell.innerHTML = `
+          <div class="team-minus-sum">${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+          <input
+            type="checkbox"
+            class="top10-check"
+            data-round-index="${roundIndex}"
+            data-team-index="${teamIndex}"
+            ${sheetState.rounds[roundIndex].teams[teamIndex].top10 ? 'checked' : ''}
+          />
+        `;
+      }
+    }
+
+    renderSheetHead();
+    attachSheetEvents();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+
+    if (shouldQueueSave) {
+      queueSaveSheet();
     }
   }
-
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  updateCheckedStyles();
-
-  if (shouldQueueSave) {
-    queueSaveSheet();
-  }
-}
 
   function attachSheetEvents() {
     const head = document.getElementById('sheetHead');
@@ -2041,16 +2082,29 @@
     if (head) {
       head.oninput = (event) => {
         const target = event.target;
-        if (!target.classList.contains('player-name-input')) return;
 
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
+        if (target.classList.contains('player-name-input')) {
+          const teamIndex = Number(target.dataset.teamIndex);
+          const playerIndex = Number(target.dataset.playerIndex);
 
-        sheetState.teams[teamIndex].players[playerIndex] = target.value;
-        renderSheetSummary();
-        refreshDashboardFromSheetState();
-        queueSaveSheet();
+          sheetState.teams[teamIndex].players[playerIndex] = target.value;
+          renderSheetSummary();
+          refreshDashboardFromSheetState();
+          queueSaveSheet();
+          return;
+        }
+
+        if (target.classList.contains('minus-select')) {
+          const teamIndex = Number(target.dataset.teamIndex);
+          const playerIndex = Number(target.dataset.playerIndex);
+
+          sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
+          updateAllRoundSums(true);
+          return;
+        }
       };
+
+      head.onchange = head.oninput;
     }
 
     if (body) {
@@ -2081,9 +2135,8 @@
         if (target.classList.contains('top10-check')) {
           const roundIndex = Number(target.dataset.roundIndex);
           const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
 
-          sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
+          sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
           updateAllRoundSums(true);
         }
       };
@@ -2091,12 +2144,13 @@
   }
 
   function renderAllFromState() {
-  renderSheetHead();
-  renderSheetBody();
-  attachSheetEvents();
-  updateAllRoundSums(false);
-  updateCheckedStyles();
-}
+    renderSheetHead();
+    renderSheetBody();
+    attachSheetEvents();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+  }
+
   function initAdvancedSheet() {
     renderAllFromState();
   }
