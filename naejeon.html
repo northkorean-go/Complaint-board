@@ -2270,50 +2270,50 @@ lastSyncedJson = JSON.stringify(sheetState);
       };
 
       body.onfocusout = (event) => {
-        const target = event.target;
+  const target = event.target;
 
-        if (target.classList.contains('kill-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
+  if (target.classList.contains('kill-input')) {
+    const roundIndex = Number(target.dataset.roundIndex);
+    const teamIndex = Number(target.dataset.teamIndex);
+    const playerIndex = Number(target.dataset.playerIndex);
 
-          editingCellKey = '';
+    editingCellKey = '';
 
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'kill',
-            roundIndex,
-            teamIndex,
-            playerIndex,
-            value: target.value
-          });
+    blockRemoteSync();
+    saveSheetPatchToServer({
+      type: 'kill',
+      roundIndex,
+      teamIndex,
+      playerIndex,
+      value: target.value
+    });
 
-          renderSheetHead();
-          attachSheetEvents();
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
+    renderSheetHead();
+    attachSheetEvents();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    return;
+  }
 
-          
-        if (target.classList.contains('map-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
+  if (target.classList.contains('map-input')) {
+    const roundIndex = Number(target.dataset.roundIndex);
 
-          editingCellKey = '';
+    editingCellKey = '';
 
-          blockRemoteSync();
-          saveSheetPatchToServer({
-            type: 'map',
-            roundIndex,
-            value: target.value
-          });
+    blockRemoteSync();
+    saveSheetPatchToServer({
+      type: 'map',
+      roundIndex,
+      value: target.value
+    });
 
-          renderSheetHead();
-          attachSheetEvents();
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-
-        
-        }
-      };
+    renderSheetHead();
+    attachSheetEvents();
+    renderSheetSummary();
+    refreshDashboardFromSheetState();
+    return;
+  }
+};
 
       body.oninput = (event) => {
         const target = event.target;
