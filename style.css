@@ -2304,3 +2304,22 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+/* ===== 팀 구분선 강화 ===== */
+
+/* 각 팀 마지막 컬럼(판점수)에 굵은 구분선 */
+.advanced-sheet .sum-cell {
+  border-right: 3px solid #000 !important;
+}
+
+/* 마지막 팀은 끝선 제거 */
+.advanced-sheet tr td.sum-cell:last-child {
+  border-right: none !important;
+}
+
+/* 헤더쪽도 맞춰주기 */
+.advanced-sheet .team-group-head {
+  border-right: 3px solid #000 !important;
+}
+.advanced-sheet .team-group-head:last-child {
+  border-right: none !important;
+}
