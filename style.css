@@ -1229,423 +1229,8 @@ button:disabled {
     letter-spacing: 2px;
   }
 }
-/* =========================
-   SHEET (내전 입력표)
-========================= */
 
-.sheet-wrap {
-  max-width: 1680px;
-  margin: 40px auto;
-  padding: 0 20px;
-}
 
-.sheet-title {
-  font-size: 26px;
-  font-weight: 900;
-  margin-bottom: 16px;
-}
-
-.sheet-table-wrap {
-  overflow-x: auto;
-  border-radius: 20px;
-  background: #fff;
-  border: 1px solid #ddd;
-}
-
-.sheet-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 1200px;
-}
-
-.sheet-table th,
-.sheet-table td {
-  border: 1px solid #e5e5e5;
-  text-align: center;
-  padding: 8px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.sheet-table th {
-  background: #111;
-  color: #fff;
-}
-
-.sheet-table .round {
-  background: #ffe600;
-  font-weight: 900;
-}
-
-.kill-input {
-  width: 60px;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.map-input {
-  width: 80px;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.top10-check {
-  transform: scale(1.2);
-}
-/* =========================
-   ADVANCED SHEET
-========================= */
-
-.sheet-wrap {
-  width: 100%;
-  max-width: 100%;
-  margin: 32px 0 56px;
-  padding: 0 10px;
-}
-
-.sheet-head {
-  margin-bottom: 12px;
-}
-
-.sheet-title {
-  font-size: 34px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: #111;
-}
-
-.sheet-desc {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #666f7c;
-  line-height: 1.6;
-}
-
-.sheet-table-wrap {
-  width: 100%;
-  overflow-x: hidden;
-  border-radius: 24px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.04);
-}
-
-.sheet-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-  background: #fff;
-}
-
-.sheet-table th,
-.sheet-table td {
-  border: 1px solid #dcdcdc;
-  text-align: center;
-  vertical-align: middle;
-  padding: 0;
-  white-space: nowrap;
-}
-
-.advanced-sheet th {
-  height: 36px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.advanced-sheet td {
-  height: 34px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.team-group-head {
-  background: #111;
-  color: #fff;
-  letter-spacing: -0.02em;
-}
-
-.sticky-round-header,
-.sticky-map-header {
-  background: #111;
-  color: #fff;
-  z-index: 5;
-}
-
-.player-head-cell {
-  background: #f4e8ee;
-  padding: 3px 2px !important;
-}
-
-.kill-head,
-.top10-head,
-.sum-head {
-  background: #fafafa;
-  color: #111;
-}
-
-.sum-head {
-  width: 40px;
-  min-width: 40px;
-}
-
-.player-name-input {
-  width: 100%;
-  height: 26px;
-  border: 1px solid #d8d8d8;
-  border-radius: 8px;
-  background: #fff;
-  padding: 0 3px;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  color: #111;
-  outline: none;
-}
-
-.player-name-input:focus {
-  border-color: #111;
-}
-
-.round-cell {
-  width: 40px;
-  background: #ffe600;
-  font-weight: 900;
-  color: #111;
-  font-size: 11px;
-}
-
-.map-cell {
-  width: 52px;
-  background: #fff8cf;
-}
-
-.kill-cell {
-  width: 34px;
-  background: #f9ecde;
-}
-
-.top10-cell {
-  width: 26px;
-  background: #f7f0c8;
-}
-
-.sum-cell {
-  width: 40px;
-  background: #fff;
-  color: #111;
-  font-weight: 900;
-  font-size: 11px;
-}
-
-.map-input,
-.kill-input {
-  width: calc(100% - 4px);
-  height: 22px;
-  border: 1px solid #cfcfcf;
-  border-radius: 6px;
-  background: #fff;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  color: #111;
-  outline: none;
-  padding: 0;
-}
-
-.map-input:focus,
-.kill-input:focus {
-  border-color: #111;
-  background: #fff;
-}
-
-.top10-check {
-  transform: scale(0.9);
-  cursor: pointer;
-}
-
-.sticky-col,
-.sticky-col-2 {
-  position: sticky;
-  left: 0;
-  z-index: 3;
-}
-
-.sticky-col-2 {
-  left: 40px;
-  z-index: 3;
-}
-
-.sticky-round-header.sticky-col {
-  left: 0;
-}
-
-.sticky-map-header.sticky-col-2 {
-  left: 40px;
-}
-
-@media (max-width: 1280px) {
-  .sheet-wrap {
-    padding: 0 6px;
-  }
-
-  .sheet-title {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 720px) {
-  .sheet-wrap {
-    padding: 0 4px;
-  }
-
-  .sheet-title {
-    font-size: 24px;
-  }
-
-  .sheet-desc {
-    font-size: 12px;
-  }
-
-  .advanced-sheet th {
-    height: 32px;
-    font-size: 10px;
-  }
-
-  .advanced-sheet td {
-    height: 30px;
-    font-size: 10px;
-  }
-
-  .round-cell {
-    width: 34px;
-    font-size: 10px;
-  }
-
-  .map-cell {
-    width: 46px;
-  }
-
-  .kill-cell {
-    width: 30px;
-  }
-
-  .top10-cell {
-    width: 24px;
-  }
-
-  .sum-cell,
-  .sum-head {
-    width: 34px;
-    min-width: 34px;
-  }
-
-  .sticky-col-2,
-  .sticky-map-header.sticky-col-2 {
-    left: 34px;
-  }
-
-  .player-name-input {
-    height: 22px;
-    font-size: 9px;
-  }
-
-  .map-input,
-  .kill-input {
-    height: 20px;
-    font-size: 9px;
-  }
-
-  .top10-check {
-    transform: scale(0.8);
-  }
-}
-/* =========================
-   FINAL SHEET FIT (5팀 꽉맞춤)
-========================= */
-
-.sheet-wrap {
-  padding: 0 4px !important;
-}
-
-.sheet-table-wrap {
-  overflow-x: hidden !important;
-}
-
-.sheet-table {
-  width: 100% !important;
-  table-layout: fixed !important;
-}
-
-/* 전체 셀 더 압축 */
-.advanced-sheet th {
-  height: 30px !important;
-  font-size: 10px !important;
-}
-
-.advanced-sheet td {
-  height: 28px !important;
-  font-size: 10px !important;
-}
-
-/* 좌측 */
-.round-cell {
-  width: 32px !important;
-  font-size: 10px !important;
-}
-
-.map-cell {
-  width: 42px !important;
-}
-
-/* 팀 내부 */
-.kill-cell {
-  width: 26px !important;
-}
-
-.top10-cell {
-  width: 20px !important;
-}
-
-.sum-cell,
-.sum-head {
-  width: 32px !important;
-  min-width: 32px !important;
-  font-size: 10px !important;
-}
-
-/* 입력칸 극압축 */
-.player-name-input {
-  height: 20px !important;
-  font-size: 9px !important;
-  padding: 0 2px !important;
-  border-radius: 6px !important;
-}
-
-.map-input,
-.kill-input {
-  height: 18px !important;
-  font-size: 9px !important;
-  padding: 0 !important;
-  border-radius: 4px !important;
-}
-
-/* 체크박스 */
-.top10-check {
-  transform: scale(0.75) !important;
-}
-
-/* sticky 위치 보정 */
-.sticky-col-2 {
-  left: 32px !important;
-}
-
-.sticky-map-header.sticky-col-2 {
-  left: 32px !important;
-}
 /* =========================
    SHEET SUMMARY
 ========================= */
@@ -1765,14 +1350,18 @@ button:disabled {
   }
 }
 /* =========================
-   INPUT SHEET UI UPGRADE
+   NAEJEON SHEET FINAL
 ========================= */
 
 .sheet-wrap {
-  margin-top: 26px;
+  width: 100%;
+  max-width: 100%;
+  margin: 18px 0 56px;
+  padding: 0 2px;
 }
 
 .sheet-head {
+  margin-bottom: 12px;
   padding: 0 4px;
 }
 
@@ -1782,17 +1371,22 @@ button:disabled {
   gap: 10px;
   font-size: 28px;
   line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #111;
 }
 
 .sheet-desc {
   margin-top: 10px;
   font-size: 13px;
   color: #6b7280;
+  line-height: 1.6;
 }
 
 .sheet-table-wrap {
+  width: 100%;
+  overflow-x: hidden;
   border-radius: 26px;
-  overflow: auto;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow:
@@ -1801,97 +1395,114 @@ button:disabled {
 }
 
 .sheet-table {
-  min-width: 1480px;
-  border-collapse: separate;
-  border-spacing: 0;
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
   background: #fff;
 }
 
 .sheet-table th,
 .sheet-table td {
-  border-right: 1px solid #d9d9d9;
-  border-bottom: 1px solid #e7e7e7;
+  box-sizing: border-box;
+  border: 1px solid #dcdcdc;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+  white-space: nowrap;
 }
 
-.sheet-table tr:last-child td {
-  border-bottom: none;
-}
-
-.sheet-table th:last-child,
-.sheet-table td:last-child {
-  border-right: none;
-}
-
-/* 상단 그룹 헤더 */
 .advanced-sheet .team-group-head {
   background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
   color: #fff;
-  font-size: 12px;
+  font-size: 10px;
   letter-spacing: -0.02em;
-  height: 38px;
+  height: 28px;
 }
 
-/* 2행 선수 이름 헤더 */
+.advanced-sheet .sticky-round-header,
+.advanced-sheet .sticky-map-header {
+  background: #111;
+  color: #fff;
+  z-index: 5;
+  font-size: 9px;
+  font-weight: 900;
+}
+
 .advanced-sheet .player-head-cell {
   background: #f7f3f7;
-  padding: 4px !important;
-  height: 38px;
+  padding: 2px !important;
+  height: 42px;
 }
 
-/* 3행 KILL/TOP10 헤더 */
 .advanced-sheet .kill-head,
 .advanced-sheet .top10-head,
 .advanced-sheet .sum-head {
   background: #fafafa;
   color: #111;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 900;
-  height: 34px;
+  height: 24px;
 }
 
 .advanced-sheet .sum-head {
-  background: #f3f4f6;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #eef1f4;
+  border-right: 2px solid #cfcfcf !important;
 }
 
-/* 좌측 고정 느낌 강화 */
 .advanced-sheet .round-cell {
-  width: 36px;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
   background: linear-gradient(180deg, #ffe600 0%, #ffd900 100%);
   color: #111;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 900;
 }
 
 .advanced-sheet .map-cell {
-  width: 54px;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
   background: #fff8cf;
 }
 
-/* 본문 기본 */
-.advanced-sheet td {
-  height: 34px;
-  background: #fff;
-  transition: background 0.15s ease;
-}
-
-/* 팀별 미세한 구분색 */
 .advanced-sheet .kill-cell {
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
   background: #fcf6ee;
 }
 
 .advanced-sheet .top10-cell {
-  background: #faf4d8;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #fbfbfb;
+  border-right: 2px solid #cfcfcf !important;
 }
 
 .advanced-sheet .sum-cell {
-  width: 36px;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
   background: #fbfbfb;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 900;
   color: #111;
+  border-right: 2px solid #cfcfcf !important;
 }
 
-/* 행 hover */
+.advanced-sheet td {
+  height: 26px;
+  background: #fff;
+  transition: background 0.15s ease;
+  line-height: 1;
+}
+
 #sheetBody tr:hover td {
   background: #f8fbff !important;
 }
@@ -1904,39 +1515,60 @@ button:disabled {
   background: #fff4b8 !important;
 }
 
-/* 입력칸 */
 .player-name-input {
-  width: 100%;
-  height: 24px;
+  width: calc(100% - 4px);
+  height: 16px;
+  margin: 0 auto;
+  display: block;
   border: 1px solid #d7d7d7;
-  border-radius: 7px;
+  border-radius: 4px;
   background: #fff;
-  padding: 0 6px;
+  padding: 0 1px;
   text-align: center;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 800;
   color: #111;
   outline: none;
   transition: all 0.15s ease;
+}
+
+.minus-select {
+  width: calc(100% - 4px);
+  height: 16px;
+  margin: 2px auto 0;
+  display: block;
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  background: #fff7db;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 900;
+  color: #111;
+  outline: none;
+  padding: 0;
 }
 
 .map-input,
 .kill-input {
-  width: calc(100% - 6px);
-  height: 22px;
+  width: calc(100% - 4px);
+  height: 16px;
+  margin: 0 auto;
+  display: block;
+  box-sizing: border-box;
   border: 1px solid #d5d5d5;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #fff;
   text-align: center;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 800;
   color: #111;
   outline: none;
-  padding: 0 4px;
+  padding: 0;
   transition: all 0.15s ease;
 }
 
 .player-name-input:focus,
+.minus-select:focus,
 .map-input:focus,
 .kill-input:focus {
   border-color: #111;
@@ -1944,21 +1576,34 @@ button:disabled {
   background: #fff;
 }
 
-/* 빈 입력칸 hover */
 .map-input:hover,
 .kill-input:hover,
-.player-name-input:hover {
+.player-name-input:hover,
+.minus-select:hover {
   border-color: #bcbcbc;
 }
 
-/* 체크박스 */
+.team-minus-sum {
+  font-size: 8px;
+  font-weight: 900;
+  color: #111;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
 .top10-check {
-  transform: scale(0.9);
+  display: block;
+  margin: 0 auto;
+  transform: scale(0.7);
   cursor: pointer;
   accent-color: #111;
 }
 
-/* 순수킬 카드도 살짝 정리 */
+.advanced-sheet td:last-child,
+.advanced-sheet th:last-child {
+  border-right: none !important;
+}
+
 .sheet-summary-card {
   border-radius: 26px;
 }
@@ -1983,7 +1628,6 @@ button:disabled {
   padding: 10px 6px;
 }
 
-/* 스크롤바 보기 좋게 */
 .sheet-table-wrap::-webkit-scrollbar {
   height: 10px;
 }
@@ -1997,115 +1641,10 @@ button:disabled {
   background: #f3f3f3;
 }
 
-/* 모바일/작은 화면 */
 @media (max-width: 1100px) {
   .sheet-title {
     font-size: 24px;
   }
-
-  .sheet-table {
-    min-width: 1400px;
-  }
-}
-/* ===== 입력표 정렬 보정 ===== */
-
-.sheet-table {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 1500px;
 }
 
-.sheet-table th,
-.sheet-table td {
-  box-sizing: border-box;
-  padding: 0;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.advanced-sheet .round-cell,
-.advanced-sheet .sticky-round-header {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
-}
-
-.advanced-sheet .map-cell,
-.advanced-sheet .sticky-map-header {
-  width: 54px;
-  min-width: 54px;
-  max-width: 54px;
-}
-
-.advanced-sheet .kill-cell,
-.advanced-sheet .kill-head {
-  width: 38px;
-  min-width: 38px;
-  max-width: 38px;
-}
-
-.advanced-sheet .top10-cell,
-.advanced-sheet .top10-head {
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-}
-
-.advanced-sheet .sum-cell,
-.advanced-sheet .sum-head {
-  width: 38px;
-  min-width: 38px;
-  max-width: 38px;
-}
-
-.player-name-input {
-  width: calc(100% - 8px);
-  height: 22px;
-  margin: 0 auto;
-  display: block;
-}
-
-.map-input,
-.kill-input {
-  width: calc(100% - 8px);
-  height: 22px;
-  margin: 0 auto;
-  display: block;
-  box-sizing: border-box;
-}
-
-.top10-check {
-  display: block;
-  margin: 0 auto;
-}
-
-.advanced-sheet th.team-group-head {
-  height: 34px;
-}
-
-.advanced-sheet th.player-head-cell {
-  height: 32px;
-}
-
-.advanced-sheet th.kill-head,
-.advanced-sheet th.top10-head,
-.advanced-sheet th.sum-head {
-  height: 30px;
-}
-
-.advanced-sheet td {
-  height: 30px;
-  line-height: 1;
-}
-
-/* 팀 경계선 자연스럽게 */
-.advanced-sheet .sum-cell,
-.advanced-sheet .sum-head {
-  border-right: 2px solid #cfcfcf !important;
-}
-
-.advanced-sheet td:last-child,
-.advanced-sheet th:last-child {
-  border-right: none !important;
-}
 
