@@ -2292,11 +2292,7 @@
           renderSheetSummary();
           refreshDashboardFromSheetState();
 
-          setTimeout(() => {
-            loadSheetFromServer();
-          }, 80);
-        }
-
+          
         if (target.classList.contains('map-input')) {
           const roundIndex = Number(target.dataset.roundIndex);
 
