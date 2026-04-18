@@ -1363,79 +1363,48 @@ button:disabled {
 .team-group-head {
   background: #111;
   color: #fff;
-  min-width: 330px;
   letter-spacing: -0.02em;
-}
-
-.sticky-round-header,
-.sticky-map-header {
-  background: #111;
-  color: #fff;
-  z-index: 5;
 }
 
 .player-head-cell {
   background: #f4e8ee;
-  min-width: 112px;
-  padding: 6px 4px !important;
-}
-
-.kill-head,
-.top10-head,
-.sum-head {
-  background: #fafafa;
-  color: #111;
+  padding: 4px 2px !important;
 }
 
 .sum-head {
-  min-width: 64px;
-}
-
-.player-name-input {
-  width: 100%;
-  height: 34px;
-  border: 1px solid #d8d8d8;
-  border-radius: 10px;
-  background: #fff;
-  padding: 0 10px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #111;
-  outline: none;
-}
-
-.player-name-input:focus {
-  border-color: #111;
+  width: 42px;
+  min-width: 42px;
 }
 
 .round-cell {
-  width: 72px;
+  width: 46px;
   background: #ffe600;
   font-weight: 900;
   color: #111;
+  font-size: 12px;
 }
 
 .map-cell {
-  width: 104px;
+  width: 62px;
   background: #fff8cf;
 }
 
 .kill-cell {
-  width: 62px;
+  width: 42px;
   background: #f9ecde;
 }
 
 .top10-cell {
-  width: 62px;
+  width: 34px;
   background: #f7f0c8;
 }
 
 .sum-cell {
-  width: 64px;
+  width: 42px;
   background: #fff;
   color: #111;
   font-weight: 900;
+  font-size: 12px;
 }
 
 .map-input,
@@ -1497,18 +1466,40 @@ button:disabled {
   }
 
   .advanced-sheet th {
-    height: 38px;
-    font-size: 11px;
-  }
+  height: 34px;
+  font-size: 11px;
+  font-weight: 900;
+}
 
-  .advanced-sheet td {
-    height: 38px;
-    font-size: 12px;
-  }
+.advanced-sheet td {
+  height: 32px;
+  font-size: 11px;
+  font-weight: 800;
+}
+  .player-name-input {
+  width: 100%;
+  height: 28px;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
+}
 
-  .player-name-input,
-  .map-input,
-  .kill-input {
-    font-size: 12px;
-  }
+.map-input,
+.kill-input {
+  width: calc(100% - 6px);
+  height: 24px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  background: #fff;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #111;
+  outline: none;
 }
