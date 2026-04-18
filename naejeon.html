@@ -1001,26 +1001,14 @@
     </div>
   </div>
   <div class="sheet-wrap">
-  <h2 class="sheet-title">📊 내전 입력표</h2>
+  <div class="sheet-head">
+    <h2 class="sheet-title">📊 내전 입력표</h2>
+    <p class="sheet-desc">선수 이름, KILL, TOP10을 입력하는 시트형 입력표입니다.</p>
+  </div>
 
   <div class="sheet-table-wrap">
-    <table class="sheet-table" id="sheetTable">
-      <thead>
-        <tr>
-          <th>라운드</th>
-          <th>맵</th>
-          <th>팀1 KILL</th>
-          <th>TOP10</th>
-          <th>팀2 KILL</th>
-          <th>TOP10</th>
-          <th>팀3 KILL</th>
-          <th>TOP10</th>
-          <th>팀4 KILL</th>
-          <th>TOP10</th>
-          <th>팀5 KILL</th>
-          <th>TOP10</th>
-        </tr>
-      </thead>
+    <table class="sheet-table advanced-sheet" id="sheetTable">
+      <thead id="sheetHead"></thead>
       <tbody id="sheetBody"></tbody>
     </table>
   </div>
@@ -1717,30 +1705,233 @@
       loadSpreadsheetData();
       loadRoundSummary();
     });
-    function createSheet() {
+   const TEAM_COUNT = 5;
+const PLAYERS_PER_TEAM = 4;
+const ROUND_COUNT = 40;
+
+const sheetState = {
+  teams: [
+    { teamName: '1팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '2팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '3팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '4팀', players: ['선수1', '선수2', '선수3', '선수4'] },
+    { teamName: '5팀', players: ['선수1', '선수2', '선수3', '선수4'] }
+  ],
+  rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
+    round: index + 1,
+    map: '사녹',
+    teams: Array.from({ length: TEAM_COUNT }, () => ({
+      players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
+        kill: '',
+        top10: false
+      }))
+    }))
+  }))
+};
+
+function escapeHtml(text) {
+  return String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderSheetHead() {
+  const head = document.getElementById('sheetHead');
+  if (!head) return;
+
+  let teamRow = `
+    <tr>
+      <th rowspan="3" class="sticky-col sticky-round-header">라운드</th>
+      <th rowspan="3" class="sticky-col-2 sticky-map-header">맵</th>
+  `;
+
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    const team = sheetState.teams[teamIndex];
+    teamRow += `<th colspan="${PLAYERS_PER_TEAM * 2 + 1}" class="team-group-head">${escapeHtml(team.teamName)}</th>`;
+  }
+  teamRow += `</tr>`;
+
+  let playerRow = `<tr>`;
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    const team = sheetState.teams[teamIndex];
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      playerRow += `
+        <th colspan="2" class="player-head-cell">
+          <input
+            class="player-name-input"
+            type="text"
+            value="${escapeHtml(team.players[playerIndex])}"
+            data-team-index="${teamIndex}"
+            data-player-index="${playerIndex}"
+          />
+        </th>
+      `;
+    }
+    playerRow += `<th rowspan="2" class="sum-head">점수</th>`;
+  }
+  playerRow += `</tr>`;
+
+  let statRow = `<tr>`;
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      statRow += `
+        <th class="kill-head">KILL</th>
+        <th class="top10-head">TOP10</th>
+      `;
+    }
+  }
+  statRow += `</tr>`;
+
+  head.innerHTML = teamRow + playerRow + statRow;
+}
+
+function getTeamRoundTotal(roundData, teamIndex) {
+  const team = roundData.teams[teamIndex];
+  if (!team) return 0;
+
+  return team.players.reduce((sum, player) => {
+    const kill = Number(player.kill || 0);
+    const top10 = player.top10 ? 1 : 0;
+    return sum + kill + top10;
+  }, 0);
+}
+
+function renderSheetBody() {
   const body = document.getElementById('sheetBody');
+  if (!body) return;
 
-  for (let i = 1; i <= 40; i++) {
-    const tr = document.createElement('tr');
+  let html = '';
 
-    let html = `
-      <td class="round">${i}</td>
-      <td><input class="map-input" value="사녹" /></td>
+  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+    const roundData = sheetState.rounds[roundIndex];
+
+    html += `<tr>`;
+    html += `<td class="round-cell sticky-col">${roundData.round}</td>`;
+    html += `
+      <td class="map-cell sticky-col-2">
+        <input
+          class="map-input"
+          type="text"
+          value="${escapeHtml(roundData.map)}"
+          data-round-index="${roundIndex}"
+        />
+      </td>
     `;
 
-    for (let t = 0; t < 5; t++) {
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+        const player = roundData.teams[teamIndex].players[playerIndex];
+
+        html += `
+          <td class="kill-cell">
+            <input
+              type="number"
+              class="kill-input"
+              value="${escapeHtml(player.kill)}"
+              data-round-index="${roundIndex}"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+              min="0"
+            />
+          </td>
+          <td class="top10-cell">
+            <input
+              type="checkbox"
+              class="top10-check"
+              data-round-index="${roundIndex}"
+              data-team-index="${teamIndex}"
+              data-player-index="${playerIndex}"
+              ${player.top10 ? 'checked' : ''}
+            />
+          </td>
+        `;
+      }
+
       html += `
-        <td><input type="number" class="kill-input" /></td>
-        <td><input type="checkbox" class="top10-check" /></td>
+        <td class="sum-cell" id="team-sum-${roundIndex}-${teamIndex}">
+          ${getTeamRoundTotal(roundData, teamIndex)}
+        </td>
       `;
     }
 
-    tr.innerHTML = html;
-    body.appendChild(tr);
+    html += `</tr>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function updateAllRoundSums() {
+  for (let roundIndex = 0; roundIndex < ROUND_COUNT; roundIndex++) {
+    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+      const sumCell = document.getElementById(`team-sum-${roundIndex}-${teamIndex}`);
+      if (!sumCell) continue;
+      sumCell.textContent = getTeamRoundTotal(sheetState.rounds[roundIndex], teamIndex);
+    }
   }
 }
 
-createSheet();
+function attachSheetEvents() {
+  const head = document.getElementById('sheetHead');
+  const body = document.getElementById('sheetBody');
+
+  if (head) {
+    head.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!target.classList.contains('player-name-input')) return;
+
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+
+      sheetState.teams[teamIndex].players[playerIndex] = target.value;
+    });
+  }
+
+  if (body) {
+    body.addEventListener('input', (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        sheetState.rounds[roundIndex].map = target.value;
+        return;
+      }
+
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+        updateAllRoundSums();
+      }
+    });
+
+    body.addEventListener('change', (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('top10-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].top10 = target.checked;
+        updateAllRoundSums();
+      }
+    });
+  }
+}
+
+function initAdvancedSheet() {
+  renderSheetHead();
+  renderSheetBody();
+  attachSheetEvents();
+  updateAllRoundSums();
+}
+
+initAdvancedSheet();
   </script>
 
   <div class="roulette-section">
