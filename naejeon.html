@@ -1614,34 +1614,25 @@
     }
   }
 
-  async function saveSheetToServer() {
-    if (isRemoteApplying) return;
+  async function saveSheetPatchToServer(patch) {
+  if (isRemoteApplying) return;
 
-    try {
-      const payload = JSON.stringify(sheetState);
+  try {
+    const res = await fetch('/api/sheet-patch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(patch)
+    });
 
-      const res = await fetch('/api/sheet-save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: payload
-      });
-
-      const data = await res.json().catch(() => ({ ok: false }));
-      if (data.ok) {
-        lastSyncedJson = payload;
-      }
-    } catch (e) {
-      console.error('sheet-save 실패', e);
+    const data = await res.json().catch(() => ({ ok: false }));
+    if (!data.ok) {
+      console.error('sheet-patch 실패', data);
     }
+  } catch (e) {
+    console.error('sheet-patch 실패', e);
   }
-
-  function queueSaveSheet() {
-    if (isRemoteApplying) return;
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(saveSheetToServer, 120);
-  }
-
+}
   function hydrateIncomingSheetState(data) {
     const base = getDefaultSheetState();
 
@@ -2188,104 +2179,140 @@
     gridNode.innerHTML = teamColumns.join('');
   }
 
-  function updateAllRoundSums(shouldQueueSave = true) {
-    renderSheetHead();
-    renderSheetBody();
-    attachSheetEvents();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-
-    if (shouldQueueSave) {
-      queueSaveSheet();
-    }
-  }
-
-  function attachSheetEvents() {
-    const head = document.getElementById('sheetHead');
-    const body = document.getElementById('sheetBody');
-
-    if (head) {
-      head.oninput = (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('player-name-input')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
-
-          sheetState.teams[teamIndex].players[playerIndex] = target.value;
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
-
-        if (target.classList.contains('minus-select')) {
-          const teamIndex = Number(target.dataset.teamIndex);
-          const playerIndex = Number(target.dataset.playerIndex);
-
-          sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
-          updateAllRoundSums(true);
-          return;
-        }
-      };
-
-      head.onchange = head.oninput;
-    }
-
-    if (body) {
-      body.oninput = (event) => {
-        const target = event.target;
-
-        if (target.classList.contains('map-input')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          sheetState.rounds[roundIndex].map = target.value;
-
-          renderSheetSummary();
-          refreshDashboardFromSheetState();
-          queueSaveSheet();
-          return;
-        }
-
-       if (target.classList.contains('kill-input')) {
-  const roundIndex = Number(target.dataset.roundIndex);
-  const teamIndex = Number(target.dataset.teamIndex);
-  const playerIndex = Number(target.dataset.playerIndex);
-
-  sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
-
+  ffunction updateAllRoundSums() {
   renderSheetHead();
+  renderSheetBody();
   attachSheetEvents();
-  updateRoundScoreCell(roundIndex, teamIndex);
   renderSheetSummary();
   refreshDashboardFromSheetState();
-  queueSaveSheet();
-  return;
+}
+
+  function attachSheetEvents() {
+  const head = document.getElementById('sheetHead');
+  const body = document.getElementById('sheetBody');
+
+  if (head) {
+    head.oninput = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('player-name-input')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.teams[teamIndex].players[playerIndex] = target.value;
+
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+
+        saveSheetPatchToServer({
+          type: 'playerName',
+          teamIndex,
+          playerIndex,
+          value: target.value
+        });
+        return;
+      }
+
+      if (target.classList.contains('minus-select')) {
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.teams[teamIndex].minusScores[playerIndex] = target.value;
+        updateAllRoundSums();
+
+        saveSheetPatchToServer({
+          type: 'minusScore',
+          teamIndex,
+          playerIndex,
+          value: target.value
+        });
+        return;
+      }
+    };
+
+    head.onchange = head.oninput;
   }
- };
 
-      body.onchange = (event) => {
-        const target = event.target;
+  if (body) {
+    body.oninput = async (event) => {
+      const target = event.target;
 
-        if (target.classList.contains('top10-check')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
+      if (target.classList.contains('map-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        sheetState.rounds[roundIndex].map = target.value;
 
-          sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
-          updateAllRoundSums(true);
-          return;
-        }
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
 
-        if (target.classList.contains('chicken-check')) {
-          const roundIndex = Number(target.dataset.roundIndex);
-          const teamIndex = Number(target.dataset.teamIndex);
+        saveSheetPatchToServer({
+          type: 'map',
+          roundIndex,
+          value: target.value
+        });
+        return;
+      }
 
-          sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
-          updateAllRoundSums(true);
-          return;
-        }
-      };
-    }
+      if (target.classList.contains('kill-input')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+        const playerIndex = Number(target.dataset.playerIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = target.value;
+
+        renderSheetHead();
+        attachSheetEvents();
+        updateRoundScoreCell(roundIndex, teamIndex);
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+
+        saveSheetPatchToServer({
+          type: 'kill',
+          roundIndex,
+          teamIndex,
+          playerIndex,
+          value: target.value
+        });
+        return;
+      }
+    };
+
+    body.onchange = async (event) => {
+      const target = event.target;
+
+      if (target.classList.contains('top10-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].top10 = target.checked;
+        updateAllRoundSums();
+
+        saveSheetPatchToServer({
+          type: 'top10',
+          roundIndex,
+          teamIndex,
+          value: target.checked
+        });
+        return;
+      }
+
+      if (target.classList.contains('chicken-check')) {
+        const roundIndex = Number(target.dataset.roundIndex);
+        const teamIndex = Number(target.dataset.teamIndex);
+
+        sheetState.rounds[roundIndex].teams[teamIndex].chicken = target.checked;
+        updateAllRoundSums();
+
+        saveSheetPatchToServer({
+          type: 'chicken',
+          roundIndex,
+          teamIndex,
+          value: target.checked
+        });
+        return;
+      }
+    };
   }
+}
 
   function renderAllFromState() {
     renderSheetHead();
@@ -2299,19 +2326,27 @@
     renderAllFromState();
   }
 
-  function resetSheetState() {
-    const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
-    if (!ok) return;
+  async function resetSheetState() {
+  const ok = confirm('내전입력표의 입력값과 체크를 전부 초기화할까요?');
+  if (!ok) return;
 
-    sheetState = getDefaultSheetState();
-    renderAllFromState();
-    queueSaveSheet();
+  sheetState = getDefaultSheetState();
+  renderAllFromState();
 
-    const statusEl = document.getElementById('saveStatus');
-    if (statusEl) {
-      statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
-    }
+  try {
+    await fetch('/api/sheet-reset', {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch (e) {
+    console.error('sheet-reset 실패', e);
   }
+
+  const statusEl = document.getElementById('saveStatus');
+  if (statusEl) {
+    statusEl.textContent = '🗑 입력표가 초기화되었습니다.';
+  }
+}
 
   document.addEventListener('DOMContentLoaded', async function () {
     const saveBtn = document.getElementById('saveBtn');
