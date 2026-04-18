@@ -2102,45 +2102,55 @@ html += `</tr>`;
   }
 
   function renderSheetSummary() {
-    const totalNode = document.getElementById('sheetSummaryTotal');
-    const gridNode = document.getElementById('sheetSummaryGrid');
-    if (!totalNode || !gridNode) return;
+  const totalNode = document.getElementById('sheetSummaryTotal');
+  const gridNode = document.getElementById('sheetSummaryGrid');
+  if (!totalNode || !gridNode) return;
 
-    const teamColumns = [];
-    const totalTexts = [];
-    let grandTotal = 0;
+  const teamColumns = [];
+  const totalTexts = [];
+  let grandTotal = 0;
 
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const team = sheetState.teams[teamIndex];
-      const playerLines = [];
-      let teamPureTotal = 0;
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    const team = sheetState.teams[teamIndex];
+    const playerLines = [];
+    let teamDisplayTotal = 0;
 
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const playerName = (team.players[playerIndex] || '').trim();
-        const totals = getPlayerTotals(teamIndex, playerIndex);
-        teamPureTotal += totals.pure;
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      const playerName = (team.players[playerIndex] || '').trim();
+      const totals = getPlayerTotals(teamIndex, playerIndex);
 
-        playerLines.push(`
-          <div class="sheet-summary-player">
-            ${escapeHtml(playerName)}${playerName ? ' ' : ''}${totals.pure}킬
-          </div>
-        `);
-      }
+      const leftScore = Number(totals.pure || 0);
+      const rightScore = Number(totals.minusOnly || 0);   // 실제론 음수값
+      const finalScore = leftScore + rightScore;          // 예: 10 + (-4) = 6
 
-      grandTotal += teamPureTotal;
-      totalTexts.push(`${team.teamName} ${teamPureTotal}`);
+      teamDisplayTotal += finalScore;
 
-      teamColumns.push(`
-        <div class="sheet-summary-team">
-          ${playerLines.join('')}
-          <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+      const summaryText =
+        `${escapeHtml(playerName)}${playerName ? ' ' : ''}` +
+        `${formatCellValue(finalScore)} ` +
+        `(${formatCellValue(leftScore)}-${formatCellValue(Math.abs(rightScore))})`;
+
+      playerLines.push(`
+        <div class="sheet-summary-player">
+          ${summaryText}
         </div>
       `);
     }
 
-    totalNode.textContent = `[${grandTotal}] ` + totalTexts.join(' : ');
-    gridNode.innerHTML = teamColumns.join('');
+    grandTotal += teamDisplayTotal;
+    totalTexts.push(`${team.teamName} ${formatCellValue(teamDisplayTotal)}`);
+
+    teamColumns.push(`
+      <div class="sheet-summary-team">
+        ${playerLines.join('')}
+        <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+      </div>
+    `);
   }
+
+  totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
+  gridNode.innerHTML = teamColumns.join('');
+}
 
   function updateAllRoundSums(shouldQueueSave = true) {
     renderSheetHead();
