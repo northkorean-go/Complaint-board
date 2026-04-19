@@ -2068,16 +2068,20 @@ html += `</tr>`;
       function renderSheetSummary() {
   const totalNode = document.getElementById('sheetSummaryTotal');
   const gridNode = document.getElementById('sheetSummaryGrid');
+  const sideTopNode = document.getElementById('sheetSummarySideTop');
+  const sideBottomNode = document.getElementById('sheetSummarySideBottom');
+  const sideBoxNode = document.getElementById('sheetSummarySideBox');
+
   if (!totalNode || !gridNode) return;
 
-  const teamColumns = [];
   const totalTexts = [];
   let grandTotal = 0;
+  const teamSummaries = [];
 
   for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-    const playerLines = [];
     const teamTotals = getTeamTotals(teamIndex);
     const teamMinusTotal = getTeamScoreMinusTotal(teamIndex);
+    const players = [];
 
     for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
       const playerName = getRawPlayerName(teamIndex, playerIndex);
@@ -2087,35 +2091,88 @@ html += `</tr>`;
       const rightScore = Number(totals.minusOnly || 0);
       const finalScore = leftScore + rightScore;
 
-      const summaryText = formatPlayerScoreText(
-        playerName,
+      players.push({
+        name: playerName,
         finalScore,
         leftScore,
-        rightScore
-      );
-
-      playerLines.push(`
-        <div class="sheet-summary-player">
-          ${escapeHtml(summaryText)}
-        </div>
-      `);
+        rightScore,
+        text: formatPlayerScoreText(playerName, finalScore, leftScore, rightScore)
+      });
     }
 
     grandTotal += Number(teamTotals.score || 0);
     totalTexts.push(`${sheetState.teams[teamIndex].teamName} ${formatCellValue(teamTotals.score)}`);
 
-    teamColumns.push(`
-      <div class="sheet-summary-team">
-        <div class="sheet-summary-team-head">${escapeHtml(sheetState.teams[teamIndex].teamName)}</div>
-        ${playerLines.join('')}
-        <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(teamMinusTotal)}</div>
-        <div class="sheet-summary-footer">총합점수 ${formatCellValue(teamTotals.score)}</div>
-      </div>
-    `);
+    teamSummaries.push({
+      teamIndex,
+      teamName: sheetState.teams[teamIndex].teamName,
+      score: Number(teamTotals.score || 0),
+      pure: Number(teamTotals.pure || 0),
+      minusTotal: Number(teamMinusTotal || 0),
+      players
+    });
   }
 
+  const winner = teamSummaries.reduce((best, current) => {
+    if (!best) return current;
+    if (current.score !== best.score) return current.score > best.score ? current : best;
+    if (current.pure !== best.pure) return current.pure > best.pure ? current : best;
+    return current.teamIndex < best.teamIndex ? current : best;
+  }, null);
+
+  const winnerIndex = winner ? winner.teamIndex : -1;
+
   totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
-  gridNode.innerHTML = teamColumns.join('');
+
+  gridNode.innerHTML = teamSummaries.map((team) => {
+    const isLeading = team.teamIndex === winnerIndex;
+
+    const playerRows = team.players.map((player) => `
+      <div class="sheet-summary-player ${isLeading ? 'is-leading' : ''}">
+        ${escapeHtml(player.text)}
+      </div>
+    `).join('');
+
+    return `
+      <div class="sheet-summary-team ${isLeading ? 'is-leading' : ''}">
+        <div class="sheet-summary-team-head ${isLeading ? 'is-leading' : ''}">
+          ${isLeading ? '👑 ' : ''}${escapeHtml(team.teamName)}
+        </div>
+        ${playerRows}
+        <div class="sheet-summary-footer ${isLeading ? 'is-leading' : ''}">
+          팀 감점합 ${formatMinusValue(team.minusTotal)}
+        </div>
+        <div class="sheet-summary-footer ${isLeading ? 'is-leading' : ''}">
+          총합점수 ${formatCellValue(team.score)}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const ranking = getAllPlayerRanking();
+  const mvp = ranking[0] || null;
+
+  if (sideTopNode && winner) {
+    sideTopNode.textContent = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점`;
+  }
+
+  if (sideBottomNode) {
+    if (mvp) {
+      const mvpLeft = Number(mvp.pure || 0);
+      const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
+      sideBottomNode.textContent = `MVP ${formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight)}`;
+    } else {
+      sideBottomNode.textContent = 'MVP 집계 데이터가 없습니다.';
+    }
+  }
+
+  if (sideBoxNode) {
+    if (winner) {
+      sideBoxNode.classList.add('is-leading');
+    } else {
+      sideBoxNode.classList.remove('is-leading');
+    }
+  }
 }
       
 
