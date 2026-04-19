@@ -2273,18 +2273,14 @@
 
     if (recentMatchCard) {
       const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
-        const totals = getTeamTotals(i);
-        return {
-          teamIndex: i,
-          teamName: sheetState.teams[i].teamName,
-          score: totals.score,
-          pure: totals.pure
-        };
-      }).sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.pure !== a.pure) return b.pure - a.pure;
-        return a.teamIndex - b.teamIndex;
-      });
+  const totals = getTeamTotals(i);
+  return {
+    teamIndex: i,
+    teamName: sheetState.teams[i].teamName,
+    score: totals.score,
+    pure: totals.pure
+  };
+});
 
       const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
         teamOrder.map(team => `${team.teamName} ${formatCellValue(team.score)}`).join(' : ');
