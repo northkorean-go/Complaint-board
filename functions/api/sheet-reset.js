@@ -1,4 +1,4 @@
-import { getLoginUserFromRequest } from './_utils';
+import { requireAdmin } from './_utils';
 
 function getDefaultSheetState() {
   return {
@@ -27,16 +27,11 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
-    // 🔥 관리자 체크
-    const user = await getLoginUserFromRequest(request, env);
-    if (!user || !user.isAdmin) {
-      return new Response(
-        JSON.stringify({ ok: false, error: '관리자만 초기화할 수 있습니다.' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
+    const denied = requireAdmin(request);
+    if (denied) {
+      return denied;
     }
 
-    // 🔥 초기화 실행
     const data = getDefaultSheetState();
 
     await env.DB.prepare(`
@@ -50,7 +45,6 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ ok: true, data }), {
       headers: { 'Content-Type': 'application/json' }
     });
-
   } catch (e) {
     return new Response(JSON.stringify({ ok: false, error: e.message }), {
       status: 500,
