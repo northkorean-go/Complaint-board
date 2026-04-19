@@ -2189,22 +2189,6 @@
     cell.textContent = formatCellValue(getTeamRoundTotal(roundData, teamIndex));
   }
 
-  function renderSheetSummary() {
-  const totalNode = document.getElementById('sheetSummaryTotal');
-  const gridNode = document.getElementById('sheetSummaryGrid');
-  if (!totalNode || !gridNode) return;
-
-  const teamColumns = [];
-  const totalTexts = [];
-  let grandTotal = 0;
-
-  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-    const playerLines = [];
-    let teamDisplayTotal = 0;
-
-    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-      const playerName = getRawPlayerName(teamIndex, playerIndex);
-      const totals = getPlayerTotals(teamIndex, playerIndex);
 
       function renderSheetSummary() {
   const totalNode = document.getElementById('sheetSummaryTotal');
