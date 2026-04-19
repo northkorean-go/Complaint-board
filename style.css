@@ -2479,3 +2479,44 @@ input[type="number"] {
     text-align: center;
   }
 }
+/* ===== 오른쪽 TOP5 / 치킨 / 점수 칸 폭 줄이기 ===== */
+/* 반드시 CSS 맨 아래에 넣기 */
+
+body .sheet-wrap .advanced-sheet .top10-cell {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  background: #fcfcfb !important;
+}
+
+body .sheet-wrap .advanced-sheet .chicken-cell {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  background: #fff !important;
+}
+
+body .sheet-wrap .advanced-sheet .sum-cell {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+/* 입력칸도 같이 살짝 줄이기 */
+body .sheet-wrap .map-input,
+body .sheet-wrap .kill-input {
+  width: calc(100% - 8px) !important;
+  height: 28px !important;
+  padding: 0 4px !important;
+  font-size: 10px !important;
+}
+
+/* 체크박스 칸도 너무 커 보이면 같이 축소 */
+body .sheet-wrap .top10-check,
+body .sheet-wrap .chicken-check {
+  transform: scale(0.82) !important;
+}
