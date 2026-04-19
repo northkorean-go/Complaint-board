@@ -2359,3 +2359,32 @@ input[type="number"] {
   background: #fafafa;
   word-break: keep-all;
 }
+.sheet-summary-card {
+  position: relative;
+}
+
+/* 오른쪽 위 박스 */
+.sheet-summary-side-wrap {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+}
+
+.sheet-summary-side-box {
+  background: #000;
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.sheet-summary-side-top {
+  font-weight: 900;
+}
+
+.sheet-summary-side-bottom {
+  opacity: 0.9;
+}
