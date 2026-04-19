@@ -2339,3 +2339,23 @@ input[type="number"] {
   height: 70%;
   background: rgba(255,255,255,0.7);
 }
+.sheet-summary-team-head {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: #111;
+  padding: 12px 8px;
+  background: #fafafa;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.recent-match-table th {
+  border: 1px solid #e7e7e7;
+  text-align: center;
+  padding: 10px 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #111;
+  background: #fafafa;
+  word-break: keep-all;
+}
