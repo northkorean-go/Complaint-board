@@ -1933,14 +1933,14 @@
     html += `</tr>`;
 
     html += `<tr><th class="label-head">PURE KILL</th>`;
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const totals = getPlayerTotals(teamIndex, playerIndex);
-        html += `<th class="kill-head">${formatCellValue(totals.pure)}</th>`;
-      }
-      html += `<th class="sum-head"></th>`;
-    }
-    html += `</tr>`;
+for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+  for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+    const totals = getPlayerTotals(teamIndex, playerIndex);
+    html += `<th class="kill-head">${formatCellValue(totals.score)}</th>`;
+  }
+  html += `<th class="sum-head"></th>`;
+}
+html += `</tr>`;
 
     html += `<tr><th class="label-head">SCORE</th>`;
 for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
@@ -1949,7 +1949,7 @@ for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
     html += `
       <th class="score-split-head">
         <div class="score-split-box">
-          <div>${formatCellValue(totals.score)}</div>
+          <div>${formatCellValue(totals.pure)}</div>
           <div>${formatCellValue(totals.minusOnly)}</div>
         </div>
       </th>
