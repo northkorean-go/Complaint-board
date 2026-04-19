@@ -714,78 +714,6 @@
       font-weight: 900;
     }
 
-    .sheet-summary-wrap {
-      width: 100%;
-      max-width: 1680px;
-      margin: 18px auto 18px;
-      padding: 0 20px;
-    }
-
-    .sheet-summary-card {
-      background: #f7f7f7;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 28px;
-      overflow: hidden;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.04);
-    }
-
-    .sheet-summary-title {
-      background: #050505;
-      color: #fff;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      padding: 16px 12px;
-    }
-
-    .sheet-summary-total {
-      text-align: center;
-      font-size: 16px;
-      font-weight: 900;
-      color: #111;
-      padding: 18px 12px;
-      border-bottom: 1px solid #e3e3e3;
-      background: #fcfcfc;
-      white-space: pre-line;
-    }
-
-    .sheet-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 0;
-    }
-
-    .sheet-summary-team {
-      border-right: 1px solid #e3e3e3;
-      background: #fff;
-    }
-
-    .sheet-summary-team:last-child {
-      border-right: none;
-    }
-
-    .sheet-summary-player {
-      padding: 10px 8px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 800;
-      color: #111;
-      border-bottom: 1px solid #ececec;
-      min-height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .sheet-summary-footer {
-      text-align: center;
-      font-size: 13px;
-      font-weight: 900;
-      color: #111;
-      padding: 10px 6px;
-      background: #fafafa;
-    }
 
     .sheet-wrap {
       width: 100%;
@@ -836,19 +764,6 @@
       .result-hero-right {
         min-width: 0;
         text-align: left;
-      }
-
-      .sheet-summary-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .sheet-summary-team {
-        border-right: none;
-        border-bottom: 1px solid #e3e3e3;
-      }
-
-      .sheet-summary-team:last-child {
-        border-bottom: none;
       }
     }
 
@@ -2185,15 +2100,6 @@ html += `</tr>`;
   }
 }
 
-  if (sideBoxNode) {
-    if (winner) {
-      sideBoxNode.classList.add('is-leading');
-    } else {
-      sideBoxNode.classList.remove('is-leading');
-    }
-  }
-}
-      
 
   function refreshDashboardFromSheetState() {
   const todayTitle = document.getElementById('todayTitle');
