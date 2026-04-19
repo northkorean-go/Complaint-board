@@ -1902,10 +1902,10 @@
       }
 
       html += `
-        <th class="sum-head">${formatMinusValue(getTeamMinusTotal(teamIndex))}</th>
-        <th rowspan="4" class="sum-head">치킨</th>
-        <th rowspan="4" class="sum-head">점수</th>
-      `;
+  <th class="sum-head">${formatMinusValue(getTeamMinusTotal(teamIndex))}</th>
+  <th rowspan="4" class="chicken-head-vertical">치킨</th>
+  <th rowspan="4" class="score-head-vertical">점수</th>
+`;
     }
     html += `</tr>`;
 
@@ -1964,9 +1964,9 @@ for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
   for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
     html += `<th class="kill-head">KILL</th>`;
   }
-  html += `<th class="top10-head">TOP 5</th>`;
-  html += `<th class="top10-head">10점</th>`;
-  html += `<th class="top10-head">판점수</th>`;
+  html += `<th class="top5-head">TOP 5</th>`;
+  html += `<th class="chicken-head-bottom">10점</th>`;
+  html += `<th class="score-head-bottom">판점수</th>`;
 }
 html += `</tr>`;
 
