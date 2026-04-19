@@ -2307,12 +2307,21 @@
       }
 
       recentMatchCard.innerHTML =
-        `<div class="recent-match-head">최근 내전 결과</div>` +
-        `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
-        `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
-        `<div class="recent-match-table-wrap">` +
-          `<table class="recent-match-table"><tbody>${rowsHtml}</tbody></table>` +
-        `</div>`;
+  `<div class="recent-match-head">최근 내전 결과</div>` +
+  `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
+  `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
+  `<div class="recent-match-table-wrap">` +
+    `<table class="recent-match-table">
+      <thead>
+        <tr>
+          ${sheetState.teams.map(team => `<th>${escapeHtml(team.teamName)}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>` +
+  `</div>`;
     }
   }
 
