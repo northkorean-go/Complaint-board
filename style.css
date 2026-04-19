@@ -1459,23 +1459,23 @@ button:disabled {
 }
 
 .advanced-sheet .top10-cell {
-  width: 54px;
-  min-width: 54px;
-  max-width: 54px;
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
   background: #fcfcfb;
 }
 
 .advanced-sheet .chicken-cell {
-  width: 54px;
-  min-width: 54px;
-  max-width: 54px;
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
   background: #fff;
 }
 
 .advanced-sheet .sum-cell {
-  width: 58px;
-  min-width: 58px;
-  max-width: 58px;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
   background: #fff;
   color: #111;
   font-size: 12px;
