@@ -1077,6 +1077,58 @@
     </table>
   </div>
 </div>
+  <div class="manual-board-wrap">
+  <div class="manual-board-head">
+    <div>수기 팀 배정 / 참가자 표</div>
+    <div class="manual-board-sub">입력표 아래 · 팀룰렛 위</div>
+  </div>
+
+  <div class="manual-board-body">
+    <div class="manual-board-card">
+      <div class="manual-board-card-title">왼쪽: 팀룰렛 결과를 보고 수기로 넣는 팀 배정표</div>
+      <table class="manual-team-table">
+        <thead>
+          <tr>
+            <th>1팀</th>
+            <th>2팀</th>
+            <th>3팀</th>
+            <th>4팀</th>
+            <th>5팀</th>
+          </tr>
+        </thead>
+        <tbody id="manualTeamBoardBody"></tbody>
+      </table>
+    </div>
+
+    <div class="manual-board-card">
+      <div class="manual-board-card-title">오른쪽: 내전 참가자 수기 입력표</div>
+      <table class="manual-tier-table">
+        <thead>
+          <tr>
+            <th style="color:#e13f3f;">1티어</th>
+            <th style="color:#2149ff;">2티어</th>
+            <th style="color:#8f22ff;">3티어</th>
+            <th style="color:#ff9800;">4티어</th>
+          </tr>
+        </thead>
+        <tbody id="manualTierBoardBody"></tbody>
+      </table>
+
+      <div class="manual-copy-box">
+        <div class="manual-copy-label">팀룰렛 복붙용 전체 참가자 영역</div>
+        <textarea
+          class="manual-copy-area"
+          id="manualRouletteNames"
+          placeholder="여기에 오른쪽 참가자 입력값이 자동으로 모입니다."
+        ></textarea>
+        <div class="manual-copy-help">
+          오른쪽 참가자표에 입력한 이름이 자동으로 여기에도 모입니다.
+          여기서는 한 번에 드래그해서 복사해서 팀룰렛에 붙여넣으면 됩니다.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   const TEAM_COUNT = 5;
   const PLAYERS_PER_TEAM = 4;
@@ -1098,27 +1150,32 @@
   let lastLocalEditAt = 0;
 
   function getDefaultSheetState() {
-    return {
-      teams: [
-        { teamName: '1팀', players: ['', '', '', ''], minusScores: ['-2', '-1.5', '-1', '-0.5'] },
-        { teamName: '2팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '3팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '4팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
-        { teamName: '5팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] }
-      ],
-      rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
-        round: index + 1,
-        map: '사녹',
-        teams: Array.from({ length: TEAM_COUNT }, () => ({
-          top10: false,
-          chicken: false,
-          players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
-            kill: ''
-          }))
+  return {
+    teams: [
+      { teamName: '1팀', players: ['', '', '', ''], minusScores: ['-2', '-1.5', '-1', '-0.5'] },
+      { teamName: '2팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+      { teamName: '3팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+      { teamName: '4팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] },
+      { teamName: '5팀', players: ['', '', '', ''], minusScores: ['0', '0', '0', '0'] }
+    ],
+    rounds: Array.from({ length: ROUND_COUNT }, (_, index) => ({
+      round: index + 1,
+      map: '사녹',
+      teams: Array.from({ length: TEAM_COUNT }, () => ({
+        top10: false,
+        chicken: false,
+        players: Array.from({ length: PLAYERS_PER_TEAM }, () => ({
+          kill: ''
         }))
       }))
-    };
-  }
+    })),
+    manualBoard: {
+      teamSlots: Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => '')),
+      tierSlots: Array.from({ length: 8 }, () => Array.from({ length: 4 }, () => '')),
+      rouletteNamesText: ''
+    }
+  };
+}
 
   function escapeHtml(text) {
     return String(text || '')
@@ -1677,7 +1734,32 @@
         }
       }
     }
+        if (data.manualBoard && typeof data.manualBoard === 'object') {
+      if (Array.isArray(data.manualBoard.teamSlots)) {
+        for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
+          if (!Array.isArray(data.manualBoard.teamSlots[rowIndex])) continue;
+          for (let colIndex = 0; colIndex < 5; colIndex++) {
+            base.manualBoard.teamSlots[rowIndex][colIndex] =
+              String(data.manualBoard.teamSlots[rowIndex][colIndex] || '');
+          }
+        }
+      }
 
+      if (Array.isArray(data.manualBoard.tierSlots)) {
+        for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+          if (!Array.isArray(data.manualBoard.tierSlots[rowIndex])) continue;
+          for (let colIndex = 0; colIndex < 4; colIndex++) {
+            base.manualBoard.tierSlots[rowIndex][colIndex] =
+              String(data.manualBoard.tierSlots[rowIndex][colIndex] || '');
+          }
+        }
+      }
+
+      if (data.manualBoard.rouletteNamesText !== undefined) {
+        base.manualBoard.rouletteNamesText = String(data.manualBoard.rouletteNamesText || '');
+      }
+    }
+    
     return base;
   }
 
@@ -1724,7 +1806,31 @@
         }
       }
     }
+        for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
+      for (let colIndex = 0; colIndex < 5; colIndex++) {
+        const key = cellKey('manualTeam', rowIndex, colIndex, -1);
+        if (!dirtyCells.has(key)) {
+          next.manualBoard.teamSlots[rowIndex][colIndex] =
+            remoteState.manualBoard.teamSlots[rowIndex][colIndex];
+        }
+      }
+    }
 
+    for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+      for (let colIndex = 0; colIndex < 4; colIndex++) {
+        const key = cellKey('manualTier', rowIndex, colIndex, -1);
+        if (!dirtyCells.has(key)) {
+          next.manualBoard.tierSlots[rowIndex][colIndex] =
+            remoteState.manualBoard.tierSlots[rowIndex][colIndex];
+        }
+      }
+    }
+
+    const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
+    if (!dirtyCells.has(rouletteKey)) {
+      next.manualBoard.rouletteNamesText = remoteState.manualBoard.rouletteNamesText;
+    }
+    
     return next;
   }
 
