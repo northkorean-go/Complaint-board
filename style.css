@@ -2479,61 +2479,52 @@ input[type="number"] {
     text-align: center;
   }
 }
-/* ===== TOP5 / 치킨 / 점수 3칸만 축소 ===== */
-/* style.css 맨 아래 */
+/* ===== TOP5 / 치킨 / 점수 확 줄이기 (강력 압축) ===== */
 
 body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
   background: #fcfcfb !important;
 }
 
 body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
   background: #fff !important;
 }
 
 body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
   background: #fff !important;
   color: #111 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 900 !important;
 }
 
-/* 아래 라벨 줄 */
+/* 아래 라벨 줄 (TOP5 / 10점 / 판점수) */
 body .sheet-wrap .advanced-sheet .top10-head {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 9px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  font-size: 7px !important;
   padding: 0 !important;
 }
 
-/* "합" 헤더는 점수칸 폭에 맞춤 */
+/* 위 SCORE 줄 합 칸 */
 body .sheet-wrap .advanced-sheet .sum-head {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
-  background: #fafaf8 !important;
-  color: #111 !important;
-  font-size: 9px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
+  width: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  font-size: 7px !important;
   padding: 0 !important;
 }
 
-/* 체크박스 */
+/* 체크박스도 같이 줄여야 진짜 붙어보임 */
 body .sheet-wrap .top10-check,
 body .sheet-wrap .chicken-check {
-  transform: scale(0.72) !important;
+  transform: scale(0.6) !important;
 }
