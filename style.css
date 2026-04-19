@@ -1749,20 +1749,6 @@ body .sheet-wrap .advanced-sheet .kill-cell {
   max-width: 72px !important;
 }
 
-body .sheet-wrap .advanced-sheet .top10-cell,
-body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 54px !important;
-  min-width: 54px !important;
-  max-width: 54px !important;
-}
-
-body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 58px !important;
-  min-width: 58px !important;
-  max-width: 58px !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
 
 body .sheet-wrap .advanced-sheet .player-head-cell {
   background: #fff !important;
@@ -2070,30 +2056,6 @@ body .sheet-wrap .advanced-sheet .kill-cell {
   min-width: 74px !important;
   max-width: 74px !important;
   background: #fff !important;
-}
-
-body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 56px !important;
-  min-width: 56px !important;
-  max-width: 56px !important;
-  background: #fcfcfb !important;
-}
-
-body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 56px !important;
-  min-width: 56px !important;
-  max-width: 56px !important;
-  background: #fff !important;
-}
-
-body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 62px !important;
-  min-width: 62px !important;
-  max-width: 62px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
 }
 
 body .sheet-wrap .advanced-sheet .player-head-cell {
@@ -2479,19 +2441,30 @@ input[type="number"] {
     text-align: center;
   }
 }
-/* ===== TOP5 / 치킨 / 점수 확 줄이기 (강력 압축) ===== */
+/* ===== TOP5 / 치킨 / 점수 최종 정리본 ===== */
+/* 반드시 style.css 맨 마지막 */
 
+/* 표 레이아웃 유지 */
+body .sheet-wrap .sheet-table {
+  width: 100% !important;
+  min-width: 2400px !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: #fff !important;
+}
+
+/* 실제 3칸 폭 */
 body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 16px !important;
-  min-width: 16px !important;
-  max-width: 16px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
   background: #fcfcfb !important;
 }
 
 body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 16px !important;
-  min-width: 16px !important;
-  max-width: 16px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
   background: #fff !important;
 }
 
@@ -2501,30 +2474,40 @@ body .sheet-wrap .advanced-sheet .sum-cell {
   max-width: 24px !important;
   background: #fff !important;
   color: #111 !important;
-  font-size: 11px !important;
+  font-size: 13px !important;
   font-weight: 900 !important;
 }
 
-/* 아래 라벨 줄 (TOP5 / 10점 / 판점수) */
+/* 아래 라벨 줄: TOP5 / 10점 / 판점수 */
 body .sheet-wrap .advanced-sheet .top10-head {
-  width: 16px !important;
-  min-width: 16px !important;
-  max-width: 16px !important;
-  font-size: 7px !important;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
   padding: 0 !important;
 }
 
-/* 위 SCORE 줄 합 칸 */
+/* SCORE 줄 마지막 합 칸 */
 body .sheet-wrap .advanced-sheet .sum-head {
   width: 24px !important;
   min-width: 24px !important;
   max-width: 24px !important;
-  font-size: 7px !important;
+  background: #fafaf8 !important;
+  color: #111 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
   padding: 0 !important;
 }
 
-/* 체크박스도 같이 줄여야 진짜 붙어보임 */
+/* 체크박스는 크기 원복 */
 body .sheet-wrap .top10-check,
 body .sheet-wrap .chicken-check {
-  transform: scale(0.6) !important;
+  transform: scale(0.9) !important;
+  cursor: pointer !important;
+  accent-color: #111 !important;
 }
