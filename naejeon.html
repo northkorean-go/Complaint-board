@@ -2190,51 +2190,52 @@
   }
 
   function renderSheetSummary() {
-    const totalNode = document.getElementById('sheetSummaryTotal');
-    const gridNode = document.getElementById('sheetSummaryGrid');
-    if (!totalNode || !gridNode) return;
+  const totalNode = document.getElementById('sheetSummaryTotal');
+  const gridNode = document.getElementById('sheetSummaryGrid');
+  if (!totalNode || !gridNode) return;
 
-    const teamColumns = [];
-    const totalTexts = [];
-    let grandTotal = 0;
+  const teamColumns = [];
+  const totalTexts = [];
+  let grandTotal = 0;
 
-    for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
-      const playerLines = [];
-      let teamDisplayTotal = 0;
+  for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
+    const playerLines = [];
+    let teamDisplayTotal = 0;
 
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        const playerName = getRawPlayerName(teamIndex, playerIndex);
-        const totals = getPlayerTotals(teamIndex, playerIndex);
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      const playerName = getRawPlayerName(teamIndex, playerIndex);
+      const totals = getPlayerTotals(teamIndex, playerIndex);
 
-        const leftScore = Number(totals.pure || 0);
-        const rightScore = Number(totals.minusOnly || 0);
-        const finalScore = leftScore + rightScore;
+      const leftScore = Number(totals.pure || 0);
+      const rightScore = Number(totals.minusOnly || 0);
+      const finalScore = leftScore + rightScore;
 
-        teamDisplayTotal += finalScore;
+      teamDisplayTotal += finalScore;
 
-        const summaryText = formatPlayerScoreText(playerName, finalScore, leftScore, rightScore);
+      const summaryText = formatPlayerScoreText(playerName, finalScore, leftScore, rightScore);
 
-        playerLines.push(`
-          <div class="sheet-summary-player">
-            ${escapeHtml(summaryText)}
-          </div>
-        `);
-      }
+      playerLines.push(`
+        <div class="sheet-summary-player">
+          ${escapeHtml(summaryText)}
+        </div>
+      `);
+    }
 
-      grandTotal += teamDisplayTotal;
-      totalTexts.push(`${sheetState.teams[teamIndex].teamName} ${formatCellValue(teamDisplayTotal)}`);
+    grandTotal += teamDisplayTotal;
+    totalTexts.push(`${sheetState.teams[teamIndex].teamName} ${formatCellValue(teamDisplayTotal)}`);
 
-      teamColumns.push(`
-  <div class="sheet-summary-team">
-    <div class="sheet-summary-team-head">${escapeHtml(sheetState.teams[teamIndex].teamName)}</div>
-    ${playerLines.join('')}
-    <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamScoreMinusTotal(teamIndex))}</div>
-  </div>
-`);
-
-    totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
-    gridNode.innerHTML = teamColumns.join('');
+    teamColumns.push(`
+      <div class="sheet-summary-team">
+        <div class="sheet-summary-team-head">${escapeHtml(sheetState.teams[teamIndex].teamName)}</div>
+        ${playerLines.join('')}
+        <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamScoreMinusTotal(teamIndex))}</div>
+      </div>
+    `);
   }
+
+  totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
+  gridNode.innerHTML = teamColumns.join('');
+}
 
   function refreshDashboardFromSheetState() {
     const todayTitle = document.getElementById('todayTitle');
