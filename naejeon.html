@@ -2551,7 +2551,18 @@ function renderManualBoard() {
       `</div>`;
   }
 }
+  function syncManualTeamSlotsToMainPlayers() {
+  if (!sheetState.manualBoard || !Array.isArray(sheetState.manualBoard.teamSlots)) return;
+
+  for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
+    for (let teamIndex = 0; teamIndex < 5; teamIndex++) {
+      const value = String(sheetState.manualBoard.teamSlots[rowIndex]?.[teamIndex] || '').trim();
+      sheetState.teams[teamIndex].players[rowIndex] = value;
+    }
+  }
+}
   function renderAllFromState() {
+  syncManualTeamSlotsToMainPlayers();
   renderSheetHead();
   renderSheetBody();
   renderSheetSummary();
@@ -2573,6 +2584,7 @@ function renderManualBoard() {
   }
 
   function updateUiAfterGlobalChange() {
+  syncManualTeamSlotsToMainPlayers();
   renderSheetHead();
   renderSheetBody();
   renderSheetSummary();
@@ -2826,7 +2838,7 @@ function renderManualBoard() {
         return;
       }
     };
-       const manualTeamInputs = document.querySelectorAll('.manual-team-input');
+           const manualTeamInputs = document.querySelectorAll('.manual-team-input');
     manualTeamInputs.forEach((input) => {
       input.onfocus = () => {
         const rowIndex = Number(input.dataset.rowIndex);
@@ -2838,63 +2850,43 @@ function renderManualBoard() {
         const rowIndex = Number(input.dataset.rowIndex);
         const colIndex = Number(input.dataset.colIndex);
         const value = String(input.value || '').trim();
-        const key = cellKey('manualTeam', rowIndex, colIndex, -1);
-        const patch = {
+
+        const manualKey = cellKey('manualTeam', rowIndex, colIndex, -1);
+        const manualPatch = {
           type: 'manualTeam',
           rowIndex,
           colIndex,
           value
         };
 
-        sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
-        markDirty(key, patch);
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-      };
-    });
-
-    const manualTierInputs = document.querySelectorAll('.manual-tier-input');
-    manualTierInputs.forEach((input) => {
-      input.onfocus = () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        setEditingCellKey(cellKey('manualTier', rowIndex, colIndex, -1));
-      };
-
-      input.onblur = async () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        const value = String(input.value || '').trim();
-        const key = cellKey('manualTier', rowIndex, colIndex, -1);
-        const patch = {
-          type: 'manualTier',
-          rowIndex,
-          colIndex,
+        const playerKey = cellKey('playerName', -1, colIndex, rowIndex);
+        const playerPatch = {
+          type: 'playerName',
+          teamIndex: colIndex,
+          playerIndex: rowIndex,
           value
         };
 
-        sheetState.manualBoard.tierSlots[rowIndex][colIndex] = value;
+        // 아래 수기 팀배정표 저장
+        sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
 
-        const autoText = buildManualRouletteNamesText();
-        sheetState.manualBoard.rouletteNamesText = autoText;
+        // 위 CLAN MATCH NAME 줄도 같은 값으로 즉시 반영
+        sheetState.teams[colIndex].players[rowIndex] = value;
 
-        const manualRoulette = document.getElementById('manualRouletteNames');
-        if (manualRoulette) {
-          manualRoulette.value = autoText;
-        }
+        markDirty(manualKey, manualPatch);
+        markDirty(playerKey, playerPatch);
 
-        markDirty(key, patch);
+        // 위쪽 표 / 요약 / 최근결과 이름 즉시 갱신
+        renderSheetHead();
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+        attachSheetEvents();
+        saveDraftToLocal();
 
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) {
-          const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
-          const roulettePatch = {
-            type: 'manualRouletteText',
-            value: autoText
-          };
-          markDirty(rouletteKey, roulettePatch);
-          await saveSheetPatchToServer(rouletteKey, roulettePatch);
+        const manualOk = await saveSheetPatchToServer(manualKey, manualPatch);
+        const playerOk = await saveSheetPatchToServer(playerKey, playerPatch);
+
+        if (manualOk && playerOk) {
           clearEditingCellKey();
         }
       };
