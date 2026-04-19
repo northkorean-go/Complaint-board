@@ -2427,10 +2427,14 @@ function renderManualBoard() {
       const value = escapeHtml(sheetState.manualBoard.teamSlots[rowIndex][colIndex] || '');
       teamHtml += `
         <td>
-          <input class="manual-board-input manual-team-input"
+          <input
+            class="manual-board-input manual-team-input"
+            type="text"
             value="${value}"
             data-row-index="${rowIndex}"
-            data-col-index="${colIndex}" />
+            data-col-index="${colIndex}"
+            placeholder=""
+          />
         </td>
       `;
     }
@@ -2445,10 +2449,14 @@ function renderManualBoard() {
       const value = escapeHtml(sheetState.manualBoard.tierSlots[rowIndex][colIndex] || '');
       tierHtml += `
         <td>
-          <input class="manual-board-input manual-tier-input"
+          <input
+            class="manual-board-input manual-tier-input"
+            type="text"
             value="${value}"
             data-row-index="${rowIndex}"
-            data-col-index="${colIndex}" />
+            data-col-index="${colIndex}"
+            placeholder=""
+          />
         </td>
       `;
     }
@@ -2456,7 +2464,7 @@ function renderManualBoard() {
   }
   tierBody.innerHTML = tierHtml;
 
-    const autoText = buildManualRouletteNamesText();
+  const autoText = buildManualRouletteNamesText();
   if (!String(sheetState.manualBoard.rouletteNamesText || '').trim()) {
     sheetState.manualBoard.rouletteNamesText = autoText;
   }
@@ -2827,78 +2835,125 @@ function renderManualBoard() {
         return;
       }
     };
-           const manualTeamInputs = document.querySelectorAll('.manual-team-input');
-manualTeamInputs.forEach((input) => {
-  input.onfocus = () => {
-    const rowIndex = Number(input.dataset.rowIndex);
-    const colIndex = Number(input.dataset.colIndex);
-    setEditingCellKey(cellKey('manualTeam', rowIndex, colIndex, -1));
-  };
+               const manualTeamInputs = document.querySelectorAll('.manual-team-input');
+    manualTeamInputs.forEach((input) => {
+      input.onfocus = () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        setEditingCellKey(cellKey('manualTeam', rowIndex, colIndex, -1));
+      };
 
-  input.onblur = async () => {
-    const rowIndex = Number(input.dataset.rowIndex);
-    const colIndex = Number(input.dataset.colIndex);
-    const value = String(input.value || '').trim();
+      input.onblur = async () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        const value = String(input.value || '').trim();
 
-    const manualKey = cellKey('manualTeam', rowIndex, colIndex, -1);
-    const manualPatch = {
-      type: 'manualTeam',
-      rowIndex,
-      colIndex,
-      value
-    };
+        const manualKey = cellKey('manualTeam', rowIndex, colIndex, -1);
+        const manualPatch = {
+          type: 'manualTeam',
+          rowIndex,
+          colIndex,
+          value
+        };
 
-    const playerKey = cellKey('playerName', -1, colIndex, rowIndex);
-    const playerPatch = {
-      type: 'playerName',
-      teamIndex: colIndex,
-      playerIndex: rowIndex,
-      value
-    };
+        const playerKey = cellKey('playerName', -1, colIndex, rowIndex);
+        const playerPatch = {
+          type: 'playerName',
+          teamIndex: colIndex,
+          playerIndex: rowIndex,
+          value
+        };
 
-    sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
-    sheetState.teams[colIndex].players[rowIndex] = value;
+        sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
+        sheetState.teams[colIndex].players[rowIndex] = value;
 
-    markDirty(manualKey, manualPatch);
-    markDirty(playerKey, playerPatch);
+        markDirty(manualKey, manualPatch);
+        markDirty(playerKey, playerPatch);
 
-    renderSheetHead();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    attachSheetEvents();
-    saveDraftToLocal();
+        renderSheetHead();
+        renderSheetSummary();
+        refreshDashboardFromSheetState();
+        attachSheetEvents();
+        saveDraftToLocal();
 
-    const manualOk = await saveSheetPatchToServer(manualKey, manualPatch);
-    const playerOk = await saveSheetPatchToServer(playerKey, playerPatch);
+        const manualOk = await saveSheetPatchToServer(manualKey, manualPatch);
+        const playerOk = await saveSheetPatchToServer(playerKey, playerPatch);
 
-    if (manualOk && playerOk) {
-      clearEditingCellKey();
-    }
-  };
-});
+        if (manualOk && playerOk) {
+          clearEditingCellKey();
+        }
+      };
+    });
+
+    const manualTierInputs = document.querySelectorAll('.manual-tier-input');
+    manualTierInputs.forEach((input) => {
+      input.onfocus = () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        setEditingCellKey(cellKey('manualTier', rowIndex, colIndex, -1));
+      };
+
+      input.onblur = async () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        const value = String(input.value || '').trim();
+        const key = cellKey('manualTier', rowIndex, colIndex, -1);
+        const patch = {
+          type: 'manualTier',
+          rowIndex,
+          colIndex,
+          value
+        };
+
+        sheetState.manualBoard.tierSlots[rowIndex][colIndex] = value;
+
+        const autoText = buildManualRouletteNamesText();
+        sheetState.manualBoard.rouletteNamesText = autoText;
+
+        const manualRoulette = document.getElementById('manualRouletteNames');
+        if (manualRoulette) {
+          manualRoulette.value = autoText;
+        }
+
+        markDirty(key, patch);
+        saveDraftToLocal();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) {
+          const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
+          const roulettePatch = {
+            type: 'manualRouletteText',
+            value: autoText
+          };
+          markDirty(rouletteKey, roulettePatch);
+          await saveSheetPatchToServer(rouletteKey, roulettePatch);
+          clearEditingCellKey();
+        }
+      };
+    });
 
     const manualRoulette = document.getElementById('manualRouletteNames');
-if (manualRoulette) {
-  manualRoulette.onfocus = () => {
-    setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
-  };
+    if (manualRoulette) {
+      manualRoulette.onfocus = () => {
+        setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
+      };
 
-  manualRoulette.onblur = async () => {
-    const value = String(manualRoulette.value || '').trim();
-    const key = cellKey('manualRouletteText', -1, -1, -1);
-    const patch = {
-      type: 'manualRouletteText',
-      value
-    };
+      manualRoulette.onblur = async () => {
+        const value = String(manualRoulette.value || '').trim();
+        const key = cellKey('manualRouletteText', -1, -1, -1);
+        const patch = {
+          type: 'manualRouletteText',
+          value
+        };
 
-    sheetState.manualBoard.rouletteNamesText = value;
-    markDirty(key, patch);
-    saveDraftToLocal();
+        sheetState.manualBoard.rouletteNamesText = value;
+        markDirty(key, patch);
+        saveDraftToLocal();
 
-    const ok = await saveSheetPatchToServer(key, patch);
-    if (ok) clearEditingCellKey();
-  };
-}
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
+      };
+    }
 
   async function startRemoteSync() {
     if (syncInterval) clearInterval(syncInterval);
