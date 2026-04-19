@@ -1031,35 +1031,38 @@
   </div>
 
 <div class="sheet-summary-wrap">
-  <div class="sheet-summary-preview">
-    <div class="sheet-summary-topbar">
-      <div class="sheet-summary-topbar-title">순수킬</div>
-      <div class="sheet-summary-topbar-right">
-        <div class="sheet-summary-side-top" id="sheetSummarySideTop">🏆 1등팀</div>
-        <div class="sheet-summary-side-bottom" id="sheetSummarySideBottom">MVP 집계 데이터가 없습니다.</div>
+  <div class="sheet-summary-preview-full">
+    <div class="sheet-summary-preview-topbar">
+      <div class="sheet-summary-preview-topbar-title">순수킬</div>
+      <div class="sheet-summary-preview-topbar-right" id="sheetSummaryTopbarRight">
+        <div class="sheet-summary-preview-topbar-rank" id="sheetSummarySideTop">🏆 1등팀</div>
+        <div class="sheet-summary-preview-topbar-mvp" id="sheetSummarySideBottom">MVP 집계 데이터가 없습니다.</div>
       </div>
     </div>
 
-    <div class="sheet-summary-body">
+    <div class="sheet-summary-preview-body">
+      <div class="sheet-summary-demo-status">
+        <div class="sheet-summary-demo-pill">실시간 자동 1등팀 감지</div>
+        <div class="sheet-summary-demo-pill gold" id="sheetSummaryAutoLeader">현재 1등: 1팀</div>
+      </div>
+
+      <div class="sheet-summary-preview-hint">버튼 없이 점수가 바뀌면 금색 강조가 자동으로 1등팀으로 이동</div>
+
       <div class="sheet-summary-total" id="sheetSummaryTotal">[0] 1팀 0 : 2팀 0 : 3팀 0 : 4팀 0 : 5팀 0</div>
 
-      <div class="sheet-summary-player-table-wrap">
-        <table class="sheet-summary-player-table" id="sheetSummaryTable"></table>
+      <div class="sheet-summary-headline-row" id="sheetSummaryHeadlineRow"></div>
+      <div class="sheet-summary-team-grid" id="sheetSummaryTeamGrid"></div>
+
+      <div class="sheet-summary-player-card">
+        <div class="sheet-summary-player-card-head">
+          <div>팀별 개개인 점수 표</div>
+          <div class="sheet-summary-leader-chip" id="sheetSummaryLeaderChip">🏆 1등팀 1팀 0점</div>
+        </div>
+        <div class="sheet-summary-player-table-wrap">
+          <table class="sheet-summary-player-table" id="sheetSummaryTable"></table>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="sheet-wrap">
-  <div class="sheet-head">
-    <div class="sheet-title">CLAN MATCH</div>
-  </div>
-
-  <div class="sheet-table-wrap">
-    <table class="sheet-table advanced-sheet" id="sheetTable">
-      <thead id="sheetHead"></thead>
-      <tbody id="sheetBody"></tbody>
-    </table>
   </div>
 </div>
 <script>
@@ -1989,8 +1992,12 @@ html += `</tr>`;
   const tableNode = document.getElementById('sheetSummaryTable');
   const sideTopNode = document.getElementById('sheetSummarySideTop');
   const sideBottomNode = document.getElementById('sheetSummarySideBottom');
+  const autoLeaderNode = document.getElementById('sheetSummaryAutoLeader');
+  const leaderChipNode = document.getElementById('sheetSummaryLeaderChip');
+  const headlineRowNode = document.getElementById('sheetSummaryHeadlineRow');
+  const teamGridNode = document.getElementById('sheetSummaryTeamGrid');
 
-  if (!totalNode || !tableNode) return;
+  if (!totalNode || !tableNode || !headlineRowNode || !teamGridNode) return;
 
   const teamSummaries = [];
   const totalTexts = [];
@@ -2009,9 +2016,9 @@ html += `</tr>`;
       const rightScore = Number(totals.minusOnly || 0);
       const finalScore = leftScore + rightScore;
 
-      players.push(
-        formatPlayerScoreText(playerName, finalScore, leftScore, rightScore)
-      );
+      players.push({
+        text: formatPlayerScoreText(playerName, finalScore, leftScore, rightScore)
+      });
     }
 
     grandTotal += Number(teamTotals.score || 0);
@@ -2038,12 +2045,54 @@ html += `</tr>`;
 
   totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
 
+  const ranking = getAllPlayerRanking();
+  const mvp = ranking[0] || null;
+
+  if (sideTopNode && winner) {
+    sideTopNode.textContent = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점`;
+  }
+
+  if (autoLeaderNode && winner) {
+    autoLeaderNode.textContent = `현재 1등: ${winner.teamName}`;
+  }
+
+  if (leaderChipNode && winner) {
+    leaderChipNode.textContent = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점`;
+  }
+
+  if (sideBottomNode) {
+    if (mvp) {
+      const mvpLeft = Number(mvp.pure || 0);
+      const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
+      sideBottomNode.textContent = `MVP ${formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight)}`;
+    } else {
+      sideBottomNode.textContent = 'MVP 집계 데이터가 없습니다.';
+    }
+  }
+
+  headlineRowNode.innerHTML = teamSummaries.map(team => `
+    <div class="sheet-summary-headline-box ${team.teamIndex === winnerIndex ? 'leading' : ''}">
+      ${team.teamIndex === winnerIndex ? '👑 ' : ''}${escapeHtml(team.teamName)} ${formatCellValue(team.score)}
+    </div>
+  `).join('');
+
+  teamGridNode.innerHTML = teamSummaries.map(team => `
+    <div class="sheet-summary-team-card ${team.teamIndex === winnerIndex ? 'leading' : ''}">
+      <div class="sheet-summary-team-badge">1위</div>
+      <div class="sheet-summary-team-label">${escapeHtml(team.teamName)}</div>
+      <div class="sheet-summary-team-score">${formatCellValue(team.score)}</div>
+      <div class="sheet-summary-team-sub">순수킬 ${formatCellValue(team.pure)} (${formatCellValue(team.pure)}-${formatCellValue(Math.abs(team.minusTotal))})</div>
+      <div class="sheet-summary-team-penalty">팀 감점합 ${formatMinusValue(team.minusTotal)}</div>
+      <div class="sheet-summary-team-total">총합점수 ${formatCellValue(team.score)}</div>
+    </div>
+  `).join('');
+
   const headerHtml = `
     <thead>
       <tr>
         ${teamSummaries.map(team => `
           <th class="${team.teamIndex === winnerIndex ? 'is-leading' : ''}">
-            ${team.teamIndex === winnerIndex ? '👑 ' : ''}${escapeHtml(team.teamName)}
+            ${escapeHtml(team.teamName)}
           </th>
         `).join('')}
       </tr>
@@ -2054,7 +2103,7 @@ html += `</tr>`;
     <tr>
       ${teamSummaries.map(team => `
         <td class="${team.teamIndex === winnerIndex ? 'is-leading' : ''}">
-          ${escapeHtml(team.players[rowIndex] || '0 (0-0)')}
+          ${escapeHtml(team.players[rowIndex]?.text || '0 (0-0)')}
         </td>
       `).join('')}
     </tr>
@@ -2081,23 +2130,6 @@ html += `</tr>`;
   `;
 
   tableNode.innerHTML = `${headerHtml}<tbody>${playerRows}${minusRow}${totalRow}</tbody>`;
-
-  const ranking = getAllPlayerRanking();
-  const mvp = ranking[0] || null;
-
-  if (sideTopNode && winner) {
-    sideTopNode.textContent = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점`;
-  }
-
-  if (sideBottomNode) {
-    if (mvp) {
-      const mvpLeft = Number(mvp.pure || 0);
-      const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
-      sideBottomNode.textContent = `MVP ${formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight)}`;
-    } else {
-      sideBottomNode.textContent = 'MVP 집계 데이터가 없습니다.';
-    }
-  }
 }
 
 
