@@ -2155,3 +2155,57 @@ body .sheet-wrap .advanced-sheet tr:nth-child(4) th.kill-head {
     line-height: 1.5;
   }
 }
+/* 🔥 기존 테이블 느낌 완전 제거 */
+.sheet-summary-card * {
+  background: initial;
+}
+
+.sheet-summary-team,
+.sheet-summary-player,
+.sheet-summary-footer {
+  background: #fff !important;
+}
+
+/* 🔥 테이블 느낌 제거 */
+.sheet-summary-team {
+  border: none !important;
+}
+
+/* 🔥 카드형 강제 적용 */
+.sheet-summary-team {
+  margin: 10px;
+  border-radius: 20px;
+  border: 2px solid #ddd;
+}
+
+/* 🔥 1등팀 강조 강제 */
+.sheet-summary-team.is-leading {
+  background: linear-gradient(180deg, #fffdf6 0%, #fff8e7 100%) !important;
+  border: 2px solid #caa74a !important;
+  box-shadow: 0 0 0 4px rgba(202,167,74,0.15), 0 18px 40px rgba(124,93,22,0.18) !important;
+}
+
+/* 🔥 팀 헤더 강조 */
+.sheet-summary-team-head {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.sheet-summary-team-head.is-leading {
+  color: #8c6513;
+}
+
+/* 🔥 플레이어 줄 */
+.sheet-summary-player {
+  font-size: 15px;
+  padding: 14px;
+}
+
+.sheet-summary-player.is-leading {
+  color: #7b5a15;
+}
+
+/* 🔥 하단 */
+.sheet-summary-footer.is-leading {
+  color: #7b5a15;
+}
