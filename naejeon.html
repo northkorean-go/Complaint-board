@@ -868,6 +868,155 @@
         font-size: 14px;
       }
     }
+    .manual-board-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 28px 0 28px;
+  padding: 0 4px;
+  background: #fff;
+  border: 1px solid #e4e4e4;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.manual-board-head {
+  background: #000;
+  color: #fff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-weight: 900;
+}
+
+.manual-board-sub {
+  color: #cfcfcf;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.manual-board-body {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
+  gap: 18px;
+  background: #fff;
+}
+
+.manual-board-card {
+  border: 1px solid #e4e4e4;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.manual-board-card-title {
+  background: #f7f7f7;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 900;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.manual-team-table,
+.manual-tier-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.manual-team-table th,
+.manual-team-table td,
+.manual-tier-table th,
+.manual-tier-table td {
+  border: 1px solid #e7e7e7;
+  text-align: center;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-weight: 800;
+  height: 48px;
+}
+
+.manual-team-table th,
+.manual-tier-table th {
+  background: #fafafa;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.manual-board-input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 8px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  outline: none;
+}
+
+.manual-board-input::placeholder {
+  color: #bbb;
+}
+
+.manual-copy-box {
+  padding: 14px;
+  border-top: 1px solid #ececec;
+  background: #fff;
+}
+
+.manual-copy-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.manual-copy-area {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fcfcfc;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #222;
+  outline: none;
+}
+
+.manual-copy-help {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.6;
+}
+
+@media (max-width: 1200px) {
+  .manual-board-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .manual-board-card {
+    overflow-x: auto;
+  }
+
+  .manual-team-table {
+    min-width: 760px;
+  }
+
+  .manual-tier-table {
+    min-width: 620px;
+  }
+}
   </style>
 </head>
 <body>
@@ -2250,6 +2399,65 @@ html += `</tr>`;
   tableNode.innerHTML = `${headerHtml}<tbody>${playerRows}${minusRow}${totalRow}</tbody>`;
 }
 
+// 🔥🔥🔥 여기 추가 🔥🔥🔥
+function buildManualRouletteNamesText() {
+  const names = [];
+
+  for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+    for (let colIndex = 0; colIndex < 4; colIndex++) {
+      const value = String(sheetState.manualBoard.tierSlots[rowIndex][colIndex] || '').trim();
+      if (value) names.push(value);
+    }
+  }
+
+  return names.join('\n');
+}
+
+function renderManualBoard() {
+  const teamBody = document.getElementById('manualTeamBoardBody');
+  const tierBody = document.getElementById('manualTierBoardBody');
+  const rouletteNames = document.getElementById('manualRouletteNames');
+
+  if (!teamBody || !tierBody || !rouletteNames) return;
+
+  let teamHtml = '';
+  for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
+    teamHtml += '<tr>';
+    for (let colIndex = 0; colIndex < 5; colIndex++) {
+      const value = escapeHtml(sheetState.manualBoard.teamSlots[rowIndex][colIndex] || '');
+      teamHtml += `
+        <td>
+          <input class="manual-board-input manual-team-input"
+            value="${value}"
+            data-row-index="${rowIndex}"
+            data-col-index="${colIndex}" />
+        </td>
+      `;
+    }
+    teamHtml += '</tr>';
+  }
+  teamBody.innerHTML = teamHtml;
+
+  let tierHtml = '';
+  for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+    tierHtml += '<tr>';
+    for (let colIndex = 0; colIndex < 4; colIndex++) {
+      const value = escapeHtml(sheetState.manualBoard.tierSlots[rowIndex][colIndex] || '');
+      tierHtml += `
+        <td>
+          <input class="manual-board-input manual-tier-input"
+            value="${value}"
+            data-row-index="${rowIndex}"
+            data-col-index="${colIndex}" />
+        </td>
+      `;
+    }
+    tierHtml += '</tr>';
+  }
+  tierBody.innerHTML = tierHtml;
+
+  rouletteNames.value = buildManualRouletteNamesText();
+}
 
   function refreshDashboardFromSheetState() {
   const todayTitle = document.getElementById('todayTitle');
@@ -2340,13 +2548,14 @@ html += `</tr>`;
   }
 }
   function renderAllFromState() {
-    renderSheetHead();
-    renderSheetBody();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    attachSheetEvents();
-    saveDraftToLocal();
-  }
+  renderSheetHead();
+  renderSheetBody();
+  renderSheetSummary();
+  renderManualBoard();
+  refreshDashboardFromSheetState();
+  attachSheetEvents();
+  saveDraftToLocal();
+}
 
   function updateUiAfterCellChange(roundIndex, teamIndex, rerenderHead = false) {
     if (rerenderHead) {
@@ -2360,13 +2569,14 @@ html += `</tr>`;
   }
 
   function updateUiAfterGlobalChange() {
-    renderSheetHead();
-    renderSheetBody();
-    renderSheetSummary();
-    refreshDashboardFromSheetState();
-    attachSheetEvents();
-    saveDraftToLocal();
-  }
+  renderSheetHead();
+  renderSheetBody();
+  renderSheetSummary();
+  renderManualBoard();
+  refreshDashboardFromSheetState();
+  attachSheetEvents();
+  saveDraftToLocal();
+}
 
   function attachSheetEvents() {
     const head = document.getElementById('sheetHead');
@@ -2612,6 +2822,99 @@ html += `</tr>`;
         return;
       }
     };
+    const manualTeamInputs = document.querySelectorAll('.manual-team-input');
+    manualTeamInputs.forEach((input) => {
+      input.onfocus = () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        setEditingCellKey(cellKey('manualTeam', rowIndex, colIndex, -1));
+      };
+
+      input.onblur = async () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        const value = String(input.value || '').trim();
+        const key = cellKey('manualTeam', rowIndex, colIndex, -1);
+        const patch = {
+          type: 'manualTeam',
+          rowIndex,
+          colIndex,
+          value
+        };
+
+        sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
+        markDirty(key, patch);
+        renderManualBoard();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
+      };
+    });
+
+    const manualTierInputs = document.querySelectorAll('.manual-tier-input');
+    manualTierInputs.forEach((input) => {
+      input.onfocus = () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        setEditingCellKey(cellKey('manualTier', rowIndex, colIndex, -1));
+      };
+
+      input.onblur = async () => {
+        const rowIndex = Number(input.dataset.rowIndex);
+        const colIndex = Number(input.dataset.colIndex);
+        const value = String(input.value || '').trim();
+        const key = cellKey('manualTier', rowIndex, colIndex, -1);
+        const patch = {
+          type: 'manualTier',
+          rowIndex,
+          colIndex,
+          value
+        };
+
+        sheetState.manualBoard.tierSlots[rowIndex][colIndex] = value;
+
+        const autoText = buildManualRouletteNamesText();
+        sheetState.manualBoard.rouletteNamesText = autoText;
+
+        markDirty(key, patch);
+        renderManualBoard();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) {
+          const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
+          const roulettePatch = {
+            type: 'manualRouletteText',
+            value: autoText
+          };
+          markDirty(rouletteKey, roulettePatch);
+          await saveSheetPatchToServer(rouletteKey, roulettePatch);
+          clearEditingCellKey();
+        }
+      };
+    });
+
+    const manualRoulette = document.getElementById('manualRouletteNames');
+    if (manualRoulette) {
+      manualRoulette.onfocus = () => {
+        setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
+      };
+
+      manualRoulette.onblur = async () => {
+        const value = String(manualRoulette.value || '').trim();
+        const key = cellKey('manualRouletteText', -1, -1, -1);
+        const patch = {
+          type: 'manualRouletteText',
+          value
+        };
+
+        sheetState.manualBoard.rouletteNamesText = value;
+        markDirty(key, patch);
+        renderManualBoard();
+
+        const ok = await saveSheetPatchToServer(key, patch);
+        if (ok) clearEditingCellKey();
+      };
+    }
   }
 
   async function startRemoteSync() {
