@@ -1248,10 +1248,16 @@
 
   <div class="sheet-summary-wrap">
     <div class="sheet-summary-card">
-      <div class="sheet-summary-title">순수킬</div>
-      <div class="sheet-summary-total" id="sheetSummaryTotal">[0] 1팀 0 : 2팀 0 : 3팀 0 : 4팀 0 : 5팀 0</div>
-      <div class="sheet-summary-grid" id="sheetSummaryGrid"></div>
-    </div>
+  <div class="sheet-summary-title">순수킬</div>
+
+  <div class="sheet-summary-side-box" id="sheetSummarySideBox">
+    <div class="sheet-summary-side-top" id="sheetSummarySideTop">🏆 1등팀</div>
+    <div class="sheet-summary-side-bottom" id="sheetSummarySideBottom">MVP 집계 데이터가 없습니다.</div>
+  </div>
+
+  <div class="sheet-summary-total" id="sheetSummaryTotal">[0] 1팀 0 : 2팀 0 : 3팀 0 : 4팀 0 : 5팀 0</div>
+  <div class="sheet-summary-grid" id="sheetSummaryGrid"></div>
+</div>
   </div>
 
   <div class="sheet-wrap">
@@ -2249,6 +2255,30 @@
     const topTeamLabel = document.getElementById('topTeamLabel');
     const topTeamLines = document.getElementById('topTeamLines');
     const recentMatchCard = document.getElementById('recentMatchCard');
+    const sheetSummarySideTop = document.getElementById('sheetSummarySideTop');
+const sheetSummarySideBottom = document.getElementById('sheetSummarySideBottom');
+
+let topLabelText = '🏆 1등팀';
+if (winner) {
+  const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
+  topLabelText = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
+}
+
+let topLinesText = 'MVP 집계 데이터가 없습니다.';
+if (mvp) {
+  const mvpLeft = Number(mvp.pure || 0);
+  const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
+  const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
+  topLinesText = `MVP ${mvpText}`;
+}
+
+/* 기존 카드 */
+if (topTeamLabel) topTeamLabel.textContent = topLabelText;
+if (topTeamLines) topTeamLines.textContent = topLinesText;
+
+/* 🔥 아래 순수킬 표 오른쪽에도 동일 적용 */
+if (sheetSummarySideTop) sheetSummarySideTop.textContent = topLabelText;
+if (sheetSummarySideBottom) sheetSummarySideBottom.textContent = topLinesText;
 
     if (todayTitle) {
       todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
@@ -2269,24 +2299,16 @@
     }
 
     if (topTeamLines) {
-  const totalScore = Array.from({ length: TEAM_COUNT }, (_, i) => getTeamTotals(i).score)
-    .reduce((sum, value) => sum + Number(value || 0), 0);
-
   if (!mvp) {
-    topTeamLines.textContent =
-      `MVP 집계 데이터가 없습니다.\n` +
-      `총합 ${formatCellValue(totalScore)}`;
+    topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
   } else {
     const mvpLeft = Number(mvp.pure || 0);
     const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
     const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
 
-    topTeamLines.textContent =
-      `MVP ${mvpText}\n` +
-      `총합 ${formatCellValue(totalScore)}`;
+    topTeamLines.textContent = `MVP ${mvpText}`;
   }
 }
-
     if (recentMatchCard) {
       const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
   const totals = getTeamTotals(i);
