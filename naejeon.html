@@ -2826,7 +2826,7 @@ function renderManualBoard() {
         return;
       }
     };
-    const manualTeamInputs = document.querySelectorAll('.manual-team-input');
+       const manualTeamInputs = document.querySelectorAll('.manual-team-input');
     manualTeamInputs.forEach((input) => {
       input.onfocus = () => {
         const rowIndex = Number(input.dataset.rowIndex);
@@ -2848,7 +2848,6 @@ function renderManualBoard() {
 
         sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
         markDirty(key, patch);
-        renderManualBoard();
 
         const ok = await saveSheetPatchToServer(key, patch);
         if (ok) clearEditingCellKey();
@@ -2880,8 +2879,12 @@ function renderManualBoard() {
         const autoText = buildManualRouletteNamesText();
         sheetState.manualBoard.rouletteNamesText = autoText;
 
+        const manualRoulette = document.getElementById('manualRouletteNames');
+        if (manualRoulette) {
+          manualRoulette.value = autoText;
+        }
+
         markDirty(key, patch);
-        renderManualBoard();
 
         const ok = await saveSheetPatchToServer(key, patch);
         if (ok) {
@@ -2913,7 +2916,6 @@ function renderManualBoard() {
 
         sheetState.manualBoard.rouletteNamesText = value;
         markDirty(key, patch);
-        renderManualBoard();
 
         const ok = await saveSheetPatchToServer(key, patch);
         if (ok) clearEditingCellKey();
