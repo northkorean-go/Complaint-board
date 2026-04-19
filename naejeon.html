@@ -2563,7 +2563,7 @@
         target.value = value;
         sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
         markDirty(key, patch);
-        updateUiAfterCellChange(roundIndex, teamIndex, false);
+        updateUiAfterCellChange(roundIndex, teamIndex, true);
 
         const ok = await saveSheetPatchToServer(key, patch);
         if (ok) clearEditingCellKey();
