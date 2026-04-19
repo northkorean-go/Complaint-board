@@ -1115,19 +1115,23 @@
     </div>
   </div>
 
- <div class="sheet-summary-wrap">
-  <div class="sheet-summary-card">
-    <div class="sheet-summary-title-row">
-      <div class="sheet-summary-title">순수킬</div>
-
-      <div class="sheet-summary-side-box" id="sheetSummarySideBox">
+<div class="sheet-summary-wrap">
+  <div class="sheet-summary-preview">
+    <div class="sheet-summary-topbar">
+      <div class="sheet-summary-topbar-title">순수킬</div>
+      <div class="sheet-summary-topbar-right">
         <div class="sheet-summary-side-top" id="sheetSummarySideTop">🏆 1등팀</div>
         <div class="sheet-summary-side-bottom" id="sheetSummarySideBottom">MVP 집계 데이터가 없습니다.</div>
       </div>
     </div>
 
-    <div class="sheet-summary-total" id="sheetSummaryTotal">[0] 1팀 0 : 2팀 0 : 3팀 0 : 4팀 0 : 5팀 0</div>
-    <div class="sheet-summary-grid" id="sheetSummaryGrid"></div>
+    <div class="sheet-summary-body">
+      <div class="sheet-summary-total" id="sheetSummaryTotal">[0] 1팀 0 : 2팀 0 : 3팀 0 : 4팀 0 : 5팀 0</div>
+
+      <div class="sheet-summary-player-table-wrap">
+        <table class="sheet-summary-player-table" id="sheetSummaryTable"></table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2067,16 +2071,15 @@ html += `</tr>`;
 
       function renderSheetSummary() {
   const totalNode = document.getElementById('sheetSummaryTotal');
-  const gridNode = document.getElementById('sheetSummaryGrid');
+  const tableNode = document.getElementById('sheetSummaryTable');
   const sideTopNode = document.getElementById('sheetSummarySideTop');
   const sideBottomNode = document.getElementById('sheetSummarySideBottom');
-  const sideBoxNode = document.getElementById('sheetSummarySideBox');
 
-  if (!totalNode || !gridNode) return;
+  if (!totalNode || !tableNode) return;
 
+  const teamSummaries = [];
   const totalTexts = [];
   let grandTotal = 0;
-  const teamSummaries = [];
 
   for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
     const teamTotals = getTeamTotals(teamIndex);
@@ -2091,13 +2094,9 @@ html += `</tr>`;
       const rightScore = Number(totals.minusOnly || 0);
       const finalScore = leftScore + rightScore;
 
-      players.push({
-        name: playerName,
-        finalScore,
-        leftScore,
-        rightScore,
-        text: formatPlayerScoreText(playerName, finalScore, leftScore, rightScore)
-      });
+      players.push(
+        formatPlayerScoreText(playerName, finalScore, leftScore, rightScore)
+      );
     }
 
     grandTotal += Number(teamTotals.score || 0);
@@ -2124,30 +2123,49 @@ html += `</tr>`;
 
   totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
 
-  gridNode.innerHTML = teamSummaries.map((team) => {
-    const isLeading = team.teamIndex === winnerIndex;
+  const headerHtml = `
+    <thead>
+      <tr>
+        ${teamSummaries.map(team => `
+          <th class="${team.teamIndex === winnerIndex ? 'is-leading' : ''}">
+            ${team.teamIndex === winnerIndex ? '👑 ' : ''}${escapeHtml(team.teamName)}
+          </th>
+        `).join('')}
+      </tr>
+    </thead>
+  `;
 
-    const playerRows = team.players.map((player) => `
-      <div class="sheet-summary-player ${isLeading ? 'is-leading' : ''}">
-        ${escapeHtml(player.text)}
-      </div>
-    `).join('');
+  const playerRows = [0, 1, 2, 3].map(rowIndex => `
+    <tr>
+      ${teamSummaries.map(team => `
+        <td class="${team.teamIndex === winnerIndex ? 'is-leading' : ''}">
+          ${escapeHtml(team.players[rowIndex] || '0 (0-0)')}
+        </td>
+      `).join('')}
+    </tr>
+  `).join('');
 
-    return `
-      <div class="sheet-summary-team ${isLeading ? 'is-leading' : ''}">
-        <div class="sheet-summary-team-head ${isLeading ? 'is-leading' : ''}">
-          ${isLeading ? '👑 ' : ''}${escapeHtml(team.teamName)}
-        </div>
-        ${playerRows}
-        <div class="sheet-summary-footer ${isLeading ? 'is-leading' : ''}">
+  const minusRow = `
+    <tr>
+      ${teamSummaries.map(team => `
+        <td class="${team.teamIndex === winnerIndex ? 'is-leading is-footer' : 'is-footer'}">
           팀 감점합 ${formatMinusValue(team.minusTotal)}
-        </div>
-        <div class="sheet-summary-footer ${isLeading ? 'is-leading' : ''}">
+        </td>
+      `).join('')}
+    </tr>
+  `;
+
+  const totalRow = `
+    <tr>
+      ${teamSummaries.map(team => `
+        <td class="${team.teamIndex === winnerIndex ? 'is-leading is-footer' : 'is-footer'}">
           총합점수 ${formatCellValue(team.score)}
-        </div>
-      </div>
-    `;
-  }).join('');
+        </td>
+      `).join('')}
+    </tr>
+  `;
+
+  tableNode.innerHTML = `${headerHtml}<tbody>${playerRows}${minusRow}${totalRow}</tbody>`;
 
   const ranking = getAllPlayerRanking();
   const mvp = ranking[0] || null;
@@ -2165,6 +2183,7 @@ html += `</tr>`;
       sideBottomNode.textContent = 'MVP 집계 데이터가 없습니다.';
     }
   }
+}
 
   if (sideBoxNode) {
     if (winner) {
