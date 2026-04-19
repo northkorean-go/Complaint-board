@@ -2251,118 +2251,93 @@
       
 
   function refreshDashboardFromSheetState() {
-    const todayTitle = document.getElementById('todayTitle');
-    const topTeamLabel = document.getElementById('topTeamLabel');
-    const topTeamLines = document.getElementById('topTeamLines');
-    const recentMatchCard = document.getElementById('recentMatchCard');
-    const sheetSummarySideTop = document.getElementById('sheetSummarySideTop');
-const sheetSummarySideBottom = document.getElementById('sheetSummarySideBottom');
+  const todayTitle = document.getElementById('todayTitle');
+  const topTeamLabel = document.getElementById('topTeamLabel');
+  const topTeamLines = document.getElementById('topTeamLines');
+  const recentMatchCard = document.getElementById('recentMatchCard');
+  const sheetSummarySideTop = document.getElementById('sheetSummarySideTop');
+  const sheetSummarySideBottom = document.getElementById('sheetSummarySideBottom');
 
-let topLabelText = '🏆 1등팀';
-if (winner) {
-  const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
-  topLabelText = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
-}
+  if (todayTitle) {
+    todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
+  }
 
-let topLinesText = 'MVP 집계 데이터가 없습니다.';
-if (mvp) {
-  const mvpLeft = Number(mvp.pure || 0);
-  const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
-  const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
-  topLinesText = `MVP ${mvpText}`;
-}
+  const winner = getWinningTeamInfo();
+  const ranking = getAllPlayerRanking();
+  const mvp = ranking[0] || null;
 
-/* 기존 카드 */
-if (topTeamLabel) topTeamLabel.textContent = topLabelText;
-if (topTeamLines) topTeamLines.textContent = topLinesText;
+  let topLabelText = '🏆 1등팀';
+  if (winner) {
+    const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
+    topLabelText = `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
+  }
 
-/* 🔥 아래 순수킬 표 오른쪽에도 동일 적용 */
-if (sheetSummarySideTop) sheetSummarySideTop.textContent = topLabelText;
-if (sheetSummarySideBottom) sheetSummarySideBottom.textContent = topLinesText;
-
-    if (todayTitle) {
-      todayTitle.textContent = getMatchDisplayDate() + ' 금일 내전 결과';
-    }
-
-    const winner = getWinningTeamInfo();
-    const ranking = getAllPlayerRanking();
-    const mvp = ranking[0] || null;
-
-    if (topTeamLabel) {
-      if (!winner) {
-        topTeamLabel.textContent = '🏆 1등팀';
-      } else {
-        const memberText = winner.members.length ? ` (${winner.members.join(' / ')})` : '';
-        topTeamLabel.textContent =
-          `🏆 1등팀 ${winner.teamName} ${formatCellValue(winner.score)}점${memberText}`;
-      }
-    }
-
-    if (topTeamLines) {
-  if (!mvp) {
-    topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
-  } else {
+  let topLinesText = 'MVP 집계 데이터가 없습니다.';
+  if (mvp) {
     const mvpLeft = Number(mvp.pure || 0);
     const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
     const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
-
-    topTeamLines.textContent = `MVP ${mvpText}`;
+    topLinesText = `MVP ${mvpText}`;
   }
-}
-    if (recentMatchCard) {
-      const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
-  const totals = getTeamTotals(i);
-  return {
-    teamIndex: i,
-    teamName: sheetState.teams[i].teamName,
-    score: totals.score,
-    pure: totals.pure
-  };
-});
 
-      const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
-        teamOrder.map(team => `${team.teamName} ${formatCellValue(team.score)}`).join(' : ');
+  if (topTeamLabel) topTeamLabel.textContent = topLabelText;
+  if (topTeamLines) topTeamLines.textContent = topLinesText;
+  if (sheetSummarySideTop) sheetSummarySideTop.textContent = topLabelText;
+  if (sheetSummarySideBottom) sheetSummarySideBottom.textContent = topLinesText;
 
-      let rowsHtml = '';
-      for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
-        rowsHtml += '<tr>';
+  if (recentMatchCard) {
+    const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
+      const totals = getTeamTotals(i);
+      return {
+        teamIndex: i,
+        teamName: sheetState.teams[i].teamName,
+        score: totals.score,
+        pure: totals.pure
+      };
+    });
 
-        for (let i = 0; i < teamOrder.length; i++) {
-          const teamIndex = teamOrder[i].teamIndex;
-          const playerName = getRawPlayerName(teamIndex, playerIndex);
-          const totals = getPlayerTotals(teamIndex, playerIndex);
+    const summaryText = '[' + teamOrder.reduce((sum, team) => sum + team.score, 0) + '] ' +
+      teamOrder.map(team => `${team.teamName} ${formatCellValue(team.score)}`).join(' : ');
 
-          const leftScore = Number(totals.pure || 0);
-          const rightScore = Math.abs(Number(totals.minusOnly || 0));
-          const finalScore = Number(totals.score || 0);
+    let rowsHtml = '';
+    for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+      rowsHtml += '<tr>';
 
-          const cellText = `${playerName ? playerName + '\n' : ''}${formatCellValue(finalScore)}점 (${formatCellValue(leftScore)}-${formatCellValue(rightScore)})`;
+      for (let i = 0; i < teamOrder.length; i++) {
+        const teamIndex = teamOrder[i].teamIndex;
+        const playerName = getRawPlayerName(teamIndex, playerIndex);
+        const totals = getPlayerTotals(teamIndex, playerIndex);
 
-          rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
-        }
+        const leftScore = Number(totals.pure || 0);
+        const rightScore = Math.abs(Number(totals.minusOnly || 0));
+        const finalScore = Number(totals.score || 0);
 
-        rowsHtml += '</tr>';
+        const cellText = `${playerName ? playerName + '\n' : ''}${formatCellValue(finalScore)}점 (${formatCellValue(leftScore)}-${formatCellValue(rightScore)})`;
+
+        rowsHtml += `<td>${escapeHtml(cellText)}</td>`;
       }
 
-      recentMatchCard.innerHTML =
-  `<div class="recent-match-head">최근 내전 결과</div>` +
-  `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
-  `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
-  `<div class="recent-match-table-wrap">` +
-    `<table class="recent-match-table">
-      <thead>
-        <tr>
-          ${sheetState.teams.map(team => `<th>${escapeHtml(team.teamName)}</th>`).join('')}
-        </tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>` +
-  `</div>`;
+      rowsHtml += '</tr>';
     }
-  }
 
+    recentMatchCard.innerHTML =
+      `<div class="recent-match-head">최근 내전 결과</div>` +
+      `<div class="recent-match-summary">${escapeHtml(summaryText)}</div>` +
+      `<div class="recent-match-date">${escapeHtml(getMatchDisplayDate())}</div>` +
+      `<div class="recent-match-table-wrap">` +
+        `<table class="recent-match-table">
+          <thead>
+            <tr>
+              ${sheetState.teams.map(team => `<th>${escapeHtml(team.teamName)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>` +
+      `</div>`;
+  }
+}
   function renderAllFromState() {
     renderSheetHead();
     renderSheetBody();
