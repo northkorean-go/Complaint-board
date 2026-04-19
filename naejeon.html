@@ -2225,12 +2225,12 @@
       totalTexts.push(`${sheetState.teams[teamIndex].teamName} ${formatCellValue(teamDisplayTotal)}`);
 
       teamColumns.push(`
-        <div class="sheet-summary-team">
-          ${playerLines.join('')}
-          <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamScoreMinusTotal(teamIndex))}</div>
-        </div>
-      `);
-    }
+  <div class="sheet-summary-team">
+    <div class="sheet-summary-team-head">${escapeHtml(sheetState.teams[teamIndex].teamName)}</div>
+    ${playerLines.join('')}
+    <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamScoreMinusTotal(teamIndex))}</div>
+  </div>
+`);
 
     totalNode.textContent = `[${formatCellValue(grandTotal)}] ` + totalTexts.join(' : ');
     gridNode.innerHTML = teamColumns.join('');
