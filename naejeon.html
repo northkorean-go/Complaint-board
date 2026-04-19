@@ -1429,6 +1429,16 @@
       pure: getTeamPureTotal(teamIndex)
     };
   }
+  function getTeamScoreMinusTotal(teamIndex) {
+  let total = 0;
+
+  for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
+    const totals = getPlayerTotals(teamIndex, playerIndex);
+    total += Number(totals.minusOnly || 0);
+  }
+
+  return total;
+}
 
   function getAllPlayerRanking() {
     const list = [];
@@ -2217,7 +2227,7 @@
       teamColumns.push(`
         <div class="sheet-summary-team">
           ${playerLines.join('')}
-          <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamMinusTotal(teamIndex))}</div>
+          <div class="sheet-summary-footer">팀 감점합 ${formatMinusValue(getTeamScoreMinusTotal(teamIndex))}</div>
         </div>
       `);
     }
