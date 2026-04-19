@@ -1882,3 +1882,75 @@ body .sheet-wrap .sheet-table {
   border-collapse: collapse !important;
   background: #fff !important;
 }
+/* ===== 숫자만 키우기 ===== */
+
+/* PURE KILL / SCORE 위쪽 숫자 */
+body .sheet-wrap .kill-head {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+/* SCORE 좌/우 숫자 */
+body .sheet-wrap .score-split-box div {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+/* 오른쪽 합계 숫자 (61, 157 이런거) */
+body .sheet-wrap .sum-cell {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+/* 일반 테이블 숫자 (킬 입력값 표시되는 부분) */
+body .sheet-wrap .advanced-sheet td {
+  font-size: 13px !important;
+}
+/* ===== 숫자 강조 스타일 (최종) ===== */
+
+/* PURE KILL / SCORE 상단 숫자 */
+body .sheet-wrap .kill-head {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #111 !important;
+}
+
+/* SCORE 좌/우 숫자 */
+body .sheet-wrap .score-split-box div {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #222 !important;
+}
+
+/* 오른쪽 합계 (가장 중요) */
+body .sheet-wrap .sum-cell {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  letter-spacing: -0.5px;
+}
+
+/* 일반 숫자 (킬 입력값 표시) */
+body .sheet-wrap .advanced-sheet td {
+  font-size: 13px !important;
+  color: #333 !important;
+}
+
+/* ===== 값에 따른 강조 ===== */
+
+/* 0은 흐리게 */
+body .sheet-wrap .advanced-sheet td:empty,
+body .sheet-wrap .advanced-sheet td:has(span:empty) {
+  opacity: 0.5;
+}
+
+/* 큰 값 강조 (대충 50 이상 느낌) */
+body .sheet-wrap .sum-cell {
+  text-shadow: 0 0 0 transparent;
+}
+
+/* hover 시 강조 */
+body .sheet-wrap .advanced-sheet td:hover {
+  background: #f5f5f5 !important;
+  transition: 0.15s;
+}
