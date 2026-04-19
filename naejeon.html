@@ -2577,7 +2577,6 @@ function renderManualBoard() {
   renderSheetHead();
   renderSheetBody();
   renderSheetSummary();
-  renderManualBoard();
   refreshDashboardFromSheetState();
   attachSheetEvents();
   saveDraftToLocal();
@@ -2879,27 +2878,27 @@ manualTeamInputs.forEach((input) => {
 });
 
     const manualRoulette = document.getElementById('manualRouletteNames');
-    if (manualRoulette) {
-      manualRoulette.onfocus = () => {
-        setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
-      };
+if (manualRoulette) {
+  manualRoulette.onfocus = () => {
+    setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
+  };
 
-      manualRoulette.onblur = async () => {
-        const value = String(manualRoulette.value || '').trim();
-        const key = cellKey('manualRouletteText', -1, -1, -1);
-        const patch = {
-          type: 'manualRouletteText',
-          value
-        };
+  manualRoulette.onblur = async () => {
+    const value = String(manualRoulette.value || '').trim();
+    const key = cellKey('manualRouletteText', -1, -1, -1);
+    const patch = {
+      type: 'manualRouletteText',
+      value
+    };
 
-        sheetState.manualBoard.rouletteNamesText = value;
-        markDirty(key, patch);
+    sheetState.manualBoard.rouletteNamesText = value;
+    markDirty(key, patch);
+    saveDraftToLocal();
 
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-      };
-    }
-  }
+    const ok = await saveSheetPatchToServer(key, patch);
+    if (ok) clearEditingCellKey();
+  };
+}
 
   async function startRemoteSync() {
     if (syncInterval) clearInterval(syncInterval);
