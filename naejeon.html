@@ -2551,18 +2551,8 @@ function renderManualBoard() {
       `</div>`;
   }
 }
-  function syncManualTeamSlotsToMainPlayers() {
-  if (!sheetState.manualBoard || !Array.isArray(sheetState.manualBoard.teamSlots)) return;
-
-  for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
-    for (let teamIndex = 0; teamIndex < 5; teamIndex++) {
-      const value = String(sheetState.manualBoard.teamSlots[rowIndex]?.[teamIndex] || '').trim();
-      sheetState.teams[teamIndex].players[rowIndex] = value;
-    }
-  }
-}
+  
   function renderAllFromState() {
-  syncManualTeamSlotsToMainPlayers();
   renderSheetHead();
   renderSheetBody();
   renderSheetSummary();
@@ -2584,7 +2574,6 @@ function renderManualBoard() {
   }
 
   function updateUiAfterGlobalChange() {
-  syncManualTeamSlotsToMainPlayers();
   renderSheetHead();
   renderSheetBody();
   renderSheetSummary();
@@ -2593,6 +2582,7 @@ function renderManualBoard() {
   attachSheetEvents();
   saveDraftToLocal();
 }
+
 
   function attachSheetEvents() {
     const head = document.getElementById('sheetHead');
