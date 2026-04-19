@@ -2086,10 +2086,7 @@ for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
       </th>
     `;
   }
-
-  html += `<th class="top5-group-head">합</th>`;
-  html += `<th class="chicken-group-head">치킨</th>`;
-  html += `<th class="roundscore-group-head">점수</th>`;
+  html += `<th class="sum-head">합</th>`;
 }
 html += `</tr>`;
 
@@ -2098,10 +2095,9 @@ for (let teamIndex = 0; teamIndex < TEAM_COUNT; teamIndex++) {
   for (let playerIndex = 0; playerIndex < PLAYERS_PER_TEAM; playerIndex++) {
     html += `<th class="kill-head">KILL</th>`;
   }
-
-  html += `<th class="top5-head">TOP 5</th>`;
-  html += `<th class="chicken-head">10점</th>`;
-  html += `<th class="roundscore-head">판점수</th>`;
+  html += `<th class="top10-head">TOP 5</th>`;
+  html += `<th class="top10-head">10점</th>`;
+  html += `<th class="top10-head">판점수</th>`;
 }
 html += `</tr>`;
 
