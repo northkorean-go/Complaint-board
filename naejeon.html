@@ -2269,15 +2269,23 @@
     }
 
     if (topTeamLines) {
-      if (!mvp) {
-        topTeamLines.textContent = 'MVP 집계 데이터가 없습니다.';
-      } else {
-        const mvpLeft = Number(mvp.pure || 0);
-        const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
-        const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
-        topTeamLines.textContent = `MVP ${mvpText}`;
-      }
-    }
+  const totalScore = Array.from({ length: TEAM_COUNT }, (_, i) => getTeamTotals(i).score)
+    .reduce((sum, value) => sum + Number(value || 0), 0);
+
+  if (!mvp) {
+    topTeamLines.textContent =
+      `MVP 집계 데이터가 없습니다.\n` +
+      `총합 ${formatCellValue(totalScore)}`;
+  } else {
+    const mvpLeft = Number(mvp.pure || 0);
+    const mvpRight = Math.abs(Number(mvp.minusOnly || 0));
+    const mvpText = formatPlayerScoreText(mvp.name, mvp.score, mvpLeft, mvpRight);
+
+    topTeamLines.textContent =
+      `MVP ${mvpText}\n` +
+      `총합 ${formatCellValue(totalScore)}`;
+  }
+}
 
     if (recentMatchCard) {
       const teamOrder = Array.from({ length: TEAM_COUNT }, (_, i) => {
