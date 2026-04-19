@@ -2501,46 +2501,56 @@
       const target = event.target;
 
       if (target.classList.contains('top10-check')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const value = !!target.checked;
-        const key = cellKey('top10', roundIndex, teamIndex, -1);
-        const patch = {
-          type: 'top10',
-          roundIndex,
-          teamIndex,
-          value
-        };
+  const roundIndex = Number(target.dataset.roundIndex);
+  const teamIndex = Number(target.dataset.teamIndex);
+  const value = !!target.checked;
+  const key = cellKey('top10', roundIndex, teamIndex, -1);
+  const patch = {
+    type: 'top10',
+    roundIndex,
+    teamIndex,
+    value
+  };
 
-        sheetState.rounds[roundIndex].teams[teamIndex].top10 = value;
-        markDirty(key, patch);
-        updateUiAfterGlobalChange();
+  sheetState.rounds[roundIndex].teams[teamIndex].top10 = value;
+  markDirty(key, patch);
 
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
+  renderSheetHead();
+  renderSheetBody();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  attachSheetEvents();
+
+  const ok = await saveSheetPatchToServer(key, patch);
+  if (ok) clearEditingCellKey();
+  return;
+}
 
       if (target.classList.contains('chicken-check')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const value = !!target.checked;
-        const key = cellKey('chicken', roundIndex, teamIndex, -1);
-        const patch = {
-          type: 'chicken',
-          roundIndex,
-          teamIndex,
-          value
-        };
+  const roundIndex = Number(target.dataset.roundIndex);
+  const teamIndex = Number(target.dataset.teamIndex);
+  const value = !!target.checked;
+  const key = cellKey('chicken', roundIndex, teamIndex, -1);
+  const patch = {
+    type: 'chicken',
+    roundIndex,
+    teamIndex,
+    value
+  };
 
-        sheetState.rounds[roundIndex].teams[teamIndex].chicken = value;
-        markDirty(key, patch);
-        updateUiAfterGlobalChange();
+  sheetState.rounds[roundIndex].teams[teamIndex].chicken = value;
+  markDirty(key, patch);
 
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
+  renderSheetHead();
+  renderSheetBody();
+  renderSheetSummary();
+  refreshDashboardFromSheetState();
+  attachSheetEvents();
+
+  const ok = await saveSheetPatchToServer(key, patch);
+  if (ok) clearEditingCellKey();
+  return;
+}
     };
 
     body.onfocusout = async (event) => {
