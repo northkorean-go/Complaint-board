@@ -2511,3 +2511,23 @@ body .sheet-wrap .chicken-check {
   cursor: pointer !important;
   accent-color: #111 !important;
 }
+/* 🔥 초강제 압축 (진짜 끝판) */
+body .sheet-wrap .advanced-sheet .top10-cell,
+body .sheet-wrap .advanced-sheet .chicken-cell,
+body .sheet-wrap .advanced-sheet .sum-cell {
+  padding: 0 !important;
+}
+
+/* 내부 요소까지 강제 줄이기 */
+body .sheet-wrap .top10-cell input,
+body .sheet-wrap .chicken-cell input {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+/* 체크박스 여백 제거 */
+body .sheet-wrap .top10-check,
+body .sheet-wrap .chicken-check {
+  margin: 0 !important;
+}
