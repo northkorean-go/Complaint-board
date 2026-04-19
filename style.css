@@ -1951,3 +1951,207 @@ body .sheet-wrap .advanced-sheet tr:nth-child(4) th.kill-head {
   letter-spacing: -0.4px !important;
   line-height: 1 !important;
 }
+/* =========================
+   PREVIEW STYLE SUMMARY BOARD
+========================= */
+
+.sheet-summary-wrap {
+  width: 100%;
+  max-width: 100%;
+  margin: 28px 0 26px;
+  padding: 0 4px;
+}
+
+.sheet-summary-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.04);
+}
+
+.sheet-summary-title-row {
+  position: relative;
+  min-height: 82px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.sheet-summary-title {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  text-align: center !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.04em !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.sheet-summary-side-box {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 240px;
+  max-width: 320px;
+  text-align: right;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #fff;
+}
+
+.sheet-summary-side-top {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.sheet-summary-side-bottom {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+.sheet-summary-side-box.is-leading .sheet-summary-side-top {
+  color: #f1d88b;
+}
+
+.sheet-summary-total {
+  text-align: center;
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 900;
+  color: #111;
+  padding: 22px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fcfcfb;
+  white-space: normal;
+}
+
+.sheet-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  background: #fff;
+}
+
+.sheet-summary-team {
+  position: relative;
+  background: #fff;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sheet-summary-team:last-child {
+  border-right: none;
+}
+
+.sheet-summary-team.is-leading {
+  background: linear-gradient(180deg, #fffdf6 0%, #fff8e7 100%);
+  box-shadow: inset 0 0 0 2px #caa74a;
+  z-index: 1;
+}
+
+.sheet-summary-team-head {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #111;
+  padding: 14px 8px;
+  background: #fafafa;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.sheet-summary-team-head.is-leading {
+  background: linear-gradient(180deg, #fff7dd 0%, #fff1c7 100%);
+  color: #8c6513;
+}
+
+.sheet-summary-player {
+  min-height: 48px;
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 800;
+  color: #111;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: pre-line;
+}
+
+.sheet-summary-player.is-leading {
+  color: #7b5a15;
+  background: linear-gradient(180deg, #fffdf6 0%, #fff8e7 100%);
+}
+
+.sheet-summary-footer {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #111;
+  padding: 14px 8px;
+  background: #fafaf8;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.sheet-summary-footer.is-leading {
+  color: #7b5a15;
+  background: linear-gradient(180deg, #fffdf6 0%, #fff3d2 100%);
+}
+
+@media (max-width: 1100px) {
+  .sheet-summary-title-row {
+    display: block;
+    padding: 14px 14px 16px;
+  }
+
+  .sheet-summary-title {
+    text-align: center !important;
+  }
+
+  .sheet-summary-side-box {
+    position: static;
+    transform: none;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    margin-top: 10px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 900px) {
+  .sheet-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sheet-summary-team {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .sheet-summary-team:last-child {
+    border-bottom: none;
+  }
+
+  .sheet-summary-total {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+}
