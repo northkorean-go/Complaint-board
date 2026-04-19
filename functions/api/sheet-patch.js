@@ -17,7 +17,12 @@ function getDefaultSheetState() {
           kill: ''
         }))
       }))
-    }))
+    })),
+    manualBoard: {
+      teamSlots: Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => '')),
+      tierSlots: Array.from({ length: 8 }, () => Array.from({ length: 4 }, () => '')),
+      rouletteNamesText: ''
+    }
   };
 }
 
@@ -138,6 +143,62 @@ export async function onRequestPost(context) {
       }
 
       data.rounds[roundIndex].teams[teamIndex].chicken = !!value;
+    }
+        /* ======================
+       MANUAL TEAM
+    ====================== */
+    else if (type === 'manualTeam') {
+      const { rowIndex, colIndex } = patch;
+
+      if (!safeIndex(rowIndex, 4) || !safeIndex(colIndex, 5)) {
+        throw new Error('invalid manualTeam index');
+      }
+
+      if (!data.manualBoard) {
+        data.manualBoard = {
+          teamSlots: Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => '')),
+          tierSlots: Array.from({ length: 8 }, () => Array.from({ length: 4 }, () => '')),
+          rouletteNamesText: ''
+        };
+      }
+
+      data.manualBoard.teamSlots[rowIndex][colIndex] = String(value || '');
+    }
+
+    /* ======================
+       MANUAL TIER
+    ====================== */
+    else if (type === 'manualTier') {
+      const { rowIndex, colIndex } = patch;
+
+      if (!safeIndex(rowIndex, 8) || !safeIndex(colIndex, 4)) {
+        throw new Error('invalid manualTier index');
+      }
+
+      if (!data.manualBoard) {
+        data.manualBoard = {
+          teamSlots: Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => '')),
+          tierSlots: Array.from({ length: 8 }, () => Array.from({ length: 4 }, () => '')),
+          rouletteNamesText: ''
+        };
+      }
+
+      data.manualBoard.tierSlots[rowIndex][colIndex] = String(value || '');
+    }
+
+    /* ======================
+       MANUAL ROULETTE TEXT
+    ====================== */
+    else if (type === 'manualRouletteText') {
+      if (!data.manualBoard) {
+        data.manualBoard = {
+          teamSlots: Array.from({ length: 4 }, () => Array.from({ length: 5 }, () => '')),
+          tierSlots: Array.from({ length: 8 }, () => Array.from({ length: 4 }, () => '')),
+          rouletteNamesText: ''
+        };
+      }
+
+      data.manualBoard.rouletteNamesText = String(value || '');
     }
 
     /* ======================
