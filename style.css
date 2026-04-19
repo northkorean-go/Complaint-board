@@ -1944,9 +1944,12 @@ body .sheet-wrap .advanced-sheet td:hover {
   transition: 0.15s;
 }
 /* ===== PURE KILL 숫자 더 키우기 ===== */
-body .sheet-wrap .kill-head {
+body .sheet-wrap .advanced-sheet .kill-head {
   font-size: 18px !important;
   font-weight: 900 !important;
   color: #111 !important;
   letter-spacing: -0.4px !important;
+}
+body .sheet-wrap .advanced-sheet th.kill-head {
+  font-size: 18px !important;
 }
