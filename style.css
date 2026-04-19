@@ -2479,10 +2479,9 @@ input[type="number"] {
     text-align: center;
   }
 }
-/* ===== TOP5 / 치킨 / 점수 3칸만 축소 - 최종 ===== */
-/* 반드시 style.css 맨 아래 */
+/* ===== TOP5 / 치킨 / 점수 3칸만 축소 ===== */
+/* style.css 맨 아래 */
 
-/* 아래 실제 입력/체크/점수 칸 */
 body .sheet-wrap .advanced-sheet .top10-cell {
   width: 22px !important;
   min-width: 22px !important;
@@ -2507,81 +2506,33 @@ body .sheet-wrap .advanced-sheet .sum-cell {
   font-weight: 900 !important;
 }
 
-/* 위쪽 헤더 3칸 */
-body .sheet-wrap .advanced-sheet .top5-group-head {
+/* 아래 라벨 줄 */
+body .sheet-wrap .advanced-sheet .top10-head {
   width: 22px !important;
   min-width: 22px !important;
   max-width: 22px !important;
-  background: #fafaf8 !important;
+  background: #fff !important;
   color: #111 !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-weight: 900 !important;
   letter-spacing: 0 !important;
   padding: 0 !important;
 }
 
-body .sheet-wrap .advanced-sheet .chicken-group-head {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
-  background: #fafaf8 !important;
-  color: #111 !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-}
-
-body .sheet-wrap .advanced-sheet .roundscore-group-head {
+/* "합" 헤더는 점수칸 폭에 맞춤 */
+body .sheet-wrap .advanced-sheet .sum-head {
   width: 30px !important;
   min-width: 30px !important;
   max-width: 30px !important;
   background: #fafaf8 !important;
   color: #111 !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-}
-
-/* 아래쪽 라벨 3칸 */
-body .sheet-wrap .advanced-sheet .top5-head {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
-  background: #fff !important;
-  color: #111 !important;
   font-size: 9px !important;
   font-weight: 900 !important;
   letter-spacing: 0 !important;
   padding: 0 !important;
 }
 
-body .sheet-wrap .advanced-sheet .chicken-head {
-  width: 22px !important;
-  min-width: 22px !important;
-  max-width: 22px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 9px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-}
-
-body .sheet-wrap .advanced-sheet .roundscore-head {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 9px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-}
-
-/* 체크박스도 칸에 맞춰 조금 축소 */
+/* 체크박스 */
 body .sheet-wrap .top10-check,
 body .sheet-wrap .chicken-check {
   transform: scale(0.72) !important;
