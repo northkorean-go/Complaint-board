@@ -2455,52 +2455,50 @@ body .sheet-wrap .sheet-table {
 
 /* 실제 3칸 폭 */
 body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 18px !important;
-  min-width: 18px !important;
-  max-width: 18px !important;
+  width: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
   background: #fcfcfb !important;
 }
 
 body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 18px !important;
-  min-width: 18px !important;
-  max-width: 18px !important;
+  width: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
   background: #fff !important;
 }
 
 body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 24px !important;
-  min-width: 24px !important;
-  max-width: 24px !important;
+  width: 14px !important;
+  min-width: 14px !important;
+  max-width: 14px !important;
   background: #fff !important;
   color: #111 !important;
   font-size: 13px !important;
   font-weight: 900 !important;
 }
 
-/* 아래 라벨 줄: TOP5 / 10점 / 판점수 */
 body .sheet-wrap .advanced-sheet .top10-head {
-  width: 18px !important;
-  min-width: 18px !important;
-  max-width: 18px !important;
+  width: 8px !important;
+  min-width: 8px !important;
+  max-width: 8px !important;
   background: #fff !important;
   color: #111 !important;
   font-size: 10px !important;
   font-weight: 900 !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: 0 !important;
   padding: 0 !important;
 }
 
-/* SCORE 줄 마지막 합 칸 */
 body .sheet-wrap .advanced-sheet .sum-head {
-  width: 24px !important;
-  min-width: 24px !important;
-  max-width: 24px !important;
+  width: 14px !important;
+  min-width: 14px !important;
+  max-width: 14px !important;
   background: #fafaf8 !important;
   color: #111 !important;
   font-size: 10px !important;
   font-weight: 900 !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: 0 !important;
   padding: 0 !important;
 }
 
