@@ -2479,44 +2479,110 @@ input[type="number"] {
     text-align: center;
   }
 }
-/* ===== 오른쪽 TOP5 / 치킨 / 점수 칸 폭 줄이기 ===== */
-/* 반드시 CSS 맨 아래에 넣기 */
+/* ===== TOP5 / 치킨 / 점수 3칸만 축소 - 최종 ===== */
+/* 반드시 style.css 맨 아래 */
 
+/* 아래 실제 입력/체크/점수 칸 */
 body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 34px !important;
-  min-width: 34px !important;
-  max-width: 34px !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
   background: #fcfcfb !important;
 }
 
 body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 34px !important;
-  min-width: 34px !important;
-  max-width: 34px !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
   background: #fff !important;
 }
 
 body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
   background: #fff !important;
   color: #111 !important;
   font-size: 12px !important;
   font-weight: 900 !important;
 }
 
-/* 입력칸도 같이 살짝 줄이기 */
-body .sheet-wrap .map-input,
-body .sheet-wrap .kill-input {
-  width: calc(100% - 8px) !important;
-  height: 28px !important;
-  padding: 0 4px !important;
+/* 위쪽 헤더 3칸 */
+body .sheet-wrap .advanced-sheet .top5-group-head {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  background: #fafaf8 !important;
+  color: #111 !important;
   font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
 }
 
-/* 체크박스 칸도 너무 커 보이면 같이 축소 */
+body .sheet-wrap .advanced-sheet .chicken-group-head {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  background: #fafaf8 !important;
+  color: #111 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+body .sheet-wrap .advanced-sheet .roundscore-group-head {
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  background: #fafaf8 !important;
+  color: #111 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+/* 아래쪽 라벨 3칸 */
+body .sheet-wrap .advanced-sheet .top5-head {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+body .sheet-wrap .advanced-sheet .chicken-head {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+body .sheet-wrap .advanced-sheet .roundscore-head {
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+/* 체크박스도 칸에 맞춰 조금 축소 */
 body .sheet-wrap .top10-check,
 body .sheet-wrap .chicken-check {
-  transform: scale(0.82) !important;
+  transform: scale(0.72) !important;
 }
