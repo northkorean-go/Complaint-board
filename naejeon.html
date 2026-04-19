@@ -2456,7 +2456,11 @@ function renderManualBoard() {
   }
   tierBody.innerHTML = tierHtml;
 
-  rouletteNames.value = buildManualRouletteNamesText();
+    const autoText = buildManualRouletteNamesText();
+  if (!String(sheetState.manualBoard.rouletteNamesText || '').trim()) {
+    sheetState.manualBoard.rouletteNamesText = autoText;
+  }
+  rouletteNames.value = sheetState.manualBoard.rouletteNamesText || autoText;
 }
 
   function refreshDashboardFromSheetState() {
