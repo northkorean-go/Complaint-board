@@ -2633,10 +2633,11 @@
       const data = await res.json().catch(() => ({ ok: false }));
 
       if (!data.ok) {
-        if (statusEl) statusEl.textContent = '❌ 초기화 실패';
-        return;
-      }
-
+  if (statusEl) {
+    statusEl.textContent = '❌ ' + (data.error || '관리자만 초기화할 수 있습니다.');
+  }
+  return;
+}
       localStorage.removeItem(LOCAL_DRAFT_KEY);
       dirtyCells.clear();
       pendingPatches.clear();
