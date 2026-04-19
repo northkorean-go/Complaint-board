@@ -2592,368 +2592,370 @@ function renderManualBoard() {
 
 
   function attachSheetEvents() {
-    const head = document.getElementById('sheetHead');
-    const body = document.getElementById('sheetBody');
-    if (!head || !body) return;
+  const head = document.getElementById('sheetHead');
+  const body = document.getElementById('sheetBody');
+  if (!head || !body) return;
 
-    head.oninput = null;
-    head.onchange = null;
-    head.onfocusin = null;
-    head.onfocusout = null;
-    body.oninput = null;
-    body.onchange = null;
-    body.onfocusin = null;
-    body.onfocusout = null;
+  head.oninput = null;
+  head.onchange = null;
+  head.onfocusin = null;
+  head.onfocusout = null;
+  body.oninput = null;
+  body.onchange = null;
+  body.onfocusin = null;
+  body.onfocusout = null;
 
-    head.onfocusin = (event) => {
-      const target = event.target;
+  head.onfocusin = (event) => {
+    const target = event.target;
 
-      if (target.classList.contains('player-name-input')) {
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        setEditingCellKey(cellKey('playerName', -1, teamIndex, playerIndex));
-      }
-
-      if (target.classList.contains('minus-select')) {
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        setEditingCellKey(cellKey('minus', -1, teamIndex, playerIndex));
-      }
-    };
-
-    body.onfocusin = (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('kill-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        setEditingCellKey(cellKey('kill', roundIndex, teamIndex, playerIndex));
-      }
-
-      if (target.classList.contains('map-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        setEditingCellKey(cellKey('map', roundIndex, -1, -1));
-      }
-    };
-
-    head.onchange = async (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('minus-select')) {
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        const value = String(target.value);
-        const key = cellKey('minus', -1, teamIndex, playerIndex);
-        const patch = {
-          type: 'minus',
-          teamIndex,
-          playerIndex,
-          value
-        };
-
-        sheetState.teams[teamIndex].minusScores[playerIndex] = value;
-        markDirty(key, patch);
-        updateUiAfterGlobalChange();
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
-    };
-
-    head.onfocusout = async (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('player-name-input')) {
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        const value = String(target.value || '');
-        const key = cellKey('playerName', -1, teamIndex, playerIndex);
-        const patch = {
-          type: 'playerName',
-          teamIndex,
-          playerIndex,
-          value
-        };
-
-        sheetState.teams[teamIndex].players[playerIndex] = value;
-        markDirty(key, patch);
-        updateUiAfterGlobalChange();
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
-
-      if (target.classList.contains('minus-select')) {
-        if (!pendingPatches.has(editingCellKey)) {
-          clearEditingCellKey();
-        }
-      }
-    };
-
-    body.oninput = (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('kill-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        const value = normalizeKillValue(target.value);
-        const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
-        const patch = {
-          type: 'kill',
-          roundIndex,
-          teamIndex,
-          playerIndex,
-          value
-        };
-
-        target.value = value;
-        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
-        markDirty(key, patch);
-        updateUiAfterCellChange(roundIndex, teamIndex, true);
-        return;
-      }
-
-      if (target.classList.contains('map-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const value = String(target.value || '');
-        const key = cellKey('map', roundIndex, -1, -1);
-        const patch = {
-          type: 'map',
-          roundIndex,
-          value
-        };
-
-        sheetState.rounds[roundIndex].map = value;
-        markDirty(key, patch);
-        return;
-      }
-    };
-
-    body.onchange = async (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('top10-check')) {
-  const roundIndex = Number(target.dataset.roundIndex);
-  const teamIndex = Number(target.dataset.teamIndex);
-  const value = !!target.checked;
-  const key = cellKey('top10', roundIndex, teamIndex, -1);
-  const patch = {
-    type: 'top10',
-    roundIndex,
-    teamIndex,
-    value
-  };
-
-  sheetState.rounds[roundIndex].teams[teamIndex].top10 = value;
-  markDirty(key, patch);
-
-  renderSheetHead();
-  renderSheetBody();
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  attachSheetEvents();
-
-  const ok = await saveSheetPatchToServer(key, patch);
-  if (ok) clearEditingCellKey();
-  return;
-}
-
-      if (target.classList.contains('chicken-check')) {
-  const roundIndex = Number(target.dataset.roundIndex);
-  const teamIndex = Number(target.dataset.teamIndex);
-  const value = !!target.checked;
-  const key = cellKey('chicken', roundIndex, teamIndex, -1);
-  const patch = {
-    type: 'chicken',
-    roundIndex,
-    teamIndex,
-    value
-  };
-
-  sheetState.rounds[roundIndex].teams[teamIndex].chicken = value;
-  markDirty(key, patch);
-
-  renderSheetHead();
-  renderSheetBody();
-  renderSheetSummary();
-  refreshDashboardFromSheetState();
-  attachSheetEvents();
-
-  const ok = await saveSheetPatchToServer(key, patch);
-  if (ok) clearEditingCellKey();
-  return;
-}
-    };
-
-    body.onfocusout = async (event) => {
-      const target = event.target;
-
-      if (target.classList.contains('kill-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const teamIndex = Number(target.dataset.teamIndex);
-        const playerIndex = Number(target.dataset.playerIndex);
-        const value = normalizeKillValue(target.value);
-        const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
-        const patch = {
-          type: 'kill',
-          roundIndex,
-          teamIndex,
-          playerIndex,
-          value
-        };
-
-        target.value = value;
-        sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
-        markDirty(key, patch);
-        updateUiAfterCellChange(roundIndex, teamIndex, true);
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
-
-      if (target.classList.contains('map-input')) {
-        const roundIndex = Number(target.dataset.roundIndex);
-        const value = String(target.value || '');
-        const key = cellKey('map', roundIndex, -1, -1);
-        const patch = {
-          type: 'map',
-          roundIndex,
-          value
-        };
-
-        sheetState.rounds[roundIndex].map = value;
-        markDirty(key, patch);
-        saveDraftToLocal();
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-        return;
-      }
-    };
-               const manualTeamInputs = document.querySelectorAll('.manual-team-input');
-    manualTeamInputs.forEach((input) => {
-      input.onfocus = () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        setEditingCellKey(cellKey('manualTeam', rowIndex, colIndex, -1));
-      };
-
-      input.onblur = async () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        const value = String(input.value || '').trim();
-
-        const manualKey = cellKey('manualTeam', rowIndex, colIndex, -1);
-        const manualPatch = {
-          type: 'manualTeam',
-          rowIndex,
-          colIndex,
-          value
-        };
-
-        const playerKey = cellKey('playerName', -1, colIndex, rowIndex);
-        const playerPatch = {
-          type: 'playerName',
-          teamIndex: colIndex,
-          playerIndex: rowIndex,
-          value
-        };
-
-        sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
-        sheetState.teams[colIndex].players[rowIndex] = value;
-
-        markDirty(manualKey, manualPatch);
-        markDirty(playerKey, playerPatch);
-
-        renderSheetHead();
-        renderSheetSummary();
-        refreshDashboardFromSheetState();
-        attachSheetEvents();
-        saveDraftToLocal();
-
-        const manualOk = await saveSheetPatchToServer(manualKey, manualPatch);
-        const playerOk = await saveSheetPatchToServer(playerKey, playerPatch);
-
-        if (manualOk && playerOk) {
-          clearEditingCellKey();
-        }
-      };
-    });
-
-    const manualTierInputs = document.querySelectorAll('.manual-tier-input');
-    manualTierInputs.forEach((input) => {
-      input.onfocus = () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        setEditingCellKey(cellKey('manualTier', rowIndex, colIndex, -1));
-      };
-
-      input.onblur = async () => {
-        const rowIndex = Number(input.dataset.rowIndex);
-        const colIndex = Number(input.dataset.colIndex);
-        const value = String(input.value || '').trim();
-        const key = cellKey('manualTier', rowIndex, colIndex, -1);
-        const patch = {
-          type: 'manualTier',
-          rowIndex,
-          colIndex,
-          value
-        };
-
-        sheetState.manualBoard.tierSlots[rowIndex][colIndex] = value;
-
-        const autoText = buildManualRouletteNamesText();
-        sheetState.manualBoard.rouletteNamesText = autoText;
-
-        const manualRoulette = document.getElementById('manualRouletteNames');
-        if (manualRoulette) {
-          manualRoulette.value = autoText;
-        }
-
-        markDirty(key, patch);
-        saveDraftToLocal();
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) {
-          const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
-          const roulettePatch = {
-            type: 'manualRouletteText',
-            value: autoText
-          };
-          markDirty(rouletteKey, roulettePatch);
-          await saveSheetPatchToServer(rouletteKey, roulettePatch);
-          clearEditingCellKey();
-        }
-      };
-    });
-
-    const manualRoulette = document.getElementById('manualRouletteNames');
-    if (manualRoulette) {
-      manualRoulette.onfocus = () => {
-        setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
-      };
-
-      manualRoulette.onblur = async () => {
-        const value = String(manualRoulette.value || '').trim();
-        const key = cellKey('manualRouletteText', -1, -1, -1);
-        const patch = {
-          type: 'manualRouletteText',
-          value
-        };
-
-        sheetState.manualBoard.rouletteNamesText = value;
-        markDirty(key, patch);
-        saveDraftToLocal();
-
-        const ok = await saveSheetPatchToServer(key, patch);
-        if (ok) clearEditingCellKey();
-      };
+    if (target.classList.contains('player-name-input')) {
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      setEditingCellKey(cellKey('playerName', -1, teamIndex, playerIndex));
     }
+
+    if (target.classList.contains('minus-select')) {
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      setEditingCellKey(cellKey('minus', -1, teamIndex, playerIndex));
+    }
+  };
+
+  body.onfocusin = (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('kill-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      setEditingCellKey(cellKey('kill', roundIndex, teamIndex, playerIndex));
+    }
+
+    if (target.classList.contains('map-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      setEditingCellKey(cellKey('map', roundIndex, -1, -1));
+    }
+  };
+
+  head.onchange = async (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('minus-select')) {
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      const value = String(target.value);
+      const key = cellKey('minus', -1, teamIndex, playerIndex);
+      const patch = {
+        type: 'minus',
+        teamIndex,
+        playerIndex,
+        value
+      };
+
+      sheetState.teams[teamIndex].minusScores[playerIndex] = value;
+      markDirty(key, patch);
+      updateUiAfterGlobalChange();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+  };
+
+  head.onfocusout = async (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('player-name-input')) {
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      const value = String(target.value || '').trim();
+      const key = cellKey('playerName', -1, teamIndex, playerIndex);
+      const patch = {
+        type: 'playerName',
+        teamIndex,
+        playerIndex,
+        value
+      };
+
+      sheetState.teams[teamIndex].players[playerIndex] = value;
+      markDirty(key, patch);
+      updateUiAfterGlobalChange();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+
+    if (target.classList.contains('minus-select')) {
+      if (!pendingPatches.has(editingCellKey)) {
+        clearEditingCellKey();
+      }
+    }
+  };
+
+  body.oninput = (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('kill-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      const value = normalizeKillValue(target.value);
+      const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
+      const patch = {
+        type: 'kill',
+        roundIndex,
+        teamIndex,
+        playerIndex,
+        value
+      };
+
+      target.value = value;
+      sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
+      markDirty(key, patch);
+      updateUiAfterCellChange(roundIndex, teamIndex, true);
+      return;
+    }
+
+    if (target.classList.contains('map-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const value = String(target.value || '');
+      const key = cellKey('map', roundIndex, -1, -1);
+      const patch = {
+        type: 'map',
+        roundIndex,
+        value
+      };
+
+      sheetState.rounds[roundIndex].map = value;
+      markDirty(key, patch);
+      return;
+    }
+  };
+
+  body.onchange = async (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('top10-check')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const value = !!target.checked;
+      const key = cellKey('top10', roundIndex, teamIndex, -1);
+      const patch = {
+        type: 'top10',
+        roundIndex,
+        teamIndex,
+        value
+      };
+
+      sheetState.rounds[roundIndex].teams[teamIndex].top10 = value;
+      markDirty(key, patch);
+
+      renderSheetHead();
+      renderSheetBody();
+      renderSheetSummary();
+      refreshDashboardFromSheetState();
+      attachSheetEvents();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+
+    if (target.classList.contains('chicken-check')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const value = !!target.checked;
+      const key = cellKey('chicken', roundIndex, teamIndex, -1);
+      const patch = {
+        type: 'chicken',
+        roundIndex,
+        teamIndex,
+        value
+      };
+
+      sheetState.rounds[roundIndex].teams[teamIndex].chicken = value;
+      markDirty(key, patch);
+
+      renderSheetHead();
+      renderSheetBody();
+      renderSheetSummary();
+      refreshDashboardFromSheetState();
+      attachSheetEvents();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+  };
+
+  body.onfocusout = async (event) => {
+    const target = event.target;
+
+    if (target.classList.contains('kill-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const teamIndex = Number(target.dataset.teamIndex);
+      const playerIndex = Number(target.dataset.playerIndex);
+      const value = normalizeKillValue(target.value);
+      const key = cellKey('kill', roundIndex, teamIndex, playerIndex);
+      const patch = {
+        type: 'kill',
+        roundIndex,
+        teamIndex,
+        playerIndex,
+        value
+      };
+
+      target.value = value;
+      sheetState.rounds[roundIndex].teams[teamIndex].players[playerIndex].kill = value;
+      markDirty(key, patch);
+      updateUiAfterCellChange(roundIndex, teamIndex, true);
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+
+    if (target.classList.contains('map-input')) {
+      const roundIndex = Number(target.dataset.roundIndex);
+      const value = String(target.value || '');
+      const key = cellKey('map', roundIndex, -1, -1);
+      const patch = {
+        type: 'map',
+        roundIndex,
+        value
+      };
+
+      sheetState.rounds[roundIndex].map = value;
+      markDirty(key, patch);
+      saveDraftToLocal();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+      return;
+    }
+  };
+
+  const manualTeamInputs = document.querySelectorAll('.manual-team-input');
+  manualTeamInputs.forEach((input) => {
+    input.onfocus = () => {
+      const rowIndex = Number(input.dataset.rowIndex);
+      const colIndex = Number(input.dataset.colIndex);
+      setEditingCellKey(cellKey('manualTeam', rowIndex, colIndex, -1));
+    };
+
+    input.onblur = async () => {
+      const rowIndex = Number(input.dataset.rowIndex);
+      const colIndex = Number(input.dataset.colIndex);
+      const value = String(input.value || '').trim();
+
+      const manualKey = cellKey('manualTeam', rowIndex, colIndex, -1);
+      const manualPatch = {
+        type: 'manualTeam',
+        rowIndex,
+        colIndex,
+        value
+      };
+
+      const playerKey = cellKey('playerName', -1, colIndex, rowIndex);
+      const playerPatch = {
+        type: 'playerName',
+        teamIndex: colIndex,
+        playerIndex: rowIndex,
+        value
+      };
+
+      sheetState.manualBoard.teamSlots[rowIndex][colIndex] = value;
+      sheetState.teams[colIndex].players[rowIndex] = value;
+
+      markDirty(manualKey, manualPatch);
+      markDirty(playerKey, playerPatch);
+
+      renderSheetHead();
+      renderSheetSummary();
+      refreshDashboardFromSheetState();
+      attachSheetEvents();
+      saveDraftToLocal();
+
+      const manualOk = await saveSheetPatchToServer(manualKey, manualPatch);
+      const playerOk = await saveSheetPatchToServer(playerKey, playerPatch);
+
+      if (manualOk && playerOk) {
+        clearEditingCellKey();
+      }
+    };
+  });
+
+  const manualTierInputs = document.querySelectorAll('.manual-tier-input');
+  manualTierInputs.forEach((input) => {
+    input.onfocus = () => {
+      const rowIndex = Number(input.dataset.rowIndex);
+      const colIndex = Number(input.dataset.colIndex);
+      setEditingCellKey(cellKey('manualTier', rowIndex, colIndex, -1));
+    };
+
+    input.onblur = async () => {
+      const rowIndex = Number(input.dataset.rowIndex);
+      const colIndex = Number(input.dataset.colIndex);
+      const value = String(input.value || '').trim();
+      const key = cellKey('manualTier', rowIndex, colIndex, -1);
+      const patch = {
+        type: 'manualTier',
+        rowIndex,
+        colIndex,
+        value
+      };
+
+      sheetState.manualBoard.tierSlots[rowIndex][colIndex] = value;
+
+      const autoText = buildManualRouletteNamesText();
+      sheetState.manualBoard.rouletteNamesText = autoText;
+
+      const manualRoulette = document.getElementById('manualRouletteNames');
+      if (manualRoulette) {
+        manualRoulette.value = autoText;
+      }
+
+      markDirty(key, patch);
+      saveDraftToLocal();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) {
+        const rouletteKey = cellKey('manualRouletteText', -1, -1, -1);
+        const roulettePatch = {
+          type: 'manualRouletteText',
+          value: autoText
+        };
+        markDirty(rouletteKey, roulettePatch);
+        await saveSheetPatchToServer(rouletteKey, roulettePatch);
+        clearEditingCellKey();
+      }
+    };
+  });
+
+  const manualRoulette = document.getElementById('manualRouletteNames');
+  if (manualRoulette) {
+    manualRoulette.onfocus = () => {
+      setEditingCellKey(cellKey('manualRouletteText', -1, -1, -1));
+    };
+
+    manualRoulette.onblur = async () => {
+      const value = String(manualRoulette.value || '').trim();
+      const key = cellKey('manualRouletteText', -1, -1, -1);
+      const patch = {
+        type: 'manualRouletteText',
+        value
+      };
+
+      sheetState.manualBoard.rouletteNamesText = value;
+      markDirty(key, patch);
+      saveDraftToLocal();
+
+      const ok = await saveSheetPatchToServer(key, patch);
+      if (ok) clearEditingCellKey();
+    };
+  }
+}
 
   async function startRemoteSync() {
     if (syncInterval) clearInterval(syncInterval);
