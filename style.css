@@ -1368,13 +1368,6 @@ button:disabled {
   box-shadow: none;
 }
 
-.sheet-table {
-  width: 100%;
-  min-width: 2400px;
-  table-layout: fixed;
-  border-collapse: collapse;
-  background: #fff;
-}
 
 .sheet-table th,
 .sheet-table td {
@@ -1458,29 +1451,6 @@ button:disabled {
   background: #fff;
 }
 
-.advanced-sheet .top10-cell {
-  width: 30px;
-  min-width: 30px;
-  max-width: 30px;
-  background: #fcfcfb;
-}
-
-.advanced-sheet .chicken-cell {
-  width: 30px;
-  min-width: 30px;
-  max-width: 30px;
-  background: #fff;
-}
-
-.advanced-sheet .sum-cell {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
-  background: #fff;
-  color: #111;
-  font-size: 12px;
-  font-weight: 900;
-}
 
 .advanced-sheet .player-head-cell {
   background: #fff;
@@ -1500,12 +1470,6 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.advanced-sheet .sum-head {
-  width: 46px;
-  min-width: 46px;
-  max-width: 46px;
-  background: #fcfcfb;
-}
 
 .player-name-input {
   width: calc(100% - 10px);
@@ -1654,13 +1618,6 @@ body .sheet-wrap .sheet-table-wrap {
   box-shadow: none !important;
 }
 
-body .sheet-wrap .sheet-table {
-  width: 100% !important;
-  min-width: 2400px !important;
-  table-layout: fixed !important;
-  border-collapse: collapse !important;
-  background: #fff !important;
-}
 
 body .sheet-wrap .sheet-table th,
 body .sheet-wrap .sheet-table td {
@@ -1966,13 +1923,6 @@ body .sheet-wrap .sheet-table-wrap {
   box-shadow: none !important;
 }
 
-body .sheet-wrap .sheet-table {
-  width: 100% !important;
-  min-width: 2400px !important;
-  table-layout: fixed !important;
-  border-collapse: collapse !important;
-  background: #fff !important;
-}
 
 body .sheet-wrap .sheet-table th,
 body .sheet-wrap .sheet-table td {
@@ -2441,91 +2391,52 @@ input[type="number"] {
     text-align: center;
   }
 }
-/* ===== TOP5 / 치킨 / 점수 최종 정리본 ===== */
+/* ===== 오른쪽 3칸 최종 폭 ===== */
 /* 반드시 style.css 맨 마지막 */
 
-/* 표 레이아웃 유지 */
 body .sheet-wrap .sheet-table {
-  width: 100% !important;
-  min-width: 2400px !important;
-  table-layout: fixed !important;
+  width: auto !important;
+  min-width: 0 !important;
+  table-layout: auto !important;
   border-collapse: collapse !important;
   background: #fff !important;
 }
 
-/* 실제 3칸 폭 */
-body .sheet-wrap .advanced-sheet .top10-cell {
-  width: 8px !important;
-  min-width: 8px !important;
-  max-width: 8px !important;
+/* TOP5 */
+body .sheet-wrap .advanced-sheet .top10-cell,
+body .sheet-wrap .advanced-sheet .top10-head {
+  width: 6px !important;
+  min-width: 6px !important;
+  max-width: 6px !important;
+  padding: 0 !important;
   background: #fcfcfb !important;
 }
 
+/* 치킨 */
 body .sheet-wrap .advanced-sheet .chicken-cell {
-  width: 8px !important;
-  min-width: 8px !important;
-  max-width: 8px !important;
-  background: #fff !important;
-}
-
-body .sheet-wrap .advanced-sheet .sum-cell {
-  width: 14px !important;
-  min-width: 14px !important;
-  max-width: 14px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-}
-
-body .sheet-wrap .advanced-sheet .top10-head {
-  width: 8px !important;
-  min-width: 8px !important;
-  max-width: 8px !important;
-  background: #fff !important;
-  color: #111 !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
+  width: 6px !important;
+  min-width: 6px !important;
+  max-width: 6px !important;
   padding: 0 !important;
+  background: #fff !important;
 }
 
+/* 점수 */
+body .sheet-wrap .advanced-sheet .sum-cell,
 body .sheet-wrap .advanced-sheet .sum-head {
-  width: 14px !important;
-  min-width: 14px !important;
-  max-width: 14px !important;
-  background: #fafaf8 !important;
-  color: #111 !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  letter-spacing: 0 !important;
+  width: 12px !important;
+  min-width: 12px !important;
+  max-width: 12px !important;
   padding: 0 !important;
+  background: #fff !important;
+  color: #111 !important;
 }
 
-/* 체크박스는 크기 원복 */
+/* 체크박스 */
 body .sheet-wrap .top10-check,
 body .sheet-wrap .chicken-check {
-  transform: scale(0.9) !important;
+  transform: scale(0.7) !important;
+  margin: 0 !important;
   cursor: pointer !important;
   accent-color: #111 !important;
-}
-/* 🔥 초강제 압축 (진짜 끝판) */
-body .sheet-wrap .advanced-sheet .top10-cell,
-body .sheet-wrap .advanced-sheet .chicken-cell,
-body .sheet-wrap .advanced-sheet .sum-cell {
-  padding: 0 !important;
-}
-
-/* 내부 요소까지 강제 줄이기 */
-body .sheet-wrap .top10-cell input,
-body .sheet-wrap .chicken-cell input {
-  width: 100% !important;
-  min-width: 0 !important;
-  padding: 0 !important;
-}
-
-/* 체크박스 여백 제거 */
-body .sheet-wrap .top10-check,
-body .sheet-wrap .chicken-check {
-  margin: 0 !important;
 }
