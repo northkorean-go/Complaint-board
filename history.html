@@ -242,6 +242,33 @@
       letter-spacing: 0.06em;
     }
 
+    .history-item-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.history-delete-btn {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.history-delete-btn:hover {
+  opacity: 0.86;
+}
+
+.history-item.active .history-delete-btn {
+  background: #ff4d4d;
+  color: #fff;
+}
+
     .history-item.active .history-item-badge {
       background: rgba(255, 255, 255, 0.14);
       color: #fff;
@@ -541,43 +568,101 @@
     }
 
     function renderHistoryList(items) {
-      const listEl = document.getElementById('historyList');
+  const listEl = document.getElementById('historyList');
 
-      if (!items.length) {
-        listEl.innerHTML = '<div class="empty-box">조건에 맞는 기록이 없습니다.</div>';
-        return;
-      }
+  if (!items.length) {
+    listEl.innerHTML = '<div class="empty-box">조건에 맞는 기록이 없습니다.</div>';
+    return;
+  }
 
-      listEl.innerHTML = items.map(function(item) {
-        return (
-          '<button class="history-item" data-id="' + item.id + '">' +
-            '<div class="history-item-top">' +
-              '<div class="history-item-date">' + escapeHtml(item.match_date_text || '-') + '</div>' +
-              '<div class="history-item-badge">ARCHIVE</div>' +
-            '</div>' +
-            '<div class="history-item-title">' + escapeHtml(item.title || '최근 내전 결과') + '</div>' +
-            '<div class="history-item-meta">' +
-              '1등팀 ' + escapeHtml(item.winner_team || '-') +
-              (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
-              (item.mvp_name ? '<br>MVP ' + escapeHtml(item.mvp_name) + (item.mvp_score !== null && item.mvp_score !== undefined ? ' · ' + escapeHtml(String(item.mvp_score)) + '점' : '') : '') +
-            '</div>' +
-          '</button>'
-        );
-      }).join('');
+  listEl.innerHTML = items.map(function(item) {
+    return (
+      '<div class="history-item" data-id="' + item.id + '">' +
+        '<div class="history-item-top">' +
+          '<div class="history-item-date">' + escapeHtml(item.match_date_text || '-') + '</div>' +
+          '<div class="history-item-badge">ARCHIVE</div>' +
+        '</div>' +
+        '<div class="history-item-title">' + escapeHtml(item.title || '최근 내전 결과') + '</div>' +
+        '<div class="history-item-meta">' +
+          '1등팀 ' + escapeHtml(item.winner_team || '-') +
+          (item.winner_score !== null && item.winner_score !== undefined ? ' · ' + escapeHtml(String(item.winner_score)) + '점' : '') +
+          (item.mvp_name ? '<br>MVP ' + escapeHtml(item.mvp_name) + (item.mvp_score !== null && item.mvp_score !== undefined ? ' · ' + escapeHtml(String(item.mvp_score)) + '점' : '') : '') +
+        '</div>' +
+        '<div class="history-item-actions">' +
+          '<button class="history-delete-btn" type="button" data-delete-id="' + item.id + '">삭제</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
 
-      const buttons = listEl.querySelectorAll('.history-item');
-      buttons.forEach(function(btn, index) {
-        btn.addEventListener('click', function() {
-          loadHistoryDetail(btn.getAttribute('data-id'));
-          buttons.forEach(function(b) { b.classList.remove('active'); });
-          btn.classList.add('active');
+  const itemsEls = listEl.querySelectorAll('.history-item');
+
+  itemsEls.forEach(function(itemEl, index) {
+    itemEl.addEventListener('click', function(e) {
+      if (e.target.closest('.history-delete-btn')) return;
+
+      loadHistoryDetail(itemEl.getAttribute('data-id'));
+
+      itemsEls.forEach(function(el) {
+        el.classList.remove('active');
+      });
+
+      itemEl.classList.add('active');
+    });
+
+    if (index === 0) {
+      itemEl.click();
+    }
+  });
+
+  const deleteButtons = listEl.querySelectorAll('.history-delete-btn');
+
+  deleteButtons.forEach(function(deleteBtn) {
+    deleteBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id = deleteBtn.getAttribute('data-delete-id');
+
+      if (!confirm('이 내전 기록을 삭제할까요?')) return;
+
+      try {
+        const res = await fetch('/api/delete-match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ id: id })
         });
 
-        if (index === 0) {
-          btn.click();
+        const data = await res.json();
+
+        if (!data.ok) {
+          alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
+          return;
         }
-      });
-    }
+
+        allHistoryItems = allHistoryItems.filter(function(item) {
+          return String(item.id) !== String(id);
+        });
+
+        renderHistoryList(allHistoryItems);
+
+        if (!allHistoryItems.length) {
+          document.getElementById('detailHead').textContent = '기록을 선택하세요';
+          document.getElementById('detailMeta').textContent = '';
+          document.getElementById('detailSummary').textContent = '좌측 목록에서 날짜를 선택하면 상세 결과가 표시됩니다.';
+          document.getElementById('dateStat').textContent = '-';
+          document.getElementById('winnerStat').textContent = '-';
+          document.getElementById('mvpStat').textContent = '-';
+          document.getElementById('membersStat').textContent = '-';
+          document.getElementById('detailTableBody').innerHTML = '<tr><td colspan="5">기록을 선택하면 결과표가 표시됩니다.</td></tr>';
+        }
+      } catch (error) {
+        alert('삭제 중 서버 오류가 발생했습니다.');
+      }
+    });
+  });
+}
 
     async function loadHistoryList() {
       const listEl = document.getElementById('historyList');
