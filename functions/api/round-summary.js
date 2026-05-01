@@ -130,36 +130,56 @@ async function buildAutoBenefitText(env, latestMatch) {
   const teams = parseSummaryTeamEntries(latestMatch.summary_text || "");
   if (!teams.length) return latestMatch.match_date_text || "-";
 
-  let lowestTeam = teams[0];
-  for (let i = 1; i < teams.length; i++) {
-    if (teams[i].score < lowestTeam.score) {
-      lowestTeam = teams[i];
-    }
-  }
-
   const rows = await getMatchRows(env, latestMatch.id);
   if (!rows.length) return latestMatch.match_date_text || "-";
 
-  const teamIndex = teams.findIndex((team) => team.baseName === lowestTeam.baseName);
-  if (teamIndex === -1) return latestMatch.match_date_text || "-";
+  const colKeys = ["col1", "col2", "col3", "col4", "col5"];
 
-  const colKey = ["col1", "col2", "col3", "col4", "col5"][teamIndex];
-  if (!colKey) return latestMatch.match_date_text || "-";
+  const teamInfos = teams.map((team, index) => {
+    const colKey = colKeys[index];
+    const players = [];
 
-  let lowestPlayer = null;
-
-  for (const row of rows) {
-    const player = extractPlayerInfoFromCell(row[colKey]);
-    if (!player) continue;
-
-    if (!lowestPlayer || player.score < lowestPlayer.score) {
-      lowestPlayer = player;
+    if (colKey) {
+      for (const row of rows) {
+        const player = extractPlayerInfoFromCell(row[colKey]);
+        if (player) {
+          players.push(player);
+        }
+      }
     }
+
+    players.sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score;
+      return String(a.name).localeCompare(String(b.name), "ko");
+    });
+
+    return {
+      ...team,
+      colKey,
+      players,
+      lowestPlayer: players[0] || null,
+    };
+  });
+
+  const validTeams = teamInfos.filter((team) => team.players.length > 0);
+
+  if (!validTeams.length) {
+    return latestMatch.match_date_text || "-";
   }
 
-  if (!lowestPlayer) return latestMatch.match_date_text || "-";
+  validTeams.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score;
+    return String(a.teamName).localeCompare(String(b.teamName), "ko");
+  });
 
-  return `${latestMatch.match_date_text || "-"} ${lowestPlayer.name}`;
+  const lowestTeam = validTeams[0];
+  const lowestPlayer = lowestTeam.lowestPlayer;
+
+  if (!lowestPlayer) {
+    return latestMatch.match_date_text || "-";
+  }
+
+  return `${latestMatch.match_date_text || "-"} ${lowestPlayer.name} ${lowestPlayer.score}점`;
 }
 
 function getKoreaNowDate() {
