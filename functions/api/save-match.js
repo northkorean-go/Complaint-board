@@ -50,31 +50,83 @@ function getMatchDates() {
   };
 }
 
+function formatScore(value) {
+  const num = Number(value || 0);
+  if (!num) return "0";
+  return Number.isInteger(num) ? String(num) : String(num);
+}
+
+function getTeamMinusTotal(sheetState, teamIndex) {
+  const minusScores = sheetState?.teams?.[teamIndex]?.minusScores || [];
+  return minusScores.reduce((sum, value) => sum + Number(value || 0), 0);
+}
+
+function getPlayerMinusOnlyTotal(sheetState, roundCount, teamIndex, playerIndex) {
+  let total = 0;
+
+  for (let r = 0; r < roundCount; r++) {
+    const roundTeam = sheetState?.rounds?.[r]?.teams?.[teamIndex];
+
+    if (roundTeam?.top10) {
+      total += Number(sheetState?.teams?.[teamIndex]?.minusScores?.[playerIndex] || 0);
+    }
+  }
+
+  return total;
+}
+
 function getPlayerTotals(sheetState, roundCount, teamIndex, playerIndex) {
   let kill = 0;
-  let top10 = 0;
 
   for (let r = 0; r < roundCount; r++) {
     const player = sheetState?.rounds?.[r]?.teams?.[teamIndex]?.players?.[playerIndex];
     kill += Number(player?.kill || 0);
-    if (player?.top10) top10 += 1;
   }
+
+  const minusOnly = getPlayerMinusOnlyTotal(sheetState, roundCount, teamIndex, playerIndex);
 
   return {
     kill,
-    top10,
-    pure: kill - top10,
-    score: kill + top10,
+    pure: kill,
+    minusOnly,
+    score: kill + minusOnly,
   };
+}
+
+function getTeamChickenScore(roundData, teamIndex) {
+  const team = roundData?.teams?.[teamIndex];
+  return team?.chicken ? 10 : 0;
+}
+
+function getTeamRoundTotal(sheetState, roundData, teamIndex) {
+  const team = roundData?.teams?.[teamIndex];
+  if (!team) return 0;
+
+  let total = 0;
+
+  for (let p = 0; p < team.players.length; p++) {
+    total += Number(team.players[p]?.kill || 0);
+  }
+
+  if (team.top10) {
+    total += getTeamMinusTotal(sheetState, teamIndex);
+  }
+
+  total += getTeamChickenScore(roundData, teamIndex);
+
+  return total;
 }
 
 function getTeamTotals(sheetState, roundCount, playersPerTeam, teamIndex) {
   let score = 0;
   let pure = 0;
 
+  for (let r = 0; r < roundCount; r++) {
+    score += getTeamRoundTotal(sheetState, sheetState.rounds[r], teamIndex);
+  }
+
   for (let p = 0; p < playersPerTeam; p++) {
     const totals = getPlayerTotals(sheetState, roundCount, teamIndex, p);
-    score += totals.score;
     pure += totals.pure;
   }
 
@@ -184,8 +236,7 @@ export async function onRequest(context) {
 
     for (let t = 0; t < TEAM_COUNT; t++) {
       for (let p = 0; p < PLAYERS_PER_TEAM; p++) {
-        const name =
-          sheetState?.teams?.[t]?.players?.[p] || `선수${p + 1}`;
+        const name = sheetState?.teams?.[t]?.players?.[p] || `선수${p + 1}`;
         const totals = getPlayerTotals(sheetState, ROUND_COUNT, t, p);
 
         players.push({
@@ -193,7 +244,7 @@ export async function onRequest(context) {
           score: totals.score,
           pure: totals.pure,
           kill: totals.kill,
-          top10: totals.top10,
+          minusOnly: totals.minusOnly,
         });
       }
     }
@@ -208,8 +259,8 @@ export async function onRequest(context) {
     const { storageDate, displayDate } = getMatchDates();
 
     const summaryText =
-      "[" + teams.reduce((sum, t) => sum + t.score, 0) + "] " +
-      teams.map((t) => `${t.teamName} ${t.score}`).join(" : ");
+      "[" + formatScore(teams.reduce((sum, t) => sum + Number(t.score || 0), 0)) + "] " +
+      teams.map((t) => `${t.teamName} ${formatScore(t.score)}`).join(" : ");
 
     const snapshotKey = `${round.id}|${storageDate}|${summaryText}`;
     const createdAtKST = getKoreaNowString();
@@ -266,6 +317,7 @@ export async function onRequest(context) {
       .run();
 
     const resultId = insertResult.meta?.last_row_id;
+
     if (!resultId) {
       return withCors(
         json({ ok: false, error: "결과 저장 후 ID를 가져오지 못했습니다." }, 500)
@@ -282,7 +334,11 @@ export async function onRequest(context) {
         const name = sheetState?.teams?.[teamIndex]?.players?.[p] || "";
         const totals = getPlayerTotals(sheetState, ROUND_COUNT, teamIndex, p);
 
-        row.push(name ? `${name}\n${totals.score} (${totals.kill}-${totals.top10})` : "");
+        row.push(
+          name
+            ? `${name}\n${formatScore(totals.score)} (${formatScore(totals.kill)}-${formatScore(Math.abs(totals.minusOnly))})`
+            : ""
+        );
       }
 
       rowStatements.push(
